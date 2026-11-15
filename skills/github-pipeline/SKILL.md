@@ -9,13 +9,13 @@ This skill owns the GitHub contract and the Make that implements it. `sdlc.mk` i
 
 It depends on `project-setup` only because a workflow calls `make`. The job names `setup`, `build`, `test`, and `docs` (when the repository renders docs) are real targets from that contract. `login` is the target the publish job runs, not its own job. A Make-only repository does not install this skill.
 
-A project diverges only when it has a different output or toolchain, and it writes that down.
+This repository is the shared skill collection. Node 24 is the Node template only. A Gradle project uses the JDK in its template. A project diverges only when it has a different output or toolchain, and it writes that down.
 
 | File | Role |
 | --- | --- |
 | `sdlc.mk` | Version, publish tags, cleanup, and report. Copy it to the repo root unchanged |
-| `templates/Makefile.node` | Node app, image only. Make contract: `project-setup` |
-| `templates/Makefile.gradle` | Gradle app, image plus a JAR release. Make contract: `project-setup` |
+| `templates/Makefile.node` | Node app, image only. Node 24 is this template's toolchain. Make contract: `project-setup` |
+| `templates/Makefile.gradle` | Gradle app, image plus a JAR release. The JDK image in this file is this template's toolchain. Make contract: `project-setup` |
 | `templates/ci.node.yml`, `templates/ci.gradle.yml` | `.github/workflows/ci.yml` |
 | `templates/pipeline-rules.md` | `docs/pipeline-rules.md`. Points at `project-setup` for the Make contract |
 
@@ -93,7 +93,7 @@ setup ──┬── build ──┬── publish-container ──┐
 - Cancel in-progress runs only when the push is not the default branch.
 - Permissions: `contents: read` at the top, `actions: write` on `setup`, `packages: write` on `publish-container`, `contents: write` on `publish-github`.
 - A step is `actions/checkout`, an artifact upload or download, or `run: make <target>`. Nothing else. No `./gradlew`, `npm`, `podman`, `python`, `tar`, `printf`, or `tee` in the YAML. Gradle is `make build`. Registry login is `make login`.
-- Workflow `env` holds `IMAGE`, `SDLC_DEFAULT_BRANCH` (`github.event.repository.default_branch`), and the toolchain version. The Makefile sets `IMAGE` to that same image name.
+- Workflow `env` holds `IMAGE` and `SDLC_DEFAULT_BRANCH` (`github.event.repository.default_branch`). The Makefile sets `IMAGE` to that same image name. The Node template's `env` also holds `NODE_VERSION` at 24. That line is the Node template only. A Gradle project uses the JDK in its template. A project diverges by toolchain and writes that down.
 - Pin one runner label, `ubuntu-26.04`.
 
 `setup` runs `make cleanup-actions-artifacts` before it uploads. Do not upload a Gradle home or a whole `build/` directory. `test` runs beside `build`. Between jobs, pass the tested JAR or the image tar, not the workspace. Gradle, npm, and tar run inside the matching Make target, so a laptop runs the same command the job runs.

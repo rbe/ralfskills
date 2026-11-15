@@ -1,12 +1,12 @@
 # Pipeline rules
 
-The shared part is the same in every repository. Change it everywhere or nowhere. This repository's facts go under "This repository" and "Divergences".
+The shared part is the same in every repository. Change it everywhere or nowhere. This repository is the shared skill collection. This repository's facts go under "This repository" and "Divergences". The Node 24 line is the Node template only. A Gradle project uses the JDK in its template. A project diverges by toolchain and writes that down.
 
 ## Shared rules
 
 The Make contract is the project-setup skill. Make is the only interface. A person or an agent does the work through Make. `help` is the default goal. A target does the same thing on a laptop and in CI. The required targets are `setup`, `build`, and `test`. Add `docs` only when this repository renders docs, and `login` when it publishes an image. Gradle, npm, Podman, python, and tar run inside those targets.
 
-The GitHub contract is the github-pipeline skill. Podman is the only container engine. The toolchain runs in a pinned image, so the host needs make, Podman, git, and gh. `sdlc.mk` at the repository root implements version, publish tags, cleanup, and report. It is byte-identical to the canonical copy in that skill. The project Makefile sets `IMAGE`, `PACKAGE`, and `KEEP_VERSIONS`, includes `sdlc.mk` before any target, and defines the project targets. That include already provides `help`, so this repository leaves `project.mk` out.
+The GitHub contract is the github-pipeline skill. Podman is the only container engine. The toolchain runs in a pinned image, so the host needs make, Podman, git, and gh. The Node template pins Node 24. A Gradle project uses the JDK in its template. A project diverges by toolchain and writes that down. `sdlc.mk` at the repository root implements version, publish tags, cleanup, and report. It is byte-identical to the canonical copy in that skill. The project Makefile sets `IMAGE`, `PACKAGE`, and `KEEP_VERSIONS`, includes `sdlc.mk` before any target, and defines the project targets. That include already provides `help`, so this repository leaves `project.mk` out.
 
 There is one workflow, `.github/workflows/ci.yml`. A step is a checkout, an artifact upload or download, or `run: make <target>`. Jobs, in order: `setup`, then `build`, `test`, and `docs` beside each other, then `publish-container` (needs `build` and `test`), then `report`. A repository that releases a JAR adds `publish-github`, which also needs `build` and `test`. Each job runs the make target with its name.
 
@@ -22,14 +22,16 @@ Packages and images contain the tested build only. `.containerignore` keeps out 
 
 ## This repository
 
+This repository is the shared skill collection. The Node 24 line is the Node template only. A Gradle project uses the JDK in its template. A project diverges by toolchain and writes that down. A project that copies this file replaces this section with its own facts.
+
 | | |
 | --- | --- |
 | Image | `ghcr.io/OWNER/NAME` |
 | Default branch | `main` |
-| Toolchain | Node 24 in the image |
+| Toolchain | The toolchain this project uses. Node template: Node 24 in the image. Gradle template: the JDK in that template. |
 
 ## Divergences
 
-Each entry names the shared rule, what differs, and why.
+Each entry names the shared rule, what differs, and why. A toolchain difference belongs here.
 
 - Rule: …. Here: …. Why: ….
