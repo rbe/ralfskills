@@ -1,6 +1,6 @@
 ---
 name: project-setup
-description: Apply or check the Make contract. Make is the only interface, help is the default goal, and a target does the same thing locally and in CI. Use when adding a Makefile, naming setup, build, test, docs, or login, or moving Gradle, npm, Podman, python, or tar into a target. Stands alone. The shared makefile is project.mk (help and the standard targets). A repository that does not publish through GitHub installs only this skill.
+description: Apply or check the Make contract in setup mode or report mode. Make is the only interface, help is the default goal, and a target does the same thing locally and in CI. Use setup mode when adding a Makefile, naming setup, build, test, docs, or login, moving Gradle, npm, Podman, python, or tar into a target, or installing Homebrew tools such as jq. Setup changes only what is missing or off the contract and leaves a target the project already filled in. Use report mode to fill templates/contract-report.md and name what matches and what is missing, without changing the project. Stands alone. The shared makefile is project.mk. A repository that does not publish through GitHub installs only this skill.
 ---
 
 # Project setup
@@ -12,6 +12,60 @@ Make is the only interface. A person or an agent does the work through Make.
 A target does the same thing locally and in CI. A command that only makes sense on a laptop gets its own name (`dev`, `verify`).
 
 This skill stands alone. Version tags, GHCR, and cleanup are the `github-pipeline` skill. A repository that uses Make and has no GitHub workflow installs this skill only.
+
+## Modes
+
+Use one mode. A request that asks for both runs report mode first, then setup mode for the rows that are missing. A row that matches stays as it is.
+
+| Mode | When | Files |
+| --- | --- | --- |
+| Setup | Set up a new project, or bring an existing one into line with this contract | Writes only what is missing or off the contract |
+| Report | Show the current project against this contract | Reads the project. Writes nothing |
+
+A repository that uses Make and has no GitHub workflow uses this skill only.
+
+A target is filled in when its command variable has a non-empty value, or the project's Makefile gives that target a recipe. Setup mode leaves that value and that recipe.
+
+### Setup mode
+
+Read:
+
+| File | Where |
+| --- | --- |
+| `SKILL.md`, `project.mk` | This skill. `project.mk` is the copy source |
+| `Makefile`, `project.mk` | The project, when present |
+| `sdlc.mk` | The project, only to see whether that include already provides `help` |
+
+Write:
+
+| File | Write when |
+| --- | --- |
+| `project.mk` | It is missing, or it is not byte-identical to this skill's copy. The sha256 is in Check |
+| `Makefile` | It is missing, the include is missing or sits after a target, or a required variable is unset |
+
+`project.mk` provides `help`, `setup`, `build`, `test`, and, when the variables say so, `docs` and `login`. The Makefile sets variables and includes `project.mk` before any target. Setup mode does not define `setup`, `build`, or `test` again. A second definition replaces the recipe from `project.mk`.
+
+The project fills a target in with `SETUP_CMD`, `BUILD_CMD`, or `TEST_CMD`, and with `DOCS_CMD` when it renders docs. Set a variable only when it is empty and the toolchain is already in the project (`package.json`, Gradle, python, or tar). A value already set stays. When the Makefile already has a recipe for that target, leave the recipe and leave the command variable empty. The report names that empty variable as missing.
+
+When the project's `project.mk` differs from this skill and holds a recipe the Makefile does not, copy that command into the matching variable first. An existing Makefile value wins. Then replace `project.mk` with this skill's file.
+
+`setup` installs `jq` through Homebrew when `brew` is on `PATH`, then any names in `BREW_TOOLS`. A tool already on `PATH` stays. Leave `BREW_TOOLS` when the project set it. The system `make` stays GNU Make 3.81.
+
+Set `RENDER_DOCS` and `DOCS_CMD` when the repository renders docs and those variables are empty. Set `PUBLISH_IMAGE` when an image is published and that variable is empty. A value the project set stays. Command variables stay above the include. A shell `$` in a command is `$$`.
+
+A line this mode adds follows Make 3.81. No `.ONESHELL`. No Make 4 function (`$(file ...)`, `$(guile ...)`, `!=`). Each recipe line is one POSIX shell, joined with backslashes. No shell-script wrapper.
+
+When the include is `sdlc.mk`, leave `project.mk` out. That file already provides `help`, and the project targets belong to `github-pipeline`.
+
+This mode does not add `sdlc.mk`, a workflow, or a `v*` tag.
+
+When the required command variables are set, or the Makefile already defines those targets, run `make setup`. That target installs `jq`. When a required variable is still empty, leave the run for later. The stub names the variable. Do not run `brew install` outside `make setup`.
+
+### Report mode
+
+Read `templates/contract-report.md` in this skill, this skill's `project.mk`, and the Check section. Read the project's `Makefile` and `project.mk`. `make -qp` shows `.DEFAULT_GOAL`. Compare the project's `project.mk` to the sha256 in Check.
+
+Fill the skeleton in the reply. `State` is `matches` or `missing`. The verdict lists both. Leave the skill's template blank. Write no project file, do not copy `project.mk`, and do not run `make setup`, `make build`, `make test`, `make docs`, `make login`, or `brew install`.
 
 ## Target names
 
@@ -87,3 +141,6 @@ The repository fails this contract when:
 - a person, an agent, or a workflow step runs Gradle, npm, Podman, python, or tar directly instead of `make setup`, `make build`, `make test`, `make docs`, or `make login`
 - `project.mk` is not byte-identical to this skill's copy (sha256 `7314d971bbf2e0068a65c52363b62a70a201d1d8dacecedb67aa6f72a2419aa8`), or the project Makefile includes it after the first target
 - the Makefile uses `.ONESHELL` or a Make 4 function, or the standard targets call out to a shell script
+- `setup` does not install `jq` through Homebrew when `brew` is on `PATH`. A tool already on `PATH` stays. A missing tool and no Homebrew fails `setup`
+
+Report mode records each of these in `templates/contract-report.md`. Setup mode repairs a missing file, a missing include, or an empty command variable. It leaves a target the project already filled in.

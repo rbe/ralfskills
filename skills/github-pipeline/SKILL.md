@@ -1,6 +1,6 @@
 ---
 name: github-pipeline
-description: Apply or check the GitHub delivery contract. One workflow runs setup, then build, test, and docs, then publish, then report. Versions come from a vMAJOR.MINOR.PATCH tag plus the run number. Use when adding CI, aligning a pipeline, changing publish or versioning, or fixing artifact storage. Depends on project-setup because each job name is a Make target. A Make-only repository does not install this skill. The shared makefile is sdlc.mk. No shell scripts.
+description: Apply or check the GitHub delivery contract in setup mode or report mode. One workflow runs setup, then build, test, and docs, then publish, then report. Versions come from a vMAJOR.MINOR.PATCH tag plus the run number. Use setup mode when adding CI, aligning a pipeline, changing publish or versioning, or fixing artifact storage. Setup changes only what is missing or off the contract and leaves a target the project already filled in. Use report mode to fill templates/contract-report.md and name what matches and what is missing, without changing the project. Depends on project-setup because each job name is a Make target. A Make-only repository does not install this skill. The shared makefile is sdlc.mk. No shell scripts.
 ---
 
 # GitHub pipeline
@@ -8,6 +8,64 @@ description: Apply or check the GitHub delivery contract. One workflow runs setu
 This skill owns the GitHub contract and the Make that implements it. `sdlc.mk` is that makefile: version, publish tags, cleanup, and report. Copy it to the repository root unchanged.
 
 It depends on `project-setup` only because a workflow calls `make`. The job names `setup`, `build`, `test`, and `docs` (when the repository renders docs) are real targets from that contract. `login` is the target the publish job runs, not its own job. A Make-only repository does not install this skill.
+
+## Modes
+
+Use one mode. A request that asks for both runs report mode first, then setup mode for the rows that are missing. A row that matches stays as it is.
+
+Report mode is the contract report in `templates/contract-report.md`. The `report` target is a different report: it writes `build/report/index.md` for one pipeline run.
+
+A repository that uses Make and has no GitHub workflow stops here. It installs `project-setup` only. Setup mode adds no workflow there.
+
+| Mode | When | Files |
+| --- | --- | --- |
+| Setup | Set up a new project that publishes through GitHub, or bring an existing one into line with this contract | Writes only what is missing or off the contract |
+| Report | Show the current project against this contract | Reads the project. Writes nothing |
+
+A target is filled in when the project's Makefile gives it a recipe. Setup mode leaves that recipe. On a `project-setup` Makefile the fill-in is also a non-empty `SETUP_CMD`, `BUILD_CMD`, `TEST_CMD`, or `DOCS_CMD`. Those values stay.
+
+### Setup mode
+
+Read:
+
+| File | Where |
+| --- | --- |
+| `SKILL.md`, `sdlc.mk` | This skill. `sdlc.mk` is the copy source. Leave this skill's file unchanged |
+| `templates/Makefile.node`, `templates/ci.node.yml` | Node toolchain |
+| `templates/Makefile.gradle`, `templates/ci.gradle.yml` | Gradle toolchain |
+| `templates/pipeline-rules.md` | The source for `docs/pipeline-rules.md` |
+| `Makefile`, `sdlc.mk`, `project.mk` | The project, when present |
+| `.github/workflows/` | The project |
+| `docs/pipeline-rules.md`, `AGENTS.md`, `Containerfile`, `.containerignore`, `.gitignore` | The project, when present |
+| `docs/BUGS.md`, `docs/WAVES.md`, `docs/FEATURES.md` | The project, when present |
+
+Write:
+
+| File | Write when |
+| --- | --- |
+| `sdlc.mk` | It is missing, or it is not byte-identical to this skill's copy. Copy the file. Edit neither copy. The sha256 is in Contract test |
+| `Makefile` | `include sdlc.mk` is missing or sits after a target, or a required target has no recipe and no command variable. A recipe already in the file stays |
+| `.github/workflows/ci.yml` | No workflow yet: start from the matching template. A `ci.yml` already there: fix a trigger, a permission, a missing `retention-days`, or a `run:` step that is not `make <target>`. A step that is already `make <target>` stays |
+| `docs/pipeline-rules.md` | It is missing. Copy the template and fill "This repository". When the file exists, leave "This repository" and "Divergences" as written |
+| `AGENTS.md`, `Containerfile`, `.containerignore`, `.gitignore`, `docs/BUGS.md`, `docs/WAVES.md`, `docs/FEATURES.md` | The file is missing. In `AGENTS.md`, add a missing sentence and leave a sentence the project already wrote |
+
+The workflow is one file, `.github/workflows/ci.yml`, named `CI`. It calls `make`. `publish-*` runs on a push to the default branch or when `workflow_dispatch` selects that job, and it needs `build` and `test`. The version is the nearest `vMAJOR.MINOR.PATCH` tag, read by `make version`. This mode creates no `v*` tag and adds no tag trigger.
+
+A second workflow file is named in the report. This mode does not delete it and does not add a workflow beside `ci.yml`.
+
+When the Makefile includes `project.mk`, switch the include to `sdlc.mk` and remove the `project.mk` include. `sdlc.mk` already provides `help`. Keep the command variables as the recipes of the targets this mode adds. The Node or Gradle template fills a target only when that target has no recipe and the command variable is empty.
+
+A recipe this mode adds follows Make 3.81. No `.ONESHELL`. No Make 4 function (`$(file ...)`, `$(guile ...)`, `!=`). Each recipe line is one POSIX shell, joined with backslashes. No shell-script wrapper. A shell `$` is `$$`.
+
+### Report mode
+
+Read `templates/contract-report.md` and the Contract test section. Read the project files in the setup table. `make -qp` shows `.DEFAULT_GOAL`. Compare the project's `sdlc.mk` to the sha256 in Contract test. `git describe --tags --abbrev=0 --match 'v[0-9]*'` shows the tag `version` accepts.
+
+When the repository has no workflow and does not publish through GitHub, fill Applies as yes and leave the checks blank. The verdict is that this skill stays uninstalled.
+
+Fill the skeleton in the reply. `State` is `matches` or `missing`. The verdict lists both. Leave the skill's template blank. Write no project file. Do not copy `sdlc.mk`. Do not run `make publish-container`, `make publish-github`, or a cleanup target.
+
+## Files
 
 This repository is the shared skill collection. Node 24 is the Node template only. A Gradle project uses the JDK in its template. A project diverges only when it has a different output or toolchain, and it writes that down.
 
@@ -18,6 +76,7 @@ This repository is the shared skill collection. Node 24 is the Node template onl
 | `templates/Makefile.gradle` | Gradle app, image plus a JAR release. The JDK image in this file is this template's toolchain. Make contract: `project-setup` |
 | `templates/ci.node.yml`, `templates/ci.gradle.yml` | `.github/workflows/ci.yml` |
 | `templates/pipeline-rules.md` | `docs/pipeline-rules.md`. Points at `project-setup` for the Make contract |
+| `templates/contract-report.md` | Report mode skeleton. The reply fills it. The file in this skill stays blank |
 
 No shell script is shipped. Version, both cleanups, artifact cleanup, the report, logging, `help`, and `ci` are recipes in `sdlc.mk`. `gh api --jq` does the listing. A short `awk` plan inside the cleanup recipe picks what to keep. That stayed readable, so it did not become a script.
 
@@ -145,3 +204,5 @@ The repo's own test reads the workflow, the Makefile, and `sdlc.mk`. It fails wh
 - `sdlc.mk` is not byte-identical to this skill's copy. Its sha256 is `45c6cf23664d030c61f0fedd2d0639cd9dc2dc7bb03c14167dce61fed9d495d6`
 
 Do not weaken the test to make a run pass. Fix the pipeline, or record a real divergence.
+
+Report mode records each of these in `templates/contract-report.md`. Setup mode repairs a missing workflow rule. It leaves a target the project already filled in. A Make-only repository is not a failed test: that repository does not install this skill.
