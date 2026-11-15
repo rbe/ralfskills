@@ -1,0 +1,9 @@
+[run]
+relative_files = true
+data_file = build/coverage/.coverage
+source =
+    skills
+    tests
+
+[xml]
+output = build/coverage/coverage.xml

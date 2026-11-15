@@ -48,7 +48,11 @@ def retired_ids(path):
             if inline == "[]":
                 return []
             if inline.startswith("[") and inline.endswith("]"):
-                return [item.strip().strip("'\"") for item in inline[1:-1].split(",") if item.strip()]
+                return [
+                    item.strip().strip("'\"")
+                    for item in inline[1:-1].split(",")
+                    if item.strip()
+                ]
             continue
         if not in_list:
             continue

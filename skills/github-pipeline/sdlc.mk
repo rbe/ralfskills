@@ -28,7 +28,8 @@
 #   KEEP_VERSIONS    versions to keep, counting the one just published.
 #                    Default 2 (published + one former).
 #   SDLC_JOBS        report rows, in pipeline order
-#   SDLC_CI          targets `ci` runs. Default includes docs.
+#   SDLC_CI          targets `ci` runs. Default includes editorconfig,
+#                    format, lint, test, integration, coverage, and docs.
 #   HELP_LEAD        first line of `make help`
 
 ifndef SDLC_MK
@@ -36,6 +37,7 @@ SDLC_MK := 1
 
 SDLC_MK_DIR := $(dir $(lastword $(MAKEFILE_LIST)))
 include $(SDLC_MK_DIR)../project-setup/podman-python.mk
+include $(SDLC_MK_DIR)../project-setup/tools.mk
 
 # Recipes call ${MAKE} from the shell. Make does not export this variable
 # unless asked, and a recipe that writes $(MAKE) is executed even by make -n.
@@ -44,7 +46,7 @@ export MAKE
 KEEP_VERSIONS ?= 2
 PACKAGE ?= $(GITHUB_REPOSITORY)
 SDLC_JOBS ?= setup build test docs publish-container
-SDLC_CI ?= setup build test docs report
+SDLC_CI ?= setup build editorconfig format lint test integration coverage docs report
 SDLC_KEEP_ARTIFACTS ?= report,docs
 SDLC_ARTIFACT_AGE ?= 3600
 HELP_LEAD ?= The Makefile is the interface. A laptop and CI run the same targets.
@@ -128,7 +130,7 @@ version: ## Print MAJOR.MINOR.PATCH-run. PRINT=tag prints the vX.Y.Z tag
 	  || { echo "GITHUB_RUN_NUMBER must be a positive integer. Refusing to invent a build number." >&2; exit 1; }; \
 	printf '%s-%s\n' "$${tag#v}" "$(GITHUB_RUN_NUMBER)"
 
-ci: ## Run setup, build, test, docs, and report, in that order. Does not publish
+ci: ## Run the local CI targets, in order. Does not publish
 	@set -eu; for t in $(SDLC_CI); do $(MAKE) --no-print-directory "$$t"; done
 
 report: ## Match CI: write build/report/index.md from logs, summaries, and job results

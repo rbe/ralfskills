@@ -14,12 +14,12 @@ Install so the files land in `.claude/skills/`. That is the APM target `claude`.
 | [release](skills/release/SKILL.md) | Ship a binary or a container image. Invokes `github-pipeline` when delivery changes |
 | [record](skills/record/SKILL.md) | Ids, the board, the history file, and the ADR index |
 | [migrate-docs](skills/migrate-docs/SKILL.md) | The only skill that reads an old board. Other skills stop until it has deleted those files |
-| [project-setup](skills/project-setup/SKILL.md) | Make is the only interface. `help` is the default goal. A target does the same thing locally and in CI |
+| [project-setup](skills/project-setup/SKILL.md) | Make is the only interface. `help` is the default goal. EditorConfig, one formatter, one linter, unit tests, one integration entry, and a diff-cover report are targets |
 | [github-pipeline](skills/github-pipeline/SKILL.md) | One GitHub workflow. Versions from a `vMAJOR.MINOR.PATCH` tag plus the run number |
 | [security](skills/security/SKILL.md) | Questions before a slice, checks after |
 | [privacy](skills/privacy/SKILL.md) | Personal data, before and after |
 | [ux-ui-design](skills/ux-ui-design/SKILL.md) | Interaction. Product tokens stay in a project skill |
-| [api-design](skills/api-design/SKILL.md) | The shape of an HTTP change. The route list stays in a project skill |
+| [api-design](skills/api-design/SKILL.md) | HTTP, and the public API of a module or a library. The route list stays in a project skill |
 | [node](skills/node/SKILL.md) | JavaScript and TypeScript |
 | [python](skills/python/SKILL.md) | Python |
 | [shell](skills/shell/SKILL.md) | POSIX shell inside a recipe |

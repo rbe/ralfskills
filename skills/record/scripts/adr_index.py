@@ -43,7 +43,11 @@ def frontmatter(text):
         if value == "" or value == "[]":
             data[key] = []
         elif value.startswith("[") and value.endswith("]"):
-            data[key] = [item.strip().strip("'\"") for item in value[1:-1].split(",") if item.strip()]
+            data[key] = [
+                item.strip().strip("'\"")
+                for item in value[1:-1].split(",")
+                if item.strip()
+            ]
         else:
             data[key] = value.strip("'\"")
     return data
@@ -54,7 +58,7 @@ def cell(value):
         text = ";".join(value)
     else:
         text = "" if value is None else str(value)
-    if any(character in text for character in ",\"\n"):
+    if any(character in text for character in ',"\n'):
         return '"' + text.replace('"', '""') + '"'
     return text
 
@@ -67,7 +71,12 @@ def rows(adr_dir):
         data = frontmatter(path.read_text(encoding="utf-8"))
         if "id" not in data:
             continue
-        found.append({key: data.get(key, [] if key in {"adrs", "skills", "decisions"} else "") for key in COLUMNS})
+        found.append(
+            {
+                key: data.get(key, [] if key in {"adrs", "skills", "decisions"} else "")
+                for key in COLUMNS
+            }
+        )
     return found
 
 

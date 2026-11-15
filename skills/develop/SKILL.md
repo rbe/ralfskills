@@ -1,6 +1,6 @@
 ---
 name: develop
-description: Implement a slice plan already closed, or a request that names a file or a failing test. Use the installed language skill for the files in hand. Two languages means two disjoint file sets. Stop when that language skill is not installed. Tests come with the behaviour change. Invoke record for ids and the Develop section.
+description: Implement a slice plan already closed, or a request that names a file or a failing test. Use the installed language skill for the files in hand. Two languages means two disjoint file sets. Stop when that language skill is not installed. Do not report done until make lint and make test have passed. Tests come with the behaviour change. Invoke record for ids and the Develop section.
 ---
 
 # Develop
@@ -17,5 +17,11 @@ description: Implement a slice plan already closed, or a request that names a fi
 1. Read the history file for this task. When the slice starts from a proposal, the Plan section cites that proposal id. Do not copy the proposal into Develop.
 2. Run `make toon`. Read `docs/skill-index.toon`. Invoke each `language` row whose `files` or `names` match the files in hand. A file set with no matching row stops this step.
 3. Two languages means two disjoint file sets. Finish one set before editing the other.
-4. A behaviour change has a test. `make test` runs it. Podman, XDG paths, and what a shipment may contain are `project-setup`. Do not restate them.
-5. An id, a roadmap line, or a known-issue change goes through `record`.
+4. A behaviour change has a unit test. `make test` runs the unit tests. `make integration` is the one integration entry. Stop when one target runs both. Do not take a later step. Podman, XDG paths, and what a shipment may contain are `project-setup`. Do not restate them.
+5. A method does one thing, or it only composes other methods. Stop when a method does both. Do not take a later step.
+6. Name a unit, a function, a method, a class, and a file from the domain. Stop when a name is not from the domain. Do not take a later step.
+7. No skipped test. No silent catch. No secret and no personal data in a fixture. Stop when one of these is present. Do not take a later step.
+8. Run `make lint` and `make test`. The linter is the one the language skill names. Do not write a linter. Stop when either target fails. Do not take a later step.
+9. Run `make coverage`. It writes `build/coverage/diff.md` for the lines this change touched. Stop when that report is missing. Do not take a later step.
+10. CI runs these same Make targets. Stop when lint, test, or coverage runs outside Make. Do not take a later step.
+11. An id, a roadmap line, or a known-issue change goes through `record`.

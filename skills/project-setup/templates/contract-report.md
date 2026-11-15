@@ -28,6 +28,10 @@ The include is `.claude/skills/project-setup/project.mk`. A repository that incl
 | The Makefile includes `.claude/skills/project-setup/project.mk`, or `sdlc.mk` from `github-pipeline` when that file provides `help` | | |
 | The include sits before any target | | |
 | `setup`, `build`, and `test` exist and are `.PHONY` | | |
+| `editorconfig` runs editorconfig-checker | | |
+| `format` is one existing formatter and `lint` is one existing linter | | |
+| `integration` is the one integration entry | | |
+| `coverage` writes `build/coverage/diff.md` for the lines this change touched | | |
 | `docs` exists when the repository renders docs, and is absent otherwise | | |
 | `login` exists when an image is published, and is absent otherwise | | |
 | `SETUP_CMD`, `BUILD_CMD`, and `TEST_CMD` are non-empty | | |
@@ -45,5 +49,10 @@ Setup mode leaves these recipes and these values.
 | `setup` | | |
 | `build` | | |
 | `test` | | |
+| `editorconfig` | | |
+| `format` | | |
+| `lint` | | |
+| `integration` | | |
+| `coverage` | | |
 | `docs` | | |
 | `login` | | |

@@ -51,7 +51,9 @@ class IdsTest(unittest.TestCase):
         self.write("docs/ids.yaml", "retired: []\n")
         errors = ids.retire(self.root, "H-2026-11-15-old")
         self.assertEqual(errors, [])
-        self.assertIn("H-2026-11-15-old", ids.retired_ids(self.root / "docs" / "ids.yaml"))
+        self.assertIn(
+            "H-2026-11-15-old", ids.retired_ids(self.root / "docs" / "ids.yaml")
+        )
         self.assertEqual(ids.check(self.root), [])
 
     def test_retire_rejects_a_live_id(self):
@@ -69,7 +71,9 @@ class SkillIndexTest(unittest.TestCase):
             root = Path(tmp)
             bundled = root / "skills" / "jvm"
             bundled.mkdir(parents=True)
-            (bundled / "SKILL.md").write_text("---\nname: jvm\nkind: language\nfiles: [java]\n---\n", encoding="utf-8")
+            (bundled / "SKILL.md").write_text(
+                "---\nname: jvm\nkind: language\nfiles: [java]\n---\n", encoding="utf-8"
+            )
             installed = root / ".claude" / "skills" / "node"
             installed.mkdir(parents=True)
             (installed / "SKILL.md").write_text(
@@ -78,10 +82,14 @@ class SkillIndexTest(unittest.TestCase):
             )
             check = root / ".claude" / "skills" / "security"
             check.mkdir(parents=True)
-            (check / "SKILL.md").write_text("---\nname: security\nkind: check\norder: 10\n---\n", encoding="utf-8")
+            (check / "SKILL.md").write_text(
+                "---\nname: security\nkind: check\norder: 10\n---\n", encoding="utf-8"
+            )
             plain = root / ".claude" / "skills" / "plan"
             plain.mkdir(parents=True)
-            (plain / "SKILL.md").write_text("---\nname: plan\ndescription: Grill.\n---\n", encoding="utf-8")
+            (plain / "SKILL.md").write_text(
+                "---\nname: plan\ndescription: Grill.\n---\n", encoding="utf-8"
+            )
             found = skill_index.rows(root)
             self.assertEqual([row["name"] for row in found], ["security", "node"])
             text = skill_index.render(found)
@@ -105,7 +113,10 @@ class AdrIndexTest(unittest.TestCase):
             )
             text = adr_index.render(adr_index.rows(adr))
             self.assertIn("adr_index[1]{id,status,title,adrs,skills,decisions}:", text)
-            self.assertIn("ADR-0004,Accepted,Listen on localhost,ADR-0001,security;review,D-12", text)
+            self.assertIn(
+                "ADR-0004,Accepted,Listen on localhost,ADR-0001,security;review,D-12",
+                text,
+            )
             self.assertNotIn("Body", text)
 
 
