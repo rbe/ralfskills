@@ -15,7 +15,7 @@ description: Implement a slice plan already closed, or a request that names a fi
 ## Work
 
 1. Read the history file for this task. When the slice starts from a proposal, the Plan section cites that proposal id. Do not copy the proposal into Develop.
-2. Read the installed language skill for the files in hand. `node`, `python`, `shell`, and `jvm` are the language skills. A file set with no installed language skill stops this step.
+2. Run `make toon`. Read `docs/skill-index.toon`. Invoke each `language` row whose `files` or `names` match the files in hand. A file set with no matching row stops this step.
 3. Two languages means two disjoint file sets. Finish one set before editing the other.
 4. A behaviour change has a test. `make test` runs it. Podman, XDG paths, and what a shipment may contain are `project-setup`. Do not restate them.
 5. An id, a roadmap line, or a known-issue change goes through `record`.

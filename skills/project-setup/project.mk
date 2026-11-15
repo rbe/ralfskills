@@ -130,4 +130,6 @@ login: ## Log in to the registry
 	printf '%s\n' "$$REGISTRY_TOKEN" | podman login "$(REGISTRY)" --username "$$REGISTRY_USER" --password-stdin
 endif
 
+-include .claude/skills/record/index.mk
+
 endif

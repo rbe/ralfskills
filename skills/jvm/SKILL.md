@@ -1,6 +1,8 @@
 ---
 name: jvm
 description: Java, Groovy, Grails, and Gradle. Use when jvm is installed and the files in hand are Java, Groovy, Grails, or Gradle. Read the reference that matches the file. Tests run through make. The stage skill still applies.
+kind: language
+files: [java, groovy, gradle, kts]
 ---
 
 # JVM

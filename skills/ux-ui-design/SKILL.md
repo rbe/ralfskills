@@ -1,6 +1,8 @@
 ---
 name: ux-ui-design
 description: Ask before a slice is closed, and check after implementation, when the change has a screen, a control, or a visual. plan asks the questions. review runs the checks. Product tokens stay in a project skill. Skip with the line "ux-ui-design: not installed" only when this skill is not installed.
+kind: check
+order: 30
 ---
 
 # UX and UI

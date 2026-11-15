@@ -14,10 +14,10 @@ description: Grill a change before editing. Use when a request is new, vague, or
 
 ## Work
 
-1. Read `docs/ROADMAP.md`, `docs/KNOWN_ISSUES.md`, `docs/DECISIONS.md`, `docs/adr/index.toon`, and the open files in `docs/proposals/`. Read an ADR when the index names an id this slice can change. Do not ask a question an accepted ADR, a Decided entry, or an open proposal already answered.
-2. For each of `security`, `privacy`, `ux-ui-design`, and `api-design`, in that order: if it is installed, read it and ask its questions. If it is not installed, write `not installed`. A missing line fails this step. Security and privacy come before the others.
+1. Run `make toon`. Read `docs/ROADMAP.md`, `docs/KNOWN_ISSUES.md`, `docs/DECISIONS.md`, `docs/adr/index.toon`, `docs/skill-index.toon`, and the open files in `docs/proposals/`. Read an ADR when the index names an id this slice can change. Do not ask a question an accepted ADR, a Decided entry, or an open proposal already answered.
+2. For each `skill-index` row whose `kind` is `check`, in file order: read that skill and ask its questions. If there is no `check` row, write `checks: none installed`. A missing line for a row fails this step.
 3. Ask one question, then wait. Stop when the slice is one sentence, with an out-of-scope line. A request that already names a file or a failing test is `develop`.
 4. Invoke `project-setup` when the Makefile is missing, or when the slice adds or overrides a target. Do not invoke it otherwise.
-5. Stop before introducing a language whose skill is not installed.
+5. Stop when the slice needs a language and no `language` row in `docs/skill-index.toon` matches the files. A row is installed: the index lists only installed skills.
 6. Implement now: ask `record` for a history id. Write the questions and answers in Plan. Develop, Review, and Release are `Not invoked yet.` Do not copy the grill into the roadmap.
 7. Implement later: ask `record` for a proposal id and write `docs/proposals/<id>.md`. That file is the backlog. Do not create a history file. Do not add a roadmap line.

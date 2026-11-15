@@ -1,6 +1,8 @@
 ---
 name: security
 description: Ask before a slice is closed, and check after implementation, when the change listens, stores a secret, accepts input, or runs a command. plan asks the questions. review runs the checks. Skip with the line "security: not installed" only when this skill is not installed.
+kind: check
+order: 10
 ---
 
 # Security

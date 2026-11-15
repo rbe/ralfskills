@@ -73,16 +73,19 @@ Every history file has these sections. A missing heading is a failed step.
 
 An agent on another task opens a history file only when an id names it.
 
-## ADR index
+## Indexes
 
-`python3 .claude/skills/record/scripts/adr_index.py` reads ADR frontmatter and writes `docs/adr/index.toon`. The columns are `id`, `status`, `title`, `adrs`, `skills`, and `decisions`. `plan` reads the index and opens one ADR when the id matches. The index is generated. Hand-editing it is a defect. The index does not list skills.
+`make toon` writes both indexes. `project.mk` and `sdlc.mk` include `.claude/skills/record/index.mk`, so a project Makefile that includes either of those already has the target. `make setup` runs `toon` first when that include is present.
 
-A project Makefile may add:
+Make is the interface. Python reads the frontmatter, because a makefile recipe is the wrong place for that parser. The recipe is one `python3` command.
 
-```make
-adr-index: ## Write the ADR index
-	python3 .claude/skills/record/scripts/adr_index.py
+Run `make toon` after a skill is installed or removed, after ADR frontmatter changes, and before `plan`, `develop`, or `review` reads an index. Hand-editing either file is a defect.
 
-ids: ## Reject a repeated id
-	python3 .claude/skills/record/scripts/ids.py
-```
+| File | Columns | What it lists |
+| --- | --- | --- |
+| `docs/adr/index.toon` | `id`, `status`, `title`, `adrs`, `skills`, `decisions` | ADR frontmatter. `plan` opens one ADR when the id matches |
+| `docs/skill-index.toon` | `name`, `kind`, `order`, `files`, `names` | Installed skills whose frontmatter `kind` is `language` or `check` |
+
+The skill index is the installed set under `.claude/skills/`. In this collection, before install, it is `skills/`. It does not copy skill prose. A language skill sets `files` to extensions and `names` to exact filenames such as `Makefile`. A check skill sets `order`. `plan` and `review` follow that order. `develop` invokes the language row whose `files` or `names` match the files in hand.
+
+`python3 .claude/skills/record/scripts/ids.py` is separate. It checks ids. It does not write a TOON file.

@@ -54,6 +54,16 @@ class SkillCollectionTest(unittest.TestCase):
             self.assertNotIn("Cursor", text)
             self.assertNotIn(".agents/", text)
 
+    def test_make_reaches_the_toon_target(self):
+        index = (SKILLS / "record" / "index.mk").read_text(encoding="utf-8")
+        self.assertIn("toon:", index)
+        self.assertIn("scripts/toon.py", index)
+        for makefile in (
+            SKILLS / "project-setup" / "project.mk",
+            SKILLS / "github-pipeline" / "sdlc.mk",
+        ):
+            self.assertIn("-include .claude/skills/record/index.mk", makefile.read_text(encoding="utf-8"))
+
 
 if __name__ == "__main__":
     unittest.main()

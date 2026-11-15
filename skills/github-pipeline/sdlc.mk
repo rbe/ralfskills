@@ -323,4 +323,6 @@ cleanup-actions-artifacts: ## Match CI: delete artifacts at least one hour old, 
 	printf '# cleanup-actions-artifacts\n\nStatus: %s\nDeleted: %s\n\n%s\n' "$$word" "$$count" "$$reason" > build/summaries/cleanup-actions-artifacts.md; \
 	echo "cleanup-actions-artifacts: $$reason"
 
+-include .claude/skills/record/index.mk
+
 endif

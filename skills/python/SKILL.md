@@ -1,6 +1,8 @@
 ---
 name: python
 description: Python. Use when python is installed and the files in hand are Python. Tests run through make. Type hints are on public signatures. The stage skill still applies. A framework named in CLAUDE.md is not a reason to skip this skill.
+kind: language
+files: [py]
 ---
 
 # Python

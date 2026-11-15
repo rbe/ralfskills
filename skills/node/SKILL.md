@@ -1,6 +1,8 @@
 ---
 name: node
 description: Node and TypeScript. Use when node is installed and the files in hand are JavaScript or TypeScript. Tests and installs run through make. A framework named in CLAUDE.md is a reference file beside this skill. The stage skill still applies.
+kind: language
+files: [js, jsx, ts, tsx, mjs, cjs]
 ---
 
 # Node

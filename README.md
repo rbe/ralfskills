@@ -29,6 +29,8 @@ The `name` in each skill's frontmatter matches its directory. A project installs
 
 `project-setup` and `github-pipeline` each have setup mode and report mode, written in the skill. Setup mode changes only what is missing or off the contract. Report mode names what matches and what is missing, and it changes nothing.
 
+`make toon` writes the ADR index and the skill index. `project.mk` and `sdlc.mk` include that target from `record` when the skill is installed, and `make setup` runs it first. Python reads the frontmatter. Make is the only way a project runs it.
+
 ## How APM loads them
 
 `apm install` reads every `skills/<name>/` directory and copies it to `.claude/skills/<name>/`, including makefiles, `references/`, `scripts/`, and `templates/` inside the skills. A root `apm.yml` is optional. APM fills in metadata when the file is absent.

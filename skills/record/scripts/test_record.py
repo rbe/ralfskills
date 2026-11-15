@@ -60,6 +60,38 @@ class IdsTest(unittest.TestCase):
         self.assertTrue(errors)
 
 
+skill_index = load("skill_index", HERE / "skill_index.py")
+
+
+class SkillIndexTest(unittest.TestCase):
+    def test_rows_come_from_kind_and_installed_skills_win(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            bundled = root / "skills" / "jvm"
+            bundled.mkdir(parents=True)
+            (bundled / "SKILL.md").write_text("---\nname: jvm\nkind: language\nfiles: [java]\n---\n", encoding="utf-8")
+            installed = root / ".claude" / "skills" / "node"
+            installed.mkdir(parents=True)
+            (installed / "SKILL.md").write_text(
+                "---\nname: node\nkind: language\nfiles: [js, ts]\n---\n",
+                encoding="utf-8",
+            )
+            check = root / ".claude" / "skills" / "security"
+            check.mkdir(parents=True)
+            (check / "SKILL.md").write_text("---\nname: security\nkind: check\norder: 10\n---\n", encoding="utf-8")
+            plain = root / ".claude" / "skills" / "plan"
+            plain.mkdir(parents=True)
+            (plain / "SKILL.md").write_text("---\nname: plan\ndescription: Grill.\n---\n", encoding="utf-8")
+            found = skill_index.rows(root)
+            self.assertEqual([row["name"] for row in found], ["security", "node"])
+            text = skill_index.render(found)
+            self.assertIn("skill_index[2]{name,kind,order,files,names}:", text)
+            self.assertIn("security,check,10,,", text)
+            self.assertIn("node,language,,js;ts,", text)
+            self.assertNotIn("jvm", text)
+            self.assertNotIn("Grill", text)
+
+
 class AdrIndexTest(unittest.TestCase):
     def test_index_lists_adr_links_and_not_skill_prose(self):
         with tempfile.TemporaryDirectory() as tmp:

@@ -1,6 +1,9 @@
 ---
 name: shell
 description: POSIX shell inside a Make recipe. Use when shell is installed and the change is a recipe or a shell command. Make 3.81 rules are project-setup. Do not add a shell-script wrapper. The stage skill still applies.
+kind: language
+files: [sh]
+names: [Makefile]
 ---
 
 # Shell
