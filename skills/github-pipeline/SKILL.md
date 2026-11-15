@@ -1,5 +1,5 @@
 ---
-name: common-sdlc
+name: github-pipeline
 description: Apply or check the common SDLC setup. Make is the interface, one GitHub workflow runs setup then build, test, and docs, then publish, then report, and versions come from vMAJOR.MINOR.PATCH git tags plus the run number. Use when adding CI or a Makefile, aligning a pipeline, renaming targets, changing publish or versioning, or fixing artifact storage. The shared logic is one makefile, sdlc.mk, plus Node and Gradle templates. No shell scripts.
 ---
 
