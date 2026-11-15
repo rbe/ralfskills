@@ -58,17 +58,65 @@ class SkillCollectionTest(unittest.TestCase):
         index = (SKILLS / "record" / "index.mk").read_text(encoding="utf-8")
         self.assertIn("toon:", index)
         self.assertIn("$(PYTHON)", index)
-        runner = (SKILLS / "project-setup" / "podman-python.mk").read_text(encoding="utf-8")
+        runner = (SKILLS / "project-setup" / "podman-python.mk").read_text(
+            encoding="utf-8"
+        )
         self.assertIn("podman run", runner)
         self.assertIn("PYTHON_IMAGE", runner)
-        gradle = (SKILLS / "github-pipeline" / "templates" / "Makefile.gradle").read_text(encoding="utf-8")
+        gradle = (
+            SKILLS / "github-pipeline" / "templates" / "Makefile.gradle"
+        ).read_text(encoding="utf-8")
         self.assertIn("$(PYTHON) scripts/render-docs.py", gradle)
         self.assertNotIn("python3 scripts/render-docs.py", gradle)
         for makefile in (
             SKILLS / "project-setup" / "project.mk",
             SKILLS / "github-pipeline" / "sdlc.mk",
         ):
-            self.assertIn("-include .claude/skills/record/index.mk", makefile.read_text(encoding="utf-8"))
+            self.assertIn(
+                "-include .claude/skills/record/index.mk",
+                makefile.read_text(encoding="utf-8"),
+            )
+
+    def test_plan_names_the_boundary_and_the_pattern(self):
+        text = (SKILLS / "plan" / "SKILL.md").read_text(encoding="utf-8")
+        self.assertIn("who owns state", text)
+        self.assertIn("what may call what", text)
+
+    def test_develop_stops_until_lint_and_test_pass(self):
+        text = (SKILLS / "develop" / "SKILL.md").read_text(encoding="utf-8")
+        self.assertIn("`make lint` and `make test`", text)
+        self.assertIn("Do not write a linter.", text)
+        self.assertIn("one integration entry", text)
+
+    def test_linters_are_existing_tools(self):
+        node = (SKILLS / "node" / "SKILL.md").read_text(encoding="utf-8")
+        python = (SKILLS / "python" / "SKILL.md").read_text(encoding="utf-8")
+        shell = (SKILLS / "shell" / "SKILL.md").read_text(encoding="utf-8")
+        java = (SKILLS / "jvm" / "references" / "java.md").read_text(encoding="utf-8")
+        self.assertIn("ESLint", node)
+        self.assertIn("Prettier", node)
+        self.assertIn("Ruff", python)
+        self.assertIn("shellcheck", shell)
+        self.assertIn("shfmt", shell)
+        self.assertIn("Checkstyle", java)
+        self.assertIn("google-java-format", java)
+        self.assertFalse((SKILLS / "project-setup" / "scripts").exists())
+
+    def test_api_design_covers_a_module_export(self):
+        text = (SKILLS / "api-design" / "SKILL.md").read_text(encoding="utf-8")
+        self.assertIn("What is exported?", text)
+        self.assertIn("What stays internal?", text)
+        self.assertIn(
+            "What is the resource, the verb, and the status on success?", text
+        )
+
+    def test_coverage_is_the_diff_report(self):
+        text = (SKILLS / "project-setup" / "SKILL.md").read_text(encoding="utf-8")
+        tools = (SKILLS / "project-setup" / "tools.mk").read_text(encoding="utf-8")
+        self.assertIn("diff-cover", text)
+        self.assertIn("repository-wide percentage", text)
+        self.assertIn("diff-cover==", tools)
+        self.assertIn("editorconfig-checker", tools)
 
 
 if __name__ == "__main__":

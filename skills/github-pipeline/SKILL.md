@@ -178,7 +178,7 @@ The artifact quota is shared by every repository on the account. One repo that k
 
 ## Report and packaging
 
-Each job uploads `report-<job>` with `build/logs` and `build/summaries`, and `test` also uploads results and coverage. `report` downloads `report-*` into `build/inputs` and runs `make report`. `build/report/index.md` is the entry point.
+Each job uploads `report-<job>` with `build/logs` and `build/summaries`, and `test` also uploads results and `build/coverage`. That coverage file is the diff-cover report of the lines this change touched, not a repository-wide percentage. The test job runs `make editorconfig`, `make format`, `make lint`, `make test`, `make integration`, and `make coverage`. `report` downloads `report-*` into `build/inputs` and runs `make report`. `build/report/index.md` is the entry point.
 
 A shipment is a binary or a container image. The image copies named files, not the work tree. `.containerignore` keeps out `.git`, `.github`, `.claude/`, `CLAUDE.md`, `docs/`, `build/`, `node_modules`, `data/`, `.env`, `.env.*`, and `*.tar`. Example data ships only from `examples/` when the path and the name say it is an example. `.claude/skills/` is committed so Make can include it, and the image still excludes `.claude/`. `.gitignore` keeps build output, image tars, `data/`, and `.env` out of git.
 

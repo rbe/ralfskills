@@ -53,7 +53,11 @@ def frontmatter(text):
         if value in ("", "[]"):
             data[key] = []
         elif value.startswith("[") and value.endswith("]"):
-            data[key] = [item.strip().strip("'\"") for item in value[1:-1].split(",") if item.strip()]
+            data[key] = [
+                item.strip().strip("'\"")
+                for item in value[1:-1].split(",")
+                if item.strip()
+            ]
         else:
             data[key] = value.strip("'\"")
     return data
@@ -64,7 +68,7 @@ def cell(value):
         text = ";".join(value)
     else:
         text = "" if value is None else str(value)
-    if any(character in text for character in ",\"\n"):
+    if any(character in text for character in ',"\n'):
         return '"' + text.replace('"', '""') + '"'
     return text
 
@@ -82,13 +86,19 @@ def rows(root):
         order = data.get("order", "")
         if isinstance(order, list):
             order = ""
-        found.append({
-            "name": data.get("name", path.parent.name),
-            "kind": kind,
-            "order": str(order),
-            "files": data.get("files", []) if isinstance(data.get("files", []), list) else [],
-            "names": data.get("names", []) if isinstance(data.get("names", []), list) else [],
-        })
+        found.append(
+            {
+                "name": data.get("name", path.parent.name),
+                "kind": kind,
+                "order": str(order),
+                "files": data.get("files", [])
+                if isinstance(data.get("files", []), list)
+                else [],
+                "names": data.get("names", [])
+                if isinstance(data.get("names", []), list)
+                else [],
+            }
+        )
 
     def sort_key(row):
         try:

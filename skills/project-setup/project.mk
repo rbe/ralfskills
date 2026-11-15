@@ -33,7 +33,11 @@
 #   BREW_TOOLS       extra tools setup installs. jq is always included
 #   SETUP_CMD        how this project resolves dependencies
 #   BUILD_CMD        how this project produces the artifact
-#   TEST_CMD         how this project runs the tests
+#   TEST_CMD         how this project runs the unit tests
+#   FORMAT_CMD       the one formatter. The language skill names the tool
+#   LINT_CMD         the one linter. The language skill names the tool
+#   INTEGRATION_CMD  the one integration entry
+#   COVERAGE_CMD     writes build/coverage/diff.md for lines this change touched
 #   RENDER_DOCS      1 when this repository renders docs
 #   DOCS_CMD         the renderer, required when RENDER_DOCS is 1
 #   PUBLISH_IMAGE    1 when an image is published
@@ -44,13 +48,14 @@ PROJECT_MK := 1
 
 PROJECT_MK_DIR := $(dir $(lastword $(MAKEFILE_LIST)))
 include $(PROJECT_MK_DIR)podman-python.mk
+include $(PROJECT_MK_DIR)tools.mk
 
 HELP_LEAD ?= Make is the only interface. A target does the same thing locally and in CI.
 REGISTRY ?= ghcr.io
 
 .DEFAULT_GOAL := help
 
-.PHONY: help setup build test
+.PHONY: help setup build test editorconfig format lint integration coverage
 
 help: ## Show the targets
 	@printf '%s\n' "$(HELP_LEAD)"
@@ -98,13 +103,51 @@ build: ## Produce the artifact
 	$(BUILD_CMD)
 
 # Stub. The project sets TEST_CMD. Empty fails the target.
-test: ## Run the tests
-	@set -eu; \
-	if [ -z "$(TEST_CMD)" ]; then \
-	  printf '%s\n' "test: stub. Set TEST_CMD before the include. Run this project's tests." >&2; \
-	  exit 1; \
-	fi; \
+# test is the unit tests. integration is the one integration entry.
+test: ## Run the unit tests
+ifeq ($(strip $(TEST_CMD)),)
+	@printf '%s\n' "test: stub. Set TEST_CMD before the include. Run this project's unit tests." >&2
+	@exit 1
+else
 	$(TEST_CMD)
+endif
+
+editorconfig: ## Check files against .editorconfig
+	$(EDITORCONFIG)
+
+format: ## Run the one formatter
+ifeq ($(strip $(FORMAT_CMD)),)
+	@printf '%s\n' "format: stub. Set FORMAT_CMD before the include. One existing formatter." >&2
+	@exit 1
+else
+	$(FORMAT_CMD)
+endif
+
+lint: ## Run the one linter
+ifeq ($(strip $(LINT_CMD)),)
+	@printf '%s\n' "lint: stub. Set LINT_CMD before the include. One existing linter." >&2
+	@exit 1
+else
+	$(LINT_CMD)
+endif
+
+integration: ## Run the one integration entry
+ifeq ($(strip $(INTEGRATION_CMD)),)
+	@printf '%s\n' "integration: stub. Set INTEGRATION_CMD before the include. One integration entry." >&2
+	@exit 1
+else
+	$(INTEGRATION_CMD)
+endif
+
+# COVERAGE_CMD writes build/coverage/diff.md. diff-cover is DIFF_COVER in tools.mk.
+coverage: ## Report the lines this change touched
+ifeq ($(strip $(COVERAGE_CMD)),)
+	@printf '%s\n' "coverage: stub. Set COVERAGE_CMD before the include. Write build/coverage/diff.md for the lines this change touched." >&2
+	@exit 1
+else
+	mkdir -p build/coverage
+	$(COVERAGE_CMD)
+endif
 
 # Stub. Set RENDER_DOCS=1 only when this repository renders docs.
 # Marker `# help-docs`: help lists this target only when RENDER_DOCS is 1.

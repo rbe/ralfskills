@@ -18,4 +18,5 @@ files: [java, groovy, gradle, kts]
 
 1. Read the reference that matches the file: `references/java.md`, `references/groovy.md`, `references/grails.md`, or `references/gradle.md`.
 2. `make test` runs the tests. `make build` runs Gradle. The workflow does not call Gradle itself.
-3. Podman, XDG paths, and what a shipment may contain are `project-setup`.
+3. Do not write a linter. Java's formatter is google-java-format and its linter is Checkstyle. Groovy's linter is CodeNarc. `make coverage` runs JaCoCo's XML through diff-cover. The report is the lines this change touched. Do not use a repository-wide percentage.
+4. Podman, XDG paths, and what a shipment may contain are `project-setup`.

@@ -1,6 +1,6 @@
 ---
 name: project-setup
-description: Apply or check the Make contract in setup mode or report mode. Make is the only interface, help is the default goal, and a target does the same thing locally and in CI. Use setup mode when adding a Makefile, naming setup, build, test, docs, or login, moving Gradle, npm, Podman, python, or tar into a target, or installing Homebrew tools such as jq. Setup changes only what is missing or off the contract and leaves a target the project already filled in. Use report mode to fill templates/contract-report.md and name what matches and what is missing, without changing the project. Stands alone. The shared makefile is project.mk. A repository that does not publish through GitHub installs only this skill.
+description: Apply or check the Make contract in setup mode or report mode. Make is the only interface, help is the default goal, and a target does the same thing locally and in CI. Use setup mode when adding a Makefile, naming setup, build, test, docs, or login, moving Gradle, npm, Podman, python, or tar into a target, or installing Homebrew tools such as jq. Setup also writes EditorConfig and the targets format, lint, integration, and coverage. The formatter and the linter are existing tools the language skill names. Setup changes only what is missing or off the contract and leaves a target the project already filled in. Use report mode to fill templates/contract-report.md and name what matches and what is missing, without changing the project. Stands alone. The shared makefile is project.mk. A repository that does not publish through GitHub installs only this skill.
 ---
 
 # Project setup
@@ -81,7 +81,12 @@ A project that uses this standard uses these names.
 | --- | --- |
 | `setup` | Always. Install the standard tools, then resolve dependencies |
 | `build` | Always. Produce the artifact |
-| `test` | Always. Run the tests |
+| `test` | Always. Run the unit tests |
+| `editorconfig` | Always. Check the tree with editorconfig-checker |
+| `format` | Always. Run the one formatter |
+| `lint` | Always. Run the one linter |
+| `integration` | Always. The one integration entry |
+| `coverage` | Always. diff-cover report of the lines this change touched |
 | `docs` | Only when the repository renders docs |
 | `login` | Only when an image is published. Reads `REGISTRY_USER` and `REGISTRY_TOKEN` and logs in to `REGISTRY` |
 
@@ -97,6 +102,9 @@ The project Makefile sets the variables, then includes `.claude/skills/project-s
 SETUP_CMD = npm ci
 BUILD_CMD = npm run build
 TEST_CMD = npm test
+FORMAT_CMD = npm exec -- prettier --check .
+LINT_CMD = npm exec -- eslint .
+INTEGRATION_CMD = npm run integration
 RENDER_DOCS = 1
 DOCS_CMD = node scripts/render-docs.mjs docs build/docs
 PUBLISH_IMAGE = 1
@@ -113,7 +121,11 @@ Set these before the include. `RENDER_DOCS` and `PUBLISH_IMAGE` are read while `
 | `BREW_TOOLS` | Extra tools `setup` installs. `jq` is always on the list |
 | `SETUP_CMD` | How this project resolves dependencies. Empty fails `setup` |
 | `BUILD_CMD` | How this project produces the artifact. Empty fails `build` |
-| `TEST_CMD` | How this project runs the tests. Empty fails `test` |
+| `TEST_CMD` | How this project runs the unit tests. Empty fails `test` |
+| `FORMAT_CMD` | The one formatter. Empty fails `format`. The language skill names the tool |
+| `LINT_CMD` | The one linter. Empty fails `lint`. The language skill names the tool |
+| `INTEGRATION_CMD` | The one integration entry. Empty fails `integration` |
+| `COVERAGE_CMD` | Writes `build/coverage/diff.md`. Empty fails `coverage` |
 | `RENDER_DOCS` | `1` when this repository renders docs. Otherwise there is no `docs` target |
 | `DOCS_CMD` | The renderer. Empty fails `docs` |
 | `PUBLISH_IMAGE` | `1` when an image is published. Otherwise there is no `login` target |
@@ -149,6 +161,17 @@ GNU Make 3.81, including the macOS system make.
 - No Make 4 functions (`$(file ...)`, `$(guile ...)`, `!=`).
 - No shell-script wrapper. The recipe in the Makefile is the command.
 
+## Quality targets
+
+Setup mode adds these when they are missing. Stop at the first step that cannot be finished.
+
+1. Write `.editorconfig` from `templates/editorconfig` when the file is missing. `editorconfig` runs editorconfig-checker. Stop when the file cannot be written. Do not take a later step.
+2. `format` is one formatter, the tool the language skill names. Set `FORMAT_CMD` when it is empty and that tool is already the project's. Stop when a second formatter is present, or when this step cannot name the tool. Do not write a formatter. Do not take a later step.
+3. `lint` is one linter, the tool the language skill names. Set `LINT_CMD` the same way. Stop when a second linter is present, or when this step cannot name the tool. Do not write a linter. Do not take a later step.
+4. `test` runs the unit tests. Leave an integration test out of `TEST_CMD`. Stop when the unit tests have no command and no recipe. Do not take a later step.
+5. `integration` is the one integration entry. Set `INTEGRATION_CMD` when it is empty. Stop when a second integration target exists. Do not take a later step.
+6. `coverage` writes `build/coverage/diff.md` through diff-cover, for the lines this change touched. It does not apply a repository-wide percentage. `COVERAGE_CMD` produces that report. The language skill names the coverage tool that feeds diff-cover.
+
 ## Check
 
 The repository fails this contract when:
@@ -160,5 +183,10 @@ The repository fails this contract when:
 - the Makefile does not include `.claude/skills/project-setup/project.mk` before any target, unless it includes `.claude/skills/github-pipeline/sdlc.mk` instead, or a root `project.mk` is still the include
 - the Makefile uses `.ONESHELL` or a Make 4 function, or the standard targets call out to a shell script
 - `setup` does not install `jq` through Homebrew when `brew` is on `PATH`. A tool already on `PATH` stays. A missing tool and no Homebrew fails `setup`
+- `.editorconfig` is missing, or `editorconfig` does not run editorconfig-checker
+- `format` or `lint` is missing, a second formatter or a second linter is a target, or either target runs a linter or formatter written for this project
+- `integration` is missing or is not the only integration entry
+- `coverage` does not write `build/coverage/diff.md` for the lines this change touched, or the result is a repository-wide percentage
+- CI runs a formatter, a linter, a test, or coverage by any command other than `make <target>`
 
 Report mode records each of these in `templates/contract-report.md`. Setup mode repairs a missing file, a missing include, or an empty command variable. It leaves a target the project already filled in.

@@ -1,6 +1,7 @@
 # Gradle app delivered as a container image and a GitHub release of the JAR.
 # Make contract: project-setup. help is the default goal. The target
-# names are setup, build, test, docs, and login. Gradle, npm, Podman,
+# names are setup, build, test, editorconfig, format, lint, integration,
+# coverage, docs, and login. Gradle, npm, Podman,
 # python, and tar run inside those targets. The Gradle case is build:
 # that target runs Gradle. The workflow runs `make build`.
 # GitHub makefile: include sdlc.mk from the installed skill before any
@@ -32,8 +33,32 @@ setup: ## Match CI: resolve Gradle dependencies into the Gradle cache
 build: ## Match CI: build the runnable JAR and stage it in build/dist
 	@$(call SDLC_LOG,build,_build)
 
-test: ## Match CI: tests, JUnit XML, and coverage under build/
+test: ## Match CI: unit tests, JUnit XML under build/
 	@$(call SDLC_LOG,test,_test)
+
+.PHONY: editorconfig format lint integration coverage
+
+editorconfig: ## Check .editorconfig
+	$(EDITORCONFIG)
+
+format: ## Run google-java-format, the one formatter
+	$(GRADLE) spotlessCheck
+
+lint: ## Run Checkstyle, the one linter
+	$(GRADLE) checkstyleMain
+
+integration: ## Run the one integration entry
+	$(GRADLE) integrationTest
+
+coverage: ## diff-cover report of the lines this change touched
+	@set -eu; \
+	mkdir -p build/coverage; \
+	$(GRADLE) test jacocoTestReport; \
+	base=$$(git merge-base HEAD origin/main 2>/dev/null || printf '%s' HEAD); \
+	git diff "$$base" > build/coverage/change.diff; \
+	report=$$(find build -name jacocoTestReport.xml | head -n 1); \
+	test -n "$$report"; \
+	REPORT="$$report" $(DIFF_COVER)
 
 docs: ## Match CI: render docs/ to HTML under build/docs
 	@$(call SDLC_LOG,docs,_docs)
@@ -83,8 +108,8 @@ _build:
 
 _test:
 	@set -eu; \
-	$(GRADLE) test jacocoTestReport; \
-	printf '# test\n\nJUnit XML in build/test-results. Coverage in build/reports/jacoco.\n' > build/summaries/test.md
+	$(GRADLE) test; \
+	printf '# test\n\nJUnit XML in build/test-results.\n' > build/summaries/test.md
 
 _docs:
 	@set -eu; \

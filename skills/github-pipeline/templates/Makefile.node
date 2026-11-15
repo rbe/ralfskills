@@ -1,6 +1,7 @@
 # Node app delivered as a container image.
 # Make contract: project-setup. help is the default goal. The target
-# names are setup, build, test, docs, and login. Gradle, npm, Podman,
+# names are setup, build, test, editorconfig, format, lint, integration,
+# coverage, docs, and login. Gradle, npm, Podman,
 # python, and tar run inside those targets.
 # GitHub makefile: set the product values and include sdlc.mk from the
 # installed skill before any target. sdlc.mk already defines help, so
@@ -35,8 +36,33 @@ setup: ## Match CI: npm ci, npm audit (a warning), pack node_modules
 build: ## Match CI: build the app, smoke one image, save the image tar
 	@$(call SDLC_LOG,build,_build)
 
-test: ## Match CI: tests, with results and coverage under build/
+test: ## Match CI: unit tests
 	@$(call SDLC_LOG,test,_test)
+
+.PHONY: editorconfig format lint integration coverage
+
+editorconfig: ## Check .editorconfig
+	$(EDITORCONFIG)
+
+format: ## Run Prettier, the one formatter
+	$(NODE_RUN) npm exec -- prettier --check .
+
+lint: ## Run ESLint, the one linter
+	$(NODE_RUN) npm exec -- eslint .
+
+integration: ## Run the one integration entry
+	$(NODE_RUN) npm run integration
+
+coverage: ## diff-cover report of the lines this change touched
+	@set -eu; \
+	mkdir -p build/coverage; \
+	if [ ! -d node_modules ]; then tar -xf build/deps/node_modules.tar; fi; \
+	$(NODE_RUN) npm test -- --coverage; \
+	base=$$(git merge-base HEAD origin/main 2>/dev/null || printf '%s' HEAD); \
+	git diff "$$base" > build/coverage/change.diff; \
+	report=$$(find . -name lcov.info -o -name coverage.xml | head -n 1); \
+	test -n "$$report"; \
+	REPORT="$$report" $(DIFF_COVER)
 
 docs: ## Match CI: render docs/ to HTML under build/docs
 	@$(call SDLC_LOG,docs,_docs)
@@ -103,8 +129,8 @@ _test:
 	@set -eu; \
 	if [ ! -d node_modules ]; then tar -xf build/deps/node_modules.tar; fi; \
 	mkdir -p build; \
-	$(NODE_RUN) npm test -- --coverage; \
-	printf '# test\n\nnpm test with coverage.\n' > build/summaries/test.md
+	$(NODE_RUN) npm test; \
+	printf '# test\n\nnpm test.\n' > build/summaries/test.md
 
 _docs:
 	@set -eu; \
