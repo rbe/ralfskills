@@ -18,7 +18,8 @@
 # The shell is POSIX sh. There is no shell-script wrapper. A shell `$`
 # in a command variable is `$$`.
 #
-# help is the default goal. It lists every target in this file that has
+# help is the default goal, set again after the included fragments.
+# It lists every target in this file that has
 # a ## comment. docs and login are listed only when that target exists.
 # The `# help-docs` and `# help-login` markers are how help knows.
 #
@@ -52,8 +53,6 @@ include $(PROJECT_MK_DIR)tools.mk
 
 HELP_LEAD ?= Make is the only interface. A target does the same thing locally and in CI.
 REGISTRY ?= ghcr.io
-
-.DEFAULT_GOAL := help
 
 .PHONY: help setup build test editorconfig format lint integration coverage
 
@@ -177,5 +176,8 @@ login: ## Log in to the registry
 endif
 
 -include .claude/skills/record/index.mk
+
+# After the fragments this file includes. A fragment must not replace it.
+.DEFAULT_GOAL := help
 
 endif

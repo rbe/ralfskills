@@ -58,7 +58,6 @@ GIT_TAG = $(shell $(GIT_DESCRIBE) 2>/dev/null)
 
 # Use $(THIS_MAKE) in a recipe that must not run under `make -n`.
 # A recipe that says $(MAKE) is executed even during a dry run.
-.DEFAULT_GOAL := help
 THIS_MAKE := $(MAKE)
 
 # setup, build, test, and the publish targets are phony here so a build/
@@ -329,5 +328,8 @@ cleanup-actions-artifacts: ## Match CI: delete artifacts at least one hour old, 
 	echo "cleanup-actions-artifacts: $$reason"
 
 -include .claude/skills/record/index.mk
+
+# After the fragments this file includes. A fragment must not replace it.
+.DEFAULT_GOAL := help
 
 endif

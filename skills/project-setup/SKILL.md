@@ -139,7 +139,7 @@ A shell `$` in a command is `$$`.
 
 Defining `setup`, `build`, or `test` again replaces the recipe from `project.mk`.
 
-`project.mk` marks `help`, `setup`, `build`, and `test` `.PHONY`, and `docs` and `login` when they exist. A `build/` directory would otherwise satisfy `build`. `project.mk` sets `.DEFAULT_GOAL` to `help`.
+`project.mk` marks `help`, `setup`, `build`, and `test` `.PHONY`, and `docs` and `login` when they exist. A `build/` directory would otherwise satisfy `build`. `project.mk` sets `.DEFAULT_GOAL` to `help` after the fragments it includes. `podman-python.mk`, `tools.mk`, and `record`'s `index.mk` set the same goal and do not set another. A project Makefile does not set `.DEFAULT_GOAL` to another target.
 
 A repository that includes `.claude/skills/github-pipeline/sdlc.mk` already has `help` and does not also include `project.mk`. That repository defines its own project targets.
 
