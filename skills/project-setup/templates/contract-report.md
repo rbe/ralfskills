@@ -20,13 +20,13 @@ Missing:
 
 ## Checks
 
-The sha256 for `project.mk` is the one in the Check section of `SKILL.md`. A repository that includes `sdlc.mk` and leaves `project.mk` out matches that row: `sdlc.mk` already provides `help`.
+The include is `.claude/skills/project-setup/project.mk`. A repository that includes `.claude/skills/github-pipeline/sdlc.mk` and leaves `project.mk` out matches that row: `sdlc.mk` already provides `help`.
 
 | Check | State | Evidence |
 | --- | --- | --- |
 | `make` with no goal runs `help` | | |
-| `project.mk` is this skill's copy, or `sdlc.mk` provides `help` and `project.mk` is absent | | |
-| The include sits before any target (`project.mk`, or `sdlc.mk` when that file provides `help`) | | |
+| The Makefile includes `.claude/skills/project-setup/project.mk`, or `sdlc.mk` from `github-pipeline` when that file provides `help` | | |
+| The include sits before any target | | |
 | `setup`, `build`, and `test` exist and are `.PHONY` | | |
 | `docs` exists when the repository renders docs, and is absent otherwise | | |
 | `login` exists when an image is published, and is absent otherwise | | |

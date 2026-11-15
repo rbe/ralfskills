@@ -1,5 +1,7 @@
-# Shared pipeline makefile. Copy it unchanged to the repository root as
-# sdlc.mk and include it from the project Makefile. The project sets
+# Shared pipeline makefile. A project includes this file from the
+# installed skill and does not keep a second copy at the root.
+#     include .claude/skills/github-pipeline/sdlc.mk
+# The project sets
 # IMAGE, PACKAGE, and KEEP_VERSIONS before the include, and it owns the
 # project targets (setup, build, test, docs, publish-*, image, run, stop).
 #

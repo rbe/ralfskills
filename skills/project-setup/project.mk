@@ -1,12 +1,10 @@
-# Shared makefile for the Make contract. Copy it unchanged to the
-# repository root as project.mk. The project Makefile sets the
-# variables below and includes this file before any target. It does
-# not define setup, build, or test again.
+# Shared makefile for the Make contract. A project includes this file
+# from the installed skill and does not keep a second copy at the root.
 #
 #     SETUP_CMD = npm ci
 #     BUILD_CMD = npm run build
 #     TEST_CMD = npm test
-#     include project.mk
+#     include .claude/skills/project-setup/project.mk
 #
 # Set RENDER_DOCS=1 when the repository renders docs, and
 # PUBLISH_IMAGE=1 when it publishes an image. Those targets are

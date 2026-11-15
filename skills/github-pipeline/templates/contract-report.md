@@ -28,7 +28,7 @@ Yes leaves the checks blank. No means the project publishes through GitHub, and 
 
 ## Checks
 
-The sha256 for `sdlc.mk` is the one in the Contract test section of `SKILL.md`.
+The include is `.claude/skills/github-pipeline/sdlc.mk`. A root `sdlc.mk` is off the contract.
 
 | Check | State | Evidence |
 | --- | --- | --- |
@@ -40,10 +40,9 @@ The sha256 for `sdlc.mk` is the one in the Contract test section of `SKILL.md`.
 | Version comes from a `vMAJOR.MINOR.PATCH` tag via `make version` | | |
 | `report` is last and has `!cancelled()` | | |
 | Uploads set `retention-days`: 1 for intermediates, 14 for `report` and rendered docs | | |
-| `sdlc.mk` is this skill's copy | | |
-| The Makefile includes `sdlc.mk` before any target and leaves `project.mk` out | | |
+| The Makefile includes `.claude/skills/github-pipeline/sdlc.mk` before any target and leaves `project.mk` out | | |
 | Runner is `ubuntu-26.04` | | |
-| `AGENTS.md`, `docs/pipeline-rules.md`, `docs/BUGS.md`, `docs/WAVES.md`, `docs/FEATURES.md`, `Containerfile`, `.containerignore`, `.gitignore`, `Makefile`, `sdlc.mk`, and `.github/workflows/ci.yml` are present | | |
+| `docs/pipeline-rules.md`, `Containerfile`, `.containerignore`, `.gitignore`, and `Makefile` are present. The image excludes development files and `data/` | | |
 | Each divergence names the rule, what differs, and why. None is a match | | |
 | No `.ONESHELL`, no Make 4 function, no shell-script wrapper. GNU Make 3.81 | | |
 

@@ -6,7 +6,7 @@ The shared part is the same in every repository. Change it everywhere or nowhere
 
 The Make contract is the project-setup skill. Make is the only interface. A person or an agent does the work through Make. `help` is the default goal. A target does the same thing on a laptop and in CI. The required targets are `setup`, `build`, and `test`. Add `docs` only when this repository renders docs, and `login` when it publishes an image. Gradle, npm, Podman, python, and tar run inside those targets.
 
-The GitHub contract is the github-pipeline skill. Podman is the only container engine. The toolchain runs in a pinned image, so the host needs make, Podman, git, and gh. The Node template pins Node 24. A Gradle project uses the JDK in its template. A project diverges by toolchain and writes that down. `sdlc.mk` at the repository root implements version, publish tags, cleanup, and report. It is byte-identical to the canonical copy in that skill. The project Makefile sets `IMAGE`, `PACKAGE`, and `KEEP_VERSIONS`, includes `sdlc.mk` before any target, and defines the project targets. That include already provides `help`, so this repository leaves `project.mk` out.
+The GitHub contract is the github-pipeline skill. Podman is the only container engine. The toolchain runs in a pinned image, so the host needs make, Podman, git, and gh. The Node template pins Node 24. A Gradle project uses the JDK in its template. A project diverges by toolchain and writes that down. The project Makefile sets `IMAGE`, `PACKAGE`, and `KEEP_VERSIONS`, includes `.claude/skills/github-pipeline/sdlc.mk` before any target, and defines the project targets. That include already provides `help`, so this repository leaves `project.mk` out. There is no root copy of `sdlc.mk`.
 
 There is one workflow, `.github/workflows/ci.yml`. A step is a checkout, an artifact upload or download, or `run: make <target>`. Jobs, in order: `setup`, then `build`, `test`, and `docs` beside each other, then `publish-container` (needs `build` and `test`), then `report`. A repository that releases a JAR adds `publish-github`, which also needs `build` and `test`. Each job runs the make target with its name.
 
@@ -18,7 +18,7 @@ Every upload sets `retention-days`: 1 for intermediates, 14 for `report` and ren
 
 `report` is last. It still runs when an earlier job fails or is skipped. It writes `build/report/index.md`.
 
-Packages and images contain the tested build only. `.containerignore` keeps out `.claude/`, `.cursor/`, `AGENTS.md`, `CLAUDE.md`, and `docs/`.
+Packages and images contain the tested build only: a binary or a container image. `.containerignore` keeps out `.claude/`, `CLAUDE.md`, `docs/`, and `data/`. Example data ships only from `examples/` when the path and the name say it is an example.
 
 ## This repository
 
