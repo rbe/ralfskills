@@ -1,6 +1,13 @@
 # Gradle app delivered as a container image and a GitHub release of the JAR.
+# Make contract: project-setup. help is the default goal. The target
+# names are setup, build, test, docs, and login. Gradle, npm, Podman,
+# python, and tar run inside those targets. The Gradle case is build:
+# that target runs Gradle. The workflow runs `make build`.
+# GitHub makefile: copy sdlc.mk from github-pipeline unchanged and include
+# it before any target. sdlc.mk already defines help, so leave project.mk
+# out. sdlc.mk adds version, publish tags, cleanup, and report.
 # A repo that does not publish a release deletes publish-github below and
-# drops it from SDLC_JOBS. Copy sdlc.mk unchanged.
+# drops it from SDLC_JOBS.
 
 NAME ?= app
 OWNER ?= owner

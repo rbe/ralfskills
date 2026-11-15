@@ -1,6 +1,11 @@
 # Node app delivered as a container image.
-# Set the product values, then include sdlc.mk before any target.
-# Copy sdlc.mk from the common-sdlc skill unchanged.
+# Make contract: project-setup. help is the default goal. The target
+# names are setup, build, test, docs, and login. Gradle, npm, Podman,
+# python, and tar run inside those targets.
+# GitHub makefile: copy sdlc.mk from github-pipeline unchanged, set the
+# product values, and include it before any target. sdlc.mk already
+# defines help, so leave project.mk out. sdlc.mk adds version, publish
+# tags, cleanup, and report.
 
 NAME ?= app
 OWNER ?= owner

@@ -2,9 +2,15 @@
 # the JAR.
 # Jobs: setup, then build, test, and docs beside each other, then
 # publish-container and publish-github (each needs build and test), then report.
+# The Make contract is the project-setup skill: help is the default goal.
+# setup, build, test, docs, and login are that skill's target names.
+# The jobs setup, build, test, and docs use those names. login is the
+# step `make login`, not its own job. This workflow calls make; it does
+# not define the contract.
 # A developer or agent can do everything this pipeline does through Make.
 # The YAML only checks out, uploads and downloads artifacts, and calls make.
-# Registry login is `make login`. It does not run Gradle, npm, podman, python, or tar.
+# Registry login is `make login`. Gradle, npm, podman, python, and tar run
+# inside the matching target.
 # The Gradle case is build: the build job runs `make build`, and that target
 # runs Gradle. The job does not call ./gradlew. setup, test, and docs are
 # the same kind of target. Between jobs only the tested JAR moves. test

@@ -1,25 +1,29 @@
 ---
 name: github-pipeline
-description: Apply or check the common SDLC setup. Make is the interface, one GitHub workflow runs setup then build, test, and docs, then publish, then report, and versions come from vMAJOR.MINOR.PATCH git tags plus the run number. Use when adding CI or a Makefile, aligning a pipeline, renaming targets, changing publish or versioning, or fixing artifact storage. The shared logic is one makefile, sdlc.mk, plus Node and Gradle templates. No shell scripts.
+description: Apply or check the GitHub delivery contract. One workflow runs setup, then build, test, and docs, then publish, then report. Versions come from a vMAJOR.MINOR.PATCH tag plus the run number. Use when adding CI, aligning a pipeline, changing publish or versioning, or fixing artifact storage. Depends on project-setup because each job name is a Make target. A Make-only repository does not install this skill. The shared makefile is sdlc.mk. No shell scripts.
 ---
 
-# Common SDLC
+# GitHub pipeline
 
-Developers and agents use Make. Pipelines follow one blueprint. A project diverges only when it has a different output or toolchain, and it writes that down.
+This skill owns the GitHub contract and the Make that implements it. `sdlc.mk` is that makefile: version, publish tags, cleanup, and report. Copy it to the repository root unchanged.
+
+It depends on `project-setup` only because a workflow calls `make`. The job names `setup`, `build`, `test`, and `docs` (when the repository renders docs) are real targets from that contract. `login` is the target the publish job runs, not its own job. A Make-only repository does not install this skill.
+
+A project diverges only when it has a different output or toolchain, and it writes that down.
 
 | File | Role |
 | --- | --- |
-| `sdlc.mk` | Shared makefile. Copy it to the repo root unchanged |
-| `templates/Makefile.node` | Node app, image only |
-| `templates/Makefile.gradle` | Gradle app, image plus a JAR release |
+| `sdlc.mk` | Version, publish tags, cleanup, and report. Copy it to the repo root unchanged |
+| `templates/Makefile.node` | Node app, image only. Make contract: `project-setup` |
+| `templates/Makefile.gradle` | Gradle app, image plus a JAR release. Make contract: `project-setup` |
 | `templates/ci.node.yml`, `templates/ci.gradle.yml` | `.github/workflows/ci.yml` |
-| `templates/pipeline-rules.md` | `docs/pipeline-rules.md` |
+| `templates/pipeline-rules.md` | `docs/pipeline-rules.md`. Points at `project-setup` for the Make contract |
 
 No shell script is shipped. Version, both cleanups, artifact cleanup, the report, logging, `help`, and `ci` are recipes in `sdlc.mk`. `gh api --jq` does the listing. A short `awk` plan inside the cleanup recipe picks what to keep. That stayed readable, so it did not become a script.
 
 ## How a repository uses it
 
-The project Makefile sets variables, includes `sdlc.mk` before any target, then defines project targets.
+The project Makefile sets variables, includes `sdlc.mk` before any target, then defines project targets. The target names, `help` as the default goal, and the rule that tools run inside targets are the `project-setup` contract.
 
 ```make
 IMAGE ?= ghcr.io/owner/name
@@ -51,6 +55,8 @@ A recipe that must not run under `make -n` calls `$(THIS_MAKE)`, not `$(MAKE)`. 
 
 ## Targets in sdlc.mk
 
+`help` is the `project-setup` default goal. This file defines it too, so one include is enough. The GitHub recipes are `version`, `publish-tags`, `cleanup-container-versions`, `cleanup-github-releases`, `cleanup-actions-artifacts`, and `report`. `ci` runs `SDLC_CI` and does not publish.
+
 | Target | Contract |
 | --- | --- |
 | `help` | Default goal. Lists every target that has a `##` comment |
@@ -64,13 +70,15 @@ A recipe that must not run under `make -n` calls `$(THIS_MAKE)`, not `$(MAKE)`. 
 
 `DRY_RUN=1` prints what a cleanup would delete and deletes nothing.
 
-The project defines `setup`, `build`, `test`, `docs`, `publish-container`, and, when it ships a release, `publish-github`. `publish-container` pushes every line of `publish-tags` and writes that version to `build/publish-version.txt`. On the default branch those lines are the version and `latest`. A manual publish from any other ref is the version only, and the cleanup targets then exit without deleting. `build` and `test` do the same work on a laptop and in CI. A laptop-only command gets its own name (`dev`, `verify`).
+`setup`, `build`, and `test` are required names from the `project-setup` contract. `docs` is required only when the repository renders docs, and `login` only when it publishes an image. `help` is the default goal. A target does the same thing locally and in CI. Gradle, npm, Podman, python, and tar run inside those targets. This skill depends on `project-setup` only because the workflow calls `make` and those job names are that contract's targets. `publish-container`, `publish-github`, and `report` are targets this skill adds.
 
-A developer or an agent can do everything the pipeline does through Make alone. Every workflow step that runs a tool (`gradle` or `./gradlew`, `npm`, `podman`, `python`, `tar`) is a Make target in the repository Makefile, not a shared target in `sdlc.mk`. The Gradle case is `build`: the job runs `make build`, and that target runs Gradle (`$(GRADLE) assemble` in the template, `./gradlew` when the repo sets `GRADLE=./gradlew`). The job does not call Gradle itself. `setup` resolves dependencies, `test` runs the test task, `docs` runs the renderer, and `publish-container` builds and pushes the image. Registry login is `login`: it reads `REGISTRY_USER` and `REGISTRY_TOKEN` and runs `podman login ghcr.io`. The publish job calls `make login` before `make publish-container`.
+The project also defines `publish-container` and, when it releases a JAR, `publish-github`. `publish-container` pushes every line of `publish-tags` and writes that version to `build/publish-version.txt`. On the default branch those lines are the version and `latest`. A manual publish from any other ref is the version only, and the cleanup targets then exit without deleting. A laptop-only command gets its own name (`dev`, `verify`).
+
+`sdlc.mk` also defines `help`, so a repository that includes it already meets the default goal. That repository does not include `project.mk` as well. The Gradle case is `build`: the job runs `make build`, and that target runs Gradle (`$(GRADLE) assemble` in the template, `./gradlew` when the repo sets `GRADLE=./gradlew`). The publish job runs `make login` before `make publish-container`. `login` reads `REGISTRY_USER` and `REGISTRY_TOKEN` and runs `podman login ghcr.io`.
 
 ## Workflow
 
-One file, `.github/workflows/ci.yml`, named `CI`. Job ids are the target names.
+One file, `.github/workflows/ci.yml`, named `CI`. Job ids are target names from the `project-setup` contract, plus `publish-container`, `publish-github` when the project releases a JAR, and `report`.
 
 ```
 setup ──┬── build ──┬── publish-container ──┐
@@ -80,7 +88,7 @@ setup ──┬── build ──┬── publish-container ──┐
 ```
 
 - Trigger: `push` on every branch, and `workflow_dispatch` with a `job` choice. No `pull_request` trigger. No tag trigger. After tagging `vX.Y.Z`, start `publish-container` from the Actions tab.
-- `publish-*` runs on a push to the default branch (`github.event.repository.default_branch`) or when that job is selected. It needs `build` and `test` to have succeeded.
+- `publish-*` runs on a push to the default branch (`github.event.repository.default_branch`) or when that job is selected by hand. A manual publish still runs `build` and `test`. It needs both to have succeeded. A push of a `v*` tag does not publish.
 - `report` uses `if: ${{ !cancelled() }}` and is last.
 - Cancel in-progress runs only when the push is not the default branch.
 - Permissions: `contents: read` at the top, `actions: write` on `setup`, `packages: write` on `publish-container`, `contents: write` on `publish-github`.
@@ -112,7 +120,7 @@ Each job uploads `report-<job>` with `build/logs` and `build/summaries`, and `te
 
 ## Required files
 
-`AGENTS.md` states the product, that the Makefile is the interface, that Podman is the only engine, the publish rule, and the packaging exclusion. `docs/pipeline-rules.md` comes from the template. `docs/BUGS.md`, `docs/WAVES.md`, and `docs/FEATURES.md` are the backlog. They live in `docs/`, not at the root. Also `Containerfile`, `.containerignore`, `Makefile`, `sdlc.mk`, and `.github/workflows/ci.yml`.
+`AGENTS.md` states the product, that the Makefile is the interface, that Podman is the only engine, the publish rule, and the packaging exclusion. `docs/pipeline-rules.md` comes from the template. `docs/BUGS.md`, `docs/WAVES.md`, and `docs/FEATURES.md` are the backlog. They live in `docs/`, not at the root. Also `Containerfile`, `.containerignore`, `Makefile`, `sdlc.mk`, and `.github/workflows/ci.yml`. The Makefile includes `sdlc.mk`. `project.mk` is the shared makefile from `project-setup` for a repository with no workflow, so this repository leaves it out.
 
 ## Divergence
 

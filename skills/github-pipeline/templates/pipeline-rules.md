@@ -4,11 +4,11 @@ The shared part is the same in every repository. Change it everywhere or nowhere
 
 ## Shared rules
 
-The Makefile is the interface. A laptop and CI run the same targets, and a target does the same thing in both places. The workflow calls `make` and moves artifacts. It holds no other logic. Podman is the only container engine. The toolchain runs in a pinned image, so the host needs make, Podman, git, and gh.
+The Make contract is the project-setup skill. Make is the only interface. A person or an agent does the work through Make. `help` is the default goal. A target does the same thing on a laptop and in CI. The required targets are `setup`, `build`, and `test`. Add `docs` only when this repository renders docs, and `login` when it publishes an image. Gradle, npm, Podman, python, and tar run inside those targets.
 
-`sdlc.mk` at the repository root is the shared makefile. It is byte-identical to the canonical copy. The project Makefile sets `IMAGE`, `PACKAGE`, and `KEEP_VERSIONS`, includes `sdlc.mk`, and defines the project targets.
+The GitHub contract is the github-pipeline skill. Podman is the only container engine. The toolchain runs in a pinned image, so the host needs make, Podman, git, and gh. `sdlc.mk` at the repository root implements version, publish tags, cleanup, and report. It is byte-identical to the canonical copy in that skill. The project Makefile sets `IMAGE`, `PACKAGE`, and `KEEP_VERSIONS`, includes `sdlc.mk` before any target, and defines the project targets. That include already provides `help`, so this repository leaves `project.mk` out.
 
-There is one workflow, `.github/workflows/ci.yml`. Jobs, in order: `setup`, then `build`, `test`, and `docs` beside each other, then `publish-container` (needs `build` and `test`), then `report`. A repository that ships a release asset adds `publish-github`, which also needs `build` and `test`. Each job runs the make target with its name.
+There is one workflow, `.github/workflows/ci.yml`. A step is a checkout, an artifact upload or download, or `run: make <target>`. Jobs, in order: `setup`, then `build`, `test`, and `docs` beside each other, then `publish-container` (needs `build` and `test`), then `report`. A repository that releases a JAR adds `publish-github`, which also needs `build` and `test`. Each job runs the make target with its name.
 
 `publish-*` runs on a push to the default branch and when `workflow_dispatch` selects it. A tag push does not start a run. Any other branch runs through `report` and does not publish. A manual publish runs `build` and `test` first. In-progress runs are cancelled only off the default branch.
 
