@@ -34,6 +34,9 @@
 ifndef SDLC_MK
 SDLC_MK := 1
 
+SDLC_MK_DIR := $(dir $(lastword $(MAKEFILE_LIST)))
+include $(SDLC_MK_DIR)../project-setup/podman-python.mk
+
 # Recipes call ${MAKE} from the shell. Make does not export this variable
 # unless asked, and a recipe that writes $(MAKE) is executed even by make -n.
 export MAKE

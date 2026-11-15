@@ -89,7 +89,7 @@ _test:
 _docs:
 	@set -eu; \
 	mkdir -p build/docs; \
-	if find docs -name '*.md' 2>/dev/null | grep -q .; then python3 scripts/render-docs.py docs build/docs; fi; \
+	if find docs -name '*.md' 2>/dev/null | grep -q .; then $(PYTHON) scripts/render-docs.py docs build/docs; fi; \
 	printf '# docs\n\n%s HTML files.\n' "$$(find build/docs -type f | wc -l | tr -d ' ')" > build/summaries/docs.md
 
 _publish-container:

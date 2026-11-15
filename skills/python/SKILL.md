@@ -16,7 +16,8 @@ files: [py]
 
 ## Work
 
-1. `make test` runs the tests. Dependencies resolve inside `make setup`.
-2. Public functions have type hints. A module does one job.
-3. A framework named in `CLAUDE.md` is read as a project skill. It does not replace this skill.
-4. Podman, XDG paths, and what a shipment may contain are `project-setup`.
+1. Do not run `python`, `python3`, `pip`, or a `.py` file on the host. An agent runs Python on this machine through Make. `make py ARGS='...'` is a one-off command. `make test` runs the tests. `make setup` resolves dependencies. CI runs those same targets. The container is Podman on the machine where Make is running.
+2. A command variable that calls Python uses `=` and `$(PYTHON)`, so it expands after `podman-python.mk` is included. `TEST_CMD = $(PYTHON) -m unittest` is the shape. `:=` expands too early.
+3. Public functions have type hints. A module does one job.
+4. A framework named in `CLAUDE.md` is read as a project skill. It does not replace this skill.
+5. `PYTHON_IMAGE` is set before the include. The default is in `project-setup`. XDG paths and what a shipment may contain are `project-setup`.

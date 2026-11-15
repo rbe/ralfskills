@@ -57,9 +57,13 @@ class SkillCollectionTest(unittest.TestCase):
     def test_make_reaches_the_toon_target(self):
         index = (SKILLS / "record" / "index.mk").read_text(encoding="utf-8")
         self.assertIn("toon:", index)
-        self.assertIn("podman run", index)
-        self.assertIn("PYTHON_IMAGE", index)
-        self.assertNotIn("\n\tpython3 ", index)
+        self.assertIn("$(PYTHON)", index)
+        runner = (SKILLS / "project-setup" / "podman-python.mk").read_text(encoding="utf-8")
+        self.assertIn("podman run", runner)
+        self.assertIn("PYTHON_IMAGE", runner)
+        gradle = (SKILLS / "github-pipeline" / "templates" / "Makefile.gradle").read_text(encoding="utf-8")
+        self.assertIn("$(PYTHON) scripts/render-docs.py", gradle)
+        self.assertNotIn("python3 scripts/render-docs.py", gradle)
         for makefile in (
             SKILLS / "project-setup" / "project.mk",
             SKILLS / "github-pipeline" / "sdlc.mk",

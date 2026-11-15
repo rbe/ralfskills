@@ -1,0 +1,26 @@
+# Python runs in Podman on the machine where Make runs. The host does
+# not need a Python install. Set PYTHON_IMAGE before the include to
+# pick another version. A one-off command is `make py ARGS='...'`.
+# Use `=` for a command variable that calls $(PYTHON), so it expands
+# after this file is included.
+
+ifndef PODMAN_PYTHON_MK
+PODMAN_PYTHON_MK := 1
+
+PYTHON_IMAGE ?= docker.io/library/python:3.13-slim
+PYTHON_UID := $(shell id -u)
+PYTHON_GID := $(shell id -g)
+
+PYTHON = podman run --rm --user $(PYTHON_UID):$(PYTHON_GID) \
+	-e PYTHONDONTWRITEBYTECODE=1 \
+	-v "$(CURDIR)":/work:Z -w /work \
+	$(PYTHON_IMAGE) python3
+
+.PHONY: py
+
+py: ## Run Python in Podman on this machine. Set ARGS.
+	@set -eu; \
+	if [ -z "$(ARGS)" ]; then printf '%s\n' "py: set ARGS to the Python arguments." >&2; exit 1; fi
+	$(PYTHON) $(ARGS)
+
+endif

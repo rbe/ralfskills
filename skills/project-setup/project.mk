@@ -42,6 +42,9 @@
 ifndef PROJECT_MK
 PROJECT_MK := 1
 
+PROJECT_MK_DIR := $(dir $(lastword $(MAKEFILE_LIST)))
+include $(PROJECT_MK_DIR)podman-python.mk
+
 HELP_LEAD ?= Make is the only interface. A target does the same thing locally and in CI.
 REGISTRY ?= ghcr.io
 

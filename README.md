@@ -29,7 +29,7 @@ The `name` in each skill's frontmatter matches its directory. A project installs
 
 `project-setup` and `github-pipeline` each have setup mode and report mode, written in the skill. Setup mode changes only what is missing or off the contract. Report mode names what matches and what is missing, and it changes nothing.
 
-`make toon` writes the ADR index and the skill index. `project.mk` and `sdlc.mk` include that target from `record` when the skill is installed, and `make setup` runs it first. Python reads the frontmatter inside Podman. Set `PYTHON_IMAGE` before the include to pick the version. The host does not need Python. Make is the only way a project runs it.
+`make toon` writes the ADR index and the skill index. `project.mk` and `sdlc.mk` include that target from `record` when the skill is installed, and `make setup` runs it first. Every Python command, including a one-off `make py ARGS='...'`, runs in Podman on the machine where Make runs. Set `PYTHON_IMAGE` before the include to pick the version. The host does not need Python.
 
 ## How APM loads them
 

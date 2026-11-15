@@ -135,6 +135,8 @@ A repository that includes `.claude/skills/github-pipeline/sdlc.mk` already has 
 
 `make build`, `make test`, and `make run` call Podman, on a laptop and in CI. Docker is not a second engine. A command that still runs on the host is a divergence: the rule, what differs, and why.
 
+Python is the same rule. `podman-python.mk` defines `$(PYTHON)`. An agent does not run `python3` on the host. A one-off command on this machine is `make py ARGS='...'`. A command variable uses `=` and `$(PYTHON)`. Set `PYTHON_IMAGE` before the include to pick the version.
+
 Config, data, state, and cache use the XDG directories on macOS and Linux. The variables are `XDG_CONFIG_HOME`, `XDG_DATA_HOME`, `XDG_STATE_HOME`, and `XDG_CACHE_HOME`. Unset, those are `~/.config`, `~/.local/share`, `~/.local/state`, and `~/.cache`.
 
 What a shipment may contain is `github-pipeline`. A Make-only repository that ships a binary follows the same limit: the binary, and example data only from `examples/` when the path and the name say it is an example.

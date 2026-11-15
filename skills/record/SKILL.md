@@ -77,7 +77,7 @@ An agent on another task opens a history file only when an id names it.
 
 `make toon` writes both indexes. `project.mk` and `sdlc.mk` include `.claude/skills/record/index.mk`, so a project Makefile that includes either of those already has the target. `make setup` runs `toon` first when that include is present.
 
-Make is the interface. Python reads the frontmatter, because a makefile recipe is the wrong place for that parser. The recipe runs that Python in Podman. The image is `PYTHON_IMAGE`, default `docker.io/library/python:3.13-slim`. A project sets `PYTHON_IMAGE` before the include when it wants another version. The host does not need Python.
+Make is the interface. Python reads the frontmatter, because a makefile recipe is the wrong place for that parser. `toon` and `ids` call `$(PYTHON)` from `project-setup`. That is Podman on the machine where Make runs. The host does not need Python.
 
 Run `make toon` after a skill is installed or removed, after ADR frontmatter changes, and before `plan`, `develop`, or `review` reads an index. Hand-editing either file is a defect.
 
@@ -88,4 +88,4 @@ Run `make toon` after a skill is installed or removed, after ADR frontmatter cha
 
 The skill index is the installed set under `.claude/skills/`. In this collection, before install, it is `skills/`. It does not copy skill prose. A language skill sets `files` to extensions and `names` to exact filenames such as `Makefile`. A check skill sets `order`. `plan` and `review` follow that order. `develop` invokes the language row whose `files` or `names` match the files in hand.
 
-`make ids` is separate. It checks ids. It does not write a TOON file. It uses the same Podman image as `make toon`.
+`make ids` is separate. It checks ids. It does not write a TOON file. It uses `$(PYTHON)`, the same Podman command as `make toon`.
