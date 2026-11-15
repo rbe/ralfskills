@@ -46,7 +46,7 @@ A decision, a proposal, and a history file use the same keys.
 
 ## Ids
 
-Before writing an id, run `python3 .claude/skills/record/scripts/ids.py`. The script reads every `id:` under `docs/` and the retired list in `docs/ids.yaml`. A match exits non-zero. Do not write the document.
+Before writing an id, run `make ids`. It reads every `id:` under `docs/` and the retired list in `docs/ids.yaml`. A match exits non-zero. Do not write the document.
 
 `docs/ids.yaml` is:
 
@@ -54,7 +54,7 @@ Before writing an id, run `python3 .claude/skills/record/scripts/ids.py`. The sc
 retired: []
 ```
 
-Deleting a document runs `python3 .claude/skills/record/scripts/ids.py retire <id>`. A retired id is never issued again. The caller does not invent an id in prose.
+Deleting a document runs `make ids-retire ID=<id>`. A retired id is never issued again. The caller does not invent an id in prose.
 
 ## History
 
@@ -77,7 +77,7 @@ An agent on another task opens a history file only when an id names it.
 
 `make toon` writes both indexes. `project.mk` and `sdlc.mk` include `.claude/skills/record/index.mk`, so a project Makefile that includes either of those already has the target. `make setup` runs `toon` first when that include is present.
 
-Make is the interface. Python reads the frontmatter, because a makefile recipe is the wrong place for that parser. The recipe is one `python3` command.
+Make is the interface. Python reads the frontmatter, because a makefile recipe is the wrong place for that parser. The recipe runs that Python in Podman. The image is `PYTHON_IMAGE`, default `docker.io/library/python:3.13-slim`. A project sets `PYTHON_IMAGE` before the include when it wants another version. The host does not need Python.
 
 Run `make toon` after a skill is installed or removed, after ADR frontmatter changes, and before `plan`, `develop`, or `review` reads an index. Hand-editing either file is a defect.
 
@@ -88,4 +88,4 @@ Run `make toon` after a skill is installed or removed, after ADR frontmatter cha
 
 The skill index is the installed set under `.claude/skills/`. In this collection, before install, it is `skills/`. It does not copy skill prose. A language skill sets `files` to extensions and `names` to exact filenames such as `Makefile`. A check skill sets `order`. `plan` and `review` follow that order. `develop` invokes the language row whose `files` or `names` match the files in hand.
 
-`python3 .claude/skills/record/scripts/ids.py` is separate. It checks ids. It does not write a TOON file.
+`make ids` is separate. It checks ids. It does not write a TOON file. It uses the same Podman image as `make toon`.
