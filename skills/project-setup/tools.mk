@@ -17,4 +17,7 @@ EDITORCONFIG = podman run --rm -v "$(CURDIR)":/check:Z $(EDITORCONFIG_IMAGE)
 
 DIFF_COVER = podman run --rm -e HOME=/tmp -e DEBIAN_FRONTEND=noninteractive -e PYTHONDONTWRITEBYTECODE=1 -e REPORT -v "$(CURDIR)":/work:Z -w /work $(PYTHON_IMAGE) sh -c 'set -eu; apt-get update -qq; apt-get install -y -qq git >/dev/null; pip install --disable-pip-version-check --root-user-action=ignore -q --target /tmp/py "diff-cover==$(DIFF_COVER_VERSION)"; PYTHONPATH=/tmp/py python3 -m diff_cover.diff_cover_tool "$$REPORT" --diff-file build/coverage/change.diff --format markdown:build/coverage/diff.md --fail-under=0'
 
+# help is the default goal. This fragment does not take it.
+.DEFAULT_GOAL := help
+
 endif

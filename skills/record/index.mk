@@ -33,4 +33,7 @@ ids-retire: ## Retire an id. Set ID= on the command line
 
 setup: toon
 
+# help is the default goal. This fragment does not take it.
+.DEFAULT_GOAL := help
+
 endif

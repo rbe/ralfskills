@@ -110,6 +110,20 @@ class SkillCollectionTest(unittest.TestCase):
             "What is the resource, the verb, and the status on success?", text
         )
 
+    def test_make_with_no_arguments_is_help(self):
+        files = [
+            ROOT / "Makefile",
+            SKILLS / "project-setup" / "project.mk",
+            SKILLS / "project-setup" / "podman-python.mk",
+            SKILLS / "project-setup" / "tools.mk",
+            SKILLS / "github-pipeline" / "sdlc.mk",
+            SKILLS / "record" / "index.mk",
+        ]
+        for path in files:
+            text = path.read_text(encoding="utf-8")
+            self.assertIn(".DEFAULT_GOAL := help", text)
+            self.assertNotIn(".DEFAULT_GOAL := test", text)
+
     def test_coverage_is_the_diff_report(self):
         text = (SKILLS / "project-setup" / "SKILL.md").read_text(encoding="utf-8")
         tools = (SKILLS / "project-setup" / "tools.mk").read_text(encoding="utf-8")

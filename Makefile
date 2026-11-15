@@ -1,4 +1,5 @@
 # Collection checks. Python runs in Podman on this machine.
+# `make` prints help. `make test` runs the checks.
 # Ruff is the formatter and the linter. editorconfig-checker reads
 # .editorconfig. diff-cover writes the lines this change touched.
 
@@ -17,4 +18,4 @@ COVERAGE_CMD = set -eu; \
 
 include skills/project-setup/project.mk
 
-.DEFAULT_GOAL := test
+.DEFAULT_GOAL := help
