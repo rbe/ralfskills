@@ -1,5 +1,7 @@
-# Shared pipeline makefile. Copy it unchanged to the repository root as
-# sdlc.mk and include it from the project Makefile. The project sets
+# Shared pipeline makefile. A project includes this file from the
+# installed skill and does not keep a second copy at the root.
+#     include .claude/skills/github-pipeline/sdlc.mk
+# The project sets
 # IMAGE, PACKAGE, and KEEP_VERSIONS before the include, and it owns the
 # project targets (setup, build, test, docs, publish-*, image, run, stop).
 #
@@ -31,6 +33,9 @@
 
 ifndef SDLC_MK
 SDLC_MK := 1
+
+SDLC_MK_DIR := $(dir $(lastword $(MAKEFILE_LIST)))
+include $(SDLC_MK_DIR)../project-setup/podman-python.mk
 
 # Recipes call ${MAKE} from the shell. Make does not export this variable
 # unless asked, and a recipe that writes $(MAKE) is executed even by make -n.
@@ -320,5 +325,7 @@ cleanup-actions-artifacts: ## Match CI: delete artifacts at least one hour old, 
 	if [ -n "$(DRY_RUN)" ]; then reason="$$reason Nothing deleted."; fi; \
 	printf '# cleanup-actions-artifacts\n\nStatus: %s\nDeleted: %s\n\n%s\n' "$$word" "$$count" "$$reason" > build/summaries/cleanup-actions-artifacts.md; \
 	echo "cleanup-actions-artifacts: $$reason"
+
+-include .claude/skills/record/index.mk
 
 endif

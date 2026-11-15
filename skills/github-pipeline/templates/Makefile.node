@@ -2,10 +2,10 @@
 # Make contract: project-setup. help is the default goal. The target
 # names are setup, build, test, docs, and login. Gradle, npm, Podman,
 # python, and tar run inside those targets.
-# GitHub makefile: copy sdlc.mk from github-pipeline unchanged, set the
-# product values, and include it before any target. sdlc.mk already
-# defines help, so leave project.mk out. sdlc.mk adds version, publish
-# tags, cleanup, and report.
+# GitHub makefile: set the product values and include sdlc.mk from the
+# installed skill before any target. sdlc.mk already defines help, so
+# leave project.mk out. sdlc.mk adds version, publish tags, cleanup,
+# and report.
 
 NAME ?= app
 OWNER ?= owner
@@ -24,7 +24,7 @@ SMOKE_NEEDLE ?= ok
 DATA_DIR ?= data
 DATA_ENV ?= APP_DATA
 
-include sdlc.mk
+include .claude/skills/github-pipeline/sdlc.mk
 
 NODE_RUN = podman run --rm -e HOME=/tmp -e CI -e npm_config_cache=/tmp/npm-cache \
 	-e npm_config_update_notifier=false -v "$(CURDIR)":/work:Z -w /work $(NODE_IMAGE)

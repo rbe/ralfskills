@@ -1,0 +1,4 @@
+__pycache__/
+*.pyc
+docs/adr/index.toon
+docs/skill-index.toon

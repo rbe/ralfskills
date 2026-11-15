@@ -5,9 +5,16 @@ description: Apply or check the GitHub delivery contract in setup mode or report
 
 # GitHub pipeline
 
-This skill owns the GitHub contract and the Make that implements it. `sdlc.mk` is that makefile: version, publish tags, cleanup, and report. Copy it to the repository root unchanged.
+This skill owns the GitHub contract and the Make that implements it. `sdlc.mk` is that makefile: version, publish tags, cleanup, and report. A project includes the installed file. It does not keep a second copy.
 
-It depends on `project-setup` only because a workflow calls `make`. The job names `setup`, `build`, `test`, and `docs` (when the repository renders docs) are real targets from that contract. `login` is the target the publish job runs, not its own job. A Make-only repository does not install this skill.
+It depends on `project-setup` only because a workflow calls `make`. The job names `setup`, `build`, `test`, and `docs` (when the repository renders docs) are real targets from that contract. `login` is the target the publish job runs, not its own job. A Make-only repository does not install this skill. Podman, XDG paths, and what a shipment may contain are `project-setup`.
+
+## Steps
+
+1. If `docs/BUGS.md`, `docs/WAVES.md`, `docs/FEATURES.md`, `docs/bugs/`, `docs/waves/`, or `docs/features/` exists, stop. Name `migrate-docs`. Do not take a later step.
+2. Invoke `record` before creating an id or a document. A write that skips `record` fails this step.
+3. Do this skill's work, in the order below. `release` invokes this skill when the change touches the workflow, the version, publish, the image, cleanup, or retention.
+4. Ask `record` to add one line under the open history section naming `github-pipeline`. When no history file is open, do not open one.
 
 ## Modes
 
@@ -30,36 +37,34 @@ Read:
 
 | File | Where |
 | --- | --- |
-| `SKILL.md`, `sdlc.mk` | This skill. `sdlc.mk` is the copy source. Leave this skill's file unchanged |
+| `SKILL.md`, `sdlc.mk` | This skill. The project includes `sdlc.mk` from here. Leave this skill's file unchanged |
 | `templates/Makefile.node`, `templates/ci.node.yml` | Node toolchain |
 | `templates/Makefile.gradle`, `templates/ci.gradle.yml` | Gradle toolchain |
 | `templates/pipeline-rules.md` | The source for `docs/pipeline-rules.md` |
-| `Makefile`, `sdlc.mk`, `project.mk` | The project, when present |
+| `Makefile` | The project, when present |
 | `.github/workflows/` | The project |
-| `docs/pipeline-rules.md`, `AGENTS.md`, `Containerfile`, `.containerignore`, `.gitignore` | The project, when present |
-| `docs/BUGS.md`, `docs/WAVES.md`, `docs/FEATURES.md` | The project, when present |
+| `docs/pipeline-rules.md`, `Containerfile`, `.containerignore`, `.gitignore` | The project, when present |
 
 Write:
 
 | File | Write when |
 | --- | --- |
-| `sdlc.mk` | It is missing, or it is not byte-identical to this skill's copy. Copy the file. Edit neither copy. The sha256 is in Contract test |
-| `Makefile` | `include sdlc.mk` is missing or sits after a target, or a required target has no recipe and no command variable. A recipe already in the file stays |
+| `Makefile` | `include .claude/skills/github-pipeline/sdlc.mk` is missing or sits after a target, or a required target has no recipe and no command variable. A recipe already in the file stays. Do not write `sdlc.mk` at the repository root |
 | `.github/workflows/ci.yml` | No workflow yet: start from the matching template. A `ci.yml` already there: fix a trigger, a permission, a missing `retention-days`, or a `run:` step that is not `make <target>`. A step that is already `make <target>` stays |
 | `docs/pipeline-rules.md` | It is missing. Copy the template and fill "This repository". When the file exists, leave "This repository" and "Divergences" as written |
-| `AGENTS.md`, `Containerfile`, `.containerignore`, `.gitignore`, `docs/BUGS.md`, `docs/WAVES.md`, `docs/FEATURES.md` | The file is missing. In `AGENTS.md`, add a missing sentence and leave a sentence the project already wrote |
+| `Containerfile`, `.containerignore`, `.gitignore` | The file is missing. The ignore list follows the ship rule in Report and packaging |
 
 The workflow is one file, `.github/workflows/ci.yml`, named `CI`. It calls `make`. `publish-*` runs on a push to the default branch or when `workflow_dispatch` selects that job, and it needs `build` and `test`. The version is the nearest `vMAJOR.MINOR.PATCH` tag, read by `make version`. This mode creates no `v*` tag and adds no tag trigger.
 
 A second workflow file is named in the report. This mode does not delete it and does not add a workflow beside `ci.yml`.
 
-When the Makefile includes `project.mk`, switch the include to `sdlc.mk` and remove the `project.mk` include. `sdlc.mk` already provides `help`. Keep the command variables as the recipes of the targets this mode adds. The Node or Gradle template fills a target only when that target has no recipe and the command variable is empty.
+When the Makefile includes `project.mk` or `.claude/skills/project-setup/project.mk`, switch the include to `.claude/skills/github-pipeline/sdlc.mk` and remove the `project.mk` include. `sdlc.mk` already provides `help`. Keep the command variables as the recipes of the targets this mode adds. The Node or Gradle template fills a target only when that target has no recipe and the command variable is empty. A root `sdlc.mk` is off the contract. Leave its bytes and name it in the report.
 
 A recipe this mode adds follows Make 3.81. No `.ONESHELL`. No Make 4 function (`$(file ...)`, `$(guile ...)`, `!=`). Each recipe line is one POSIX shell, joined with backslashes. No shell-script wrapper. A shell `$` is `$$`.
 
 ### Report mode
 
-Read `templates/contract-report.md` and the Contract test section. Read the project files in the setup table. `make -qp` shows `.DEFAULT_GOAL`. Compare the project's `sdlc.mk` to the sha256 in Contract test. `git describe --tags --abbrev=0 --match 'v[0-9]*'` shows the tag `version` accepts.
+Read `templates/contract-report.md` and the Contract test section. Read the project files in the setup table. `make -qp` shows `.DEFAULT_GOAL`. The include path is `.claude/skills/github-pipeline/sdlc.mk`. `git describe --tags --abbrev=0 --match 'v[0-9]*'` shows the tag `version` accepts.
 
 When the repository has no workflow and does not publish through GitHub, fill Applies as yes and leave the checks blank. The verdict is that this skill stays uninstalled.
 
@@ -71,7 +76,7 @@ This repository is the shared skill collection. Node 24 is the Node template onl
 
 | File | Role |
 | --- | --- |
-| `sdlc.mk` | Version, publish tags, cleanup, and report. Copy it to the repo root unchanged |
+| `sdlc.mk` | Version, publish tags, cleanup, and report. The project includes the installed file |
 | `templates/Makefile.node` | Node app, image only. Node 24 is this template's toolchain. Make contract: `project-setup` |
 | `templates/Makefile.gradle` | Gradle app, image plus a JAR release. The JDK image in this file is this template's toolchain. Make contract: `project-setup` |
 | `templates/ci.node.yml`, `templates/ci.gradle.yml` | `.github/workflows/ci.yml` |
@@ -88,7 +93,7 @@ The project Makefile sets variables, includes `sdlc.mk` before any target, then 
 IMAGE ?= ghcr.io/owner/name
 PACKAGE ?= owner/name
 KEEP_VERSIONS ?= 2
-include sdlc.mk
+include .claude/skills/github-pipeline/sdlc.mk
 
 setup: ## Match CI: install
 	@$(call SDLC_LOG,setup,_setup)
@@ -175,11 +180,7 @@ The artifact quota is shared by every repository on the account. One repo that k
 
 Each job uploads `report-<job>` with `build/logs` and `build/summaries`, and `test` also uploads results and coverage. `report` downloads `report-*` into `build/inputs` and runs `make report`. `build/report/index.md` is the entry point.
 
-`.containerignore` lists `.git`, `.github`, `.claude/`, `.cursor/`, `AGENTS.md`, `CLAUDE.md`, `docs/`, `build/`, `node_modules`, `data/`, `.env`, `.env.*`, and `*.tar`. The runtime image copies named files, not `COPY . .`. `.gitignore` keeps build output, image tars, `data/`, and `.env` out of git. Whether `.claude/` is tracked is the repo's choice. The image exclusion comes from `.containerignore`.
-
-## Required files
-
-`AGENTS.md` states the product, that the Makefile is the interface, that Podman is the only engine, the publish rule, and the packaging exclusion. `docs/pipeline-rules.md` comes from the template. `docs/BUGS.md`, `docs/WAVES.md`, and `docs/FEATURES.md` are the backlog. They live in `docs/`, not at the root. Also `Containerfile`, `.containerignore`, `Makefile`, `sdlc.mk`, and `.github/workflows/ci.yml`. The Makefile includes `sdlc.mk`. `project.mk` is the shared makefile from `project-setup` for a repository with no workflow, so this repository leaves it out.
+A shipment is a binary or a container image. The image copies named files, not the work tree. `.containerignore` keeps out `.git`, `.github`, `.claude/`, `CLAUDE.md`, `docs/`, `build/`, `node_modules`, `data/`, `.env`, `.env.*`, and `*.tar`. Example data ships only from `examples/` when the path and the name say it is an example. `.claude/skills/` is committed so Make can include it, and the image still excludes `.claude/`. `.gitignore` keeps build output, image tars, `data/`, and `.env` out of git.
 
 ## Divergence
 
@@ -201,7 +202,7 @@ The repo's own test reads the workflow, the Makefile, and `sdlc.mk`. It fails wh
 - an upload omits `retention-days`, or an intermediate is kept more than 1 day, or `report` is kept more than 14
 - `publish-*` is not limited to the default branch or the dispatch input, or it does not need `build` and `test`
 - `report` is not last or lacks `!cancelled()`
-- `sdlc.mk` is not byte-identical to this skill's copy. Its sha256 is `45c6cf23664d030c61f0fedd2d0639cd9dc2dc7bb03c14167dce61fed9d495d6`
+- the Makefile does not include `.claude/skills/github-pipeline/sdlc.mk` before any target, or a root `sdlc.mk` is the include
 
 Do not weaken the test to make a run pass. Fix the pipeline, or record a real divergence.
 
