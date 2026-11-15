@@ -1,0 +1,127 @@
+# Node app delivered as a container image.
+# Set the product values, then include sdlc.mk before any target.
+# Copy sdlc.mk from the common-sdlc skill unchanged.
+
+NAME ?= app
+OWNER ?= owner
+IMAGE_NAME ?= ghcr.io/$(OWNER)/$(NAME)
+IMAGE ?= $(IMAGE_NAME)
+PACKAGE ?= $(OWNER)/$(NAME)
+KEEP_VERSIONS ?= 2
+
+NODE_VERSION ?= 24
+NODE_IMAGE ?= docker.io/library/node:$(NODE_VERSION)-bookworm-slim
+CI_IMAGE ?= localhost/$(NAME):ci
+PORT ?= 4173
+SMOKE_PORT ?= 18080
+SMOKE_PATH ?= /api/health
+SMOKE_NEEDLE ?= ok
+DATA_DIR ?= data
+DATA_ENV ?= APP_DATA
+
+include sdlc.mk
+
+NODE_RUN = podman run --rm -e HOME=/tmp -e CI -e npm_config_cache=/tmp/npm-cache \
+	-e npm_config_update_notifier=false -v "$(CURDIR)":/work:Z -w /work $(NODE_IMAGE)
+
+setup: ## Match CI: npm ci, npm audit (a warning), pack node_modules
+	@$(call SDLC_LOG,setup,_setup)
+
+build: ## Match CI: build the app, smoke one image, save the image tar
+	@$(call SDLC_LOG,build,_build)
+
+test: ## Match CI: tests, with results and coverage under build/
+	@$(call SDLC_LOG,test,_test)
+
+docs: ## Match CI: render docs/ to HTML under build/docs
+	@$(call SDLC_LOG,docs,_docs)
+
+.PHONY: login
+login: ## Match CI: log in to ghcr.io with REGISTRY_USER and REGISTRY_TOKEN
+	@set -eu; \
+	test -n "$${REGISTRY_USER:-}" || { echo "REGISTRY_USER is required" >&2; exit 1; }; \
+	test -n "$${REGISTRY_TOKEN:-}" || { echo "REGISTRY_TOKEN is required" >&2; exit 1; }; \
+	printf '%s\n' "$$REGISTRY_TOKEN" | podman login ghcr.io --username "$$REGISTRY_USER" --password-stdin
+
+publish-container: ## Match CI: push the version, and latest on the default branch
+	@$(call SDLC_LOG,publish-container,_publish-container)
+
+image: ## Build the image
+	podman build -f Containerfile \
+		--build-arg NODE_VERSION=$(NODE_VERSION) \
+		--label org.opencontainers.image.source="https://github.com/$(PACKAGE)" \
+		--label org.opencontainers.image.revision="$(or $(GITHUB_SHA),local)" \
+		--label org.opencontainers.image.version="$(or $(GITHUB_RUN_NUMBER),local)" \
+		-t "$(IMAGE)" -t "$(CI_IMAGE)" .
+
+run: image ## Run detached on https://127.0.0.1:PORT
+	@mkdir -p "$(DATA_DIR)"
+	@podman rm -f $(NAME) >/dev/null 2>&1 || true
+	podman run -d --name $(NAME) -p 127.0.0.1:$(PORT):$(PORT) -e PORT=$(PORT) \
+		-e $(DATA_ENV)=/app/data -v "$(CURDIR)/$(DATA_DIR):/app/data:Z" "$(IMAGE)"
+
+stop: ## Stop the detached container
+	@podman rm -f $(NAME) >/dev/null 2>&1 || true
+
+clean: ## Remove build/, dist/, and node_modules/
+	rm -rf build dist node_modules
+
+_setup:
+	@set -eu; \
+	if [ ! -d node_modules ]; then $(NODE_RUN) npm ci; fi; \
+	$(NODE_RUN) sh -c 'npm audit --audit-level=high || echo "npm audit reported advisories; continuing"'; \
+	mkdir -p build/deps; \
+	tar -cf build/deps/node_modules.tar node_modules; \
+	printf '# setup\n\nNode %s. Dependencies packed.\n' "$(NODE_VERSION)" > build/summaries/setup.md
+
+_build:
+	@set -eu; \
+	if [ ! -d node_modules ]; then tar -xf build/deps/node_modules.tar; fi; \
+	$(NODE_RUN) npm run build; \
+	$(THIS_MAKE) --no-print-directory image; \
+	name=$(NAME)-smoke; \
+	podman rm -f "$$name" >/dev/null 2>&1 || true; \
+	podman run -d --name "$$name" -p 127.0.0.1:$(SMOKE_PORT):$(PORT) -e PORT=$(PORT) "$(CI_IMAGE)" >/dev/null; \
+	ok=0; \
+	i=0; \
+	while [ "$$i" -lt 30 ]; do \
+	  if curl -fsSk "https://127.0.0.1:$(SMOKE_PORT)$(SMOKE_PATH)" 2>/dev/null | grep -qF '$(SMOKE_NEEDLE)'; then ok=1; break; fi; \
+	  i=$$((i + 1)); sleep 1; \
+	done; \
+	podman rm -f "$$name" >/dev/null 2>&1 || true; \
+	test "$$ok" = 1; \
+	mkdir -p build/image; \
+	podman save -o build/image/$(NAME)-image.tar "$(CI_IMAGE)"; \
+	printf '# build\n\nImage %s saved.\n' "$(CI_IMAGE)" > build/summaries/build.md
+
+_test:
+	@set -eu; \
+	if [ ! -d node_modules ]; then tar -xf build/deps/node_modules.tar; fi; \
+	mkdir -p build; \
+	$(NODE_RUN) npm test -- --coverage; \
+	printf '# test\n\nnpm test with coverage.\n' > build/summaries/test.md
+
+_docs:
+	@set -eu; \
+	mkdir -p build/docs; \
+	if find docs -name '*.md' 2>/dev/null | grep -q .; then \
+	  $(NODE_RUN) node scripts/render-docs.mjs docs build/docs; \
+	fi; \
+	printf '# docs\n\n%s HTML files.\n' "$$(find build/docs -type f | wc -l | tr -d ' ')" > build/summaries/docs.md
+
+_publish-container:
+	@set -eu; \
+	if ! podman image inspect "$(CI_IMAGE)" >/dev/null 2>&1; then \
+	  test -f build/image/$(NAME)-image.tar; \
+	  podman load -i build/image/$(NAME)-image.tar; \
+	fi; \
+	version=$$($(THIS_MAKE) -s --no-print-directory version); \
+	mkdir -p build; \
+	printf '%s\n' "$$version" > build/publish-version.txt; \
+	tags=$$($(THIS_MAKE) -s --no-print-directory publish-tags); \
+	for tag in $$tags; do \
+	  podman tag "$(CI_IMAGE)" "$(IMAGE):$$tag"; \
+	  podman push "$(IMAGE):$$tag"; \
+	done; \
+	shown=$$(printf '%s\n' "$$tags" | sed 's/^/- /'); \
+	printf '# publish-container\n\nStatus: pushed\nImage: %s\nTags:\n%s\n' "$(IMAGE)" "$$shown" > build/summaries/publish-container.md

@@ -1,0 +1,114 @@
+# Gradle app delivered as a container image and a GitHub release of the JAR.
+# A repo that does not publish a release deletes publish-github below and
+# drops it from SDLC_JOBS. Copy sdlc.mk unchanged.
+
+NAME ?= app
+OWNER ?= owner
+IMAGE_NAME ?= ghcr.io/$(OWNER)/$(NAME)
+IMAGE ?= $(IMAGE_NAME)
+PACKAGE ?= $(OWNER)/$(NAME)
+KEEP_VERSIONS ?= 2
+SDLC_JOBS ?= setup build test docs publish-container publish-github
+
+JDK_IMAGE ?= docker.io/library/eclipse-temurin:25-jdk
+JRE_IMAGE ?= docker.io/library/eclipse-temurin:25-jre
+CI_IMAGE ?= localhost/$(NAME):ci
+JAR_GLOB ?= build/libs/$(NAME)-*.jar
+# Host JDK: set GRADLE=./gradlew and record that under Divergences.
+GRADLE ?= podman run --rm -e CI -e GRADLE_USER_HOME=/gradle -v "$$HOME/.gradle":/gradle:Z -v "$(CURDIR)":/work:Z -w /work $(JDK_IMAGE) ./gradlew --console=plain
+
+include sdlc.mk
+
+setup: ## Match CI: resolve Gradle dependencies into the Gradle cache
+	@$(call SDLC_LOG,setup,_setup)
+
+build: ## Match CI: build the runnable JAR and stage it in build/dist
+	@$(call SDLC_LOG,build,_build)
+
+test: ## Match CI: tests, JUnit XML, and coverage under build/
+	@$(call SDLC_LOG,test,_test)
+
+docs: ## Match CI: render docs/ to HTML under build/docs
+	@$(call SDLC_LOG,docs,_docs)
+
+image: ## Build the image from the tested JAR. No Gradle, no push
+	@set -eu; \
+	test -f build/dist/$(NAME).jar; \
+	rm -rf build/image-context; \
+	mkdir -p build/image-context; \
+	cp build/dist/$(NAME).jar build/image-context/app.jar; \
+	cp Containerfile build/image-context/Containerfile; \
+	podman build -f build/image-context/Containerfile --build-arg JRE_IMAGE=$(JRE_IMAGE) \
+		--label org.opencontainers.image.source="https://github.com/$(PACKAGE)" \
+		-t "$(CI_IMAGE)" build/image-context
+
+.PHONY: login
+login: ## Match CI: log in to ghcr.io with REGISTRY_USER and REGISTRY_TOKEN
+	@set -eu; \
+	test -n "$${REGISTRY_USER:-}" || { echo "REGISTRY_USER is required" >&2; exit 1; }; \
+	test -n "$${REGISTRY_TOKEN:-}" || { echo "REGISTRY_TOKEN is required" >&2; exit 1; }; \
+	printf '%s\n' "$$REGISTRY_TOKEN" | podman login ghcr.io --username "$$REGISTRY_USER" --password-stdin
+
+publish-container: ## Match CI: push the version, and latest on the default branch
+	@$(call SDLC_LOG,publish-container,_publish-container)
+
+publish-github: ## Match CI: release MAJOR.MINOR.PATCH-run with the tested JAR
+	@$(call SDLC_LOG,publish-github,_publish-github)
+
+clean: ## Remove build/ and .gradle/
+	rm -rf build .gradle
+
+_setup:
+	@set -eu; \
+	mkdir -p "$$HOME/.gradle"; \
+	$(GRADLE) --version; \
+	$(GRADLE) dependencies --configuration runtimeClasspath > build/logs/dependencies.txt; \
+	printf '# setup\n\nDependencies resolved into the Gradle cache.\n' > build/summaries/setup.md
+
+_build:
+	@set -eu; \
+	$(GRADLE) assemble; \
+	jars=$$(ls $(JAR_GLOB) 2>/dev/null | grep -v -- '-original.jar$$' || true); \
+	test "$$(printf '%s\n' "$$jars" | grep -c .)" -eq 1; \
+	mkdir -p build/dist; \
+	cp "$$jars" build/dist/$(NAME).jar; \
+	printf '# build\n\nJAR build/dist/%s.jar\n' "$(NAME)" > build/summaries/build.md
+
+_test:
+	@set -eu; \
+	$(GRADLE) test jacocoTestReport; \
+	printf '# test\n\nJUnit XML in build/test-results. Coverage in build/reports/jacoco.\n' > build/summaries/test.md
+
+_docs:
+	@set -eu; \
+	mkdir -p build/docs; \
+	if find docs -name '*.md' 2>/dev/null | grep -q .; then python3 scripts/render-docs.py docs build/docs; fi; \
+	printf '# docs\n\n%s HTML files.\n' "$$(find build/docs -type f | wc -l | tr -d ' ')" > build/summaries/docs.md
+
+_publish-container:
+	@set -eu; \
+	$(THIS_MAKE) --no-print-directory image; \
+	version=$$($(THIS_MAKE) -s --no-print-directory version); \
+	mkdir -p build; \
+	printf '%s\n' "$$version" > build/publish-version.txt; \
+	tags=$$($(THIS_MAKE) -s --no-print-directory publish-tags); \
+	for tag in $$tags; do \
+	  podman tag "$(CI_IMAGE)" "$(IMAGE):$$tag"; \
+	  podman push "$(IMAGE):$$tag"; \
+	done; \
+	shown=$$(printf '%s\n' "$$tags" | sed 's/^/- /'); \
+	printf '# publish-container\n\nStatus: pushed\nImage: %s\nTags:\n%s\n' "$(IMAGE)" "$$shown" > build/summaries/publish-container.md
+
+_publish-github:
+	@set -eu; \
+	test -f build/dist/$(NAME).jar; \
+	version=$$($(THIS_MAKE) -s --no-print-directory version); \
+	asset=build/dist/$(NAME)-$$version.jar; \
+	cp build/dist/$(NAME).jar "$$asset"; \
+	if gh release view "$$version" >/dev/null 2>&1; then \
+	  gh release upload "$$version" "$$asset" --clobber; \
+	else \
+	  gh release create "$$version" "$$asset" --title "$$version" \
+	    --notes "Build $$version." --target "$$(git rev-parse HEAD)"; \
+	fi; \
+	printf '# publish-github\n\nStatus: released\nRelease: %s\n' "$$version" > build/summaries/publish-github.md
