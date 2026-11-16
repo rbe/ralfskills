@@ -9,6 +9,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 class QualityContractTest(unittest.TestCase):
     def test_make_targets_use_the_existing_tools(self):
+        """id: ADR-0009"""
         makefile = (ROOT / "Makefile").read_text(encoding="utf-8")
         project = (ROOT / "skills" / "project-setup" / "project.mk").read_text(
             encoding="utf-8"
