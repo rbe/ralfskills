@@ -73,6 +73,10 @@ Every history file has these sections. A missing heading is a failed step.
 
 An agent on another task opens a history file only when an id names it.
 
+## Tests
+
+A test names the requirement it proves with `id:` in its header or metadata. That is the same line this skill matches. The id is a roadmap id, a known-issue id, an ADR id, or a decision id. The test name states what the system does when that requirement holds. The test does not build a path to the document.
+
 ## Indexes
 
 `make toon` writes both indexes. `project.mk` and `sdlc.mk` include `.claude/skills/record/index.mk`, so a project Makefile that includes either of those already has the target. `make setup` runs `toon` first when that include is present.

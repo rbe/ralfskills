@@ -32,6 +32,9 @@ The include is `.claude/skills/project-setup/project.mk`. A repository that incl
 | `format` is one existing formatter and `lint` is one existing linter | | |
 | `integration` is the one integration entry | | |
 | `coverage` writes `build/coverage/diff.md` for the lines this change touched | | |
+| `test-changed` selects tests from coverage of the diff and CI still runs `test` | | |
+| a test names its requirement with `id:` in the header or metadata | | |
+| `project-report`, when installed, writes `build/project-report.md` and that file is not hand-edited | | |
 | `docs` exists when the repository renders docs, and is absent otherwise | | |
 | `login` exists when an image is published, and is absent otherwise | | |
 | `SETUP_CMD`, `BUILD_CMD`, and `TEST_CMD` are non-empty | | |
