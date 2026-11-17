@@ -1,6 +1,6 @@
 ---
 name: project-setup
-description: Apply or check the Make contract in setup mode or report mode. Make is the only interface, help is the default goal, and a target does the same thing locally and in CI. Use setup mode when adding a Makefile, naming setup, build, test, docs, or login, moving Gradle, npm, Podman, python, or tar into a target, or installing Homebrew tools such as jq. Setup also writes EditorConfig and the targets format, lint, integration, and coverage. The formatter and the linter are existing tools the language skill names. Setup changes only what is missing or off the contract and leaves a target the project already filled in. Use report mode to fill templates/contract-report.md and name what matches and what is missing, without changing the project. Stands alone. The shared makefile is project.mk. A repository that does not publish through GitHub installs only this skill.
+description: Apply or check the Make contract in setup mode or report mode. Make is the only interface, help is the default goal, and a target does the same thing locally and in CI. Use setup mode when adding a Makefile, naming setup, build, test, docs, or login, moving Gradle, npm, Podman, python, or tar into a target, or installing Homebrew tools such as jq. Setup also writes EditorConfig and the targets format, lint, integration, coverage, and test-changed. The formatter and the linter are existing tools the language skill names. Setup changes only what is missing or off the contract and leaves a target the project already filled in. Use report mode to fill templates/contract-report.md and name what matches and what is missing, without changing the project. Stands alone. The shared makefile is project.mk. A repository that does not publish through GitHub installs only this skill.
 ---
 
 # Project setup
@@ -87,6 +87,8 @@ A project that uses this standard uses these names.
 | `lint` | Always. Run the one linter |
 | `integration` | Always. The one integration entry |
 | `coverage` | Always. diff-cover report of the lines this change touched |
+| `test-changed` | Always. The tests that cover the files in the diff. CI still runs `test` |
+| `project-report` | When that skill is installed. Writes `build/project-report.md` |
 | `docs` | Only when the repository renders docs |
 | `login` | Only when an image is published. Reads `REGISTRY_USER` and `REGISTRY_TOKEN` and logs in to `REGISTRY` |
 
@@ -96,7 +98,7 @@ Gradle, npm, Podman, python, and tar run inside those targets. The step that run
 
 `project.mk` is what is the same in every repository: `help`, the tool install in `setup`, the `build`, `test`, and `docs` stubs, and `login` when an image is published. The project includes the installed file. It does not keep a second copy.
 
-The project Makefile sets the variables, then includes `.claude/skills/project-setup/project.mk` before any target. A `##` comment on the target line is the text `help` prints. `help` lists `setup`, `build`, and `test`. It lists `docs` and `login` only when those targets exist. A target added after the include is the project's. A target repeated there, with a recipe, overrides the included recipe.
+The project Makefile sets the variables, then includes `.claude/skills/project-setup/project.mk` before any target. A `##` comment on the target line is the text `help` prints. `help` lists `setup`, `build`, `test`, `test-changed`, and `project-report`. It lists `docs` and `login` only when those targets exist. A target added after the include is the project's. A target repeated there, with a recipe, overrides the included recipe.
 
 ```make
 SETUP_CMD = npm ci
@@ -125,7 +127,9 @@ Set these before the include. `RENDER_DOCS` and `PUBLISH_IMAGE` are read while `
 | `FORMAT_CMD` | The one formatter. Empty fails `format`. The language skill names the tool |
 | `LINT_CMD` | The one linter. Empty fails `lint`. The language skill names the tool |
 | `INTEGRATION_CMD` | The one integration entry. Empty fails `integration` |
-| `COVERAGE_CMD` | Writes `build/coverage/diff.md`. Empty fails `coverage` |
+| `COVERAGE_CMD` | Writes `build/coverage/diff.md` and the coverage map `test-changed` reads. Empty fails `coverage` |
+| `TEST_CHANGED_CMD` | Runs the tests that cover the diff. Empty fails `test-changed`. The selection is coverage, not a hand-kept list |
+| `PROJECT_REPORT_CMD` | Writes `build/project-report.md`. Empty fails `project-report` |
 | `RENDER_DOCS` | `1` when this repository renders docs. Otherwise there is no `docs` target |
 | `DOCS_CMD` | The renderer. Empty fails `docs` |
 | `PUBLISH_IMAGE` | `1` when an image is published. Otherwise there is no `login` target |
@@ -139,7 +143,7 @@ A shell `$` in a command is `$$`.
 
 Defining `setup`, `build`, or `test` again replaces the recipe from `project.mk`.
 
-`project.mk` marks `help`, `setup`, `build`, and `test` `.PHONY`, and `docs` and `login` when they exist. A `build/` directory would otherwise satisfy `build`. `project.mk` sets `.DEFAULT_GOAL` to `help` after the fragments it includes. `podman-python.mk`, `tools.mk`, and `record`'s `index.mk` set the same goal and do not set another. A project Makefile does not set `.DEFAULT_GOAL` to another target.
+`project.mk` marks `help`, `setup`, `build`, `test`, `test-changed`, and `project-report` `.PHONY`, and `docs` and `login` when they exist. A `build/` directory would otherwise satisfy `build`. `project.mk` sets `.DEFAULT_GOAL` to `help` after the fragments it includes. `podman-python.mk`, `tools.mk`, and `record`'s `index.mk` set the same goal and do not set another. A project Makefile does not set `.DEFAULT_GOAL` to another target.
 
 A repository that includes `.claude/skills/github-pipeline/sdlc.mk` already has `help` and does not also include `project.mk`. That repository defines its own project targets.
 
@@ -170,7 +174,10 @@ Setup mode adds these when they are missing. Stop at the first step that cannot 
 3. `lint` is one linter, the tool the language skill names. Set `LINT_CMD` the same way. Stop when a second linter is present, or when this step cannot name the tool. Do not write a linter. Do not take a later step.
 4. `test` runs the unit tests. Leave an integration test out of `TEST_CMD`. Stop when the unit tests have no command and no recipe. Do not take a later step.
 5. `integration` is the one integration entry. Set `INTEGRATION_CMD` when it is empty. Stop when a second integration target exists. Do not take a later step.
-6. `coverage` writes `build/coverage/diff.md` through diff-cover, for the lines this change touched. It does not apply a repository-wide percentage. `COVERAGE_CMD` produces that report. The language skill names the coverage tool that feeds diff-cover.
+6. `coverage` writes `build/coverage/diff.md` through diff-cover, for the lines this change touched. It does not apply a repository-wide percentage. `COVERAGE_CMD` produces that report and the coverage map. The language skill names the coverage tool that feeds diff-cover.
+7. `test-changed` runs the tests that cover the files in the diff. The selection is the coverage of those files. Stop when the selection is a hand-kept list. Do not take a later step. `make test` stays the full suite. A green `test-changed` does not replace `make test`. CI runs `make test`.
+8. A test names the requirement it proves with `id:` in its header or metadata. Stop when a test has no id. Do not take a later step. The id is not a path.
+9. When `project-report` is installed, `make project-report` writes `build/project-report.md`. Stop when that file is missing or hand-edited. Do not take a later step. Hand-editing it is a defect. The file holds the requirements-to-tests map, the architecture review, and the development review.
 
 ## Check
 
@@ -187,6 +194,9 @@ The repository fails this contract when:
 - `format` or `lint` is missing, a second formatter or a second linter is a target, or either target runs a linter or formatter written for this project
 - `integration` is missing or is not the only integration entry
 - `coverage` does not write `build/coverage/diff.md` for the lines this change touched, or the result is a repository-wide percentage
+- `test-changed` is missing, it selects tests from a hand-kept list, or CI runs `test-changed` in place of `test`
+- a test has no `id:` in its header or metadata
+- `project-report` is installed and `make project-report` does not write `build/project-report.md`, or that file is hand-edited
 - CI runs a formatter, a linter, a test, or coverage by any command other than `make <target>`
 
 Report mode records each of these in `templates/contract-report.md`. Setup mode repairs a missing file, a missing include, or an empty command variable. It leaves a target the project already filled in.

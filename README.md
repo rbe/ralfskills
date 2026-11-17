@@ -13,6 +13,7 @@ Install so the files land in `.claude/skills/`. That is the APM target `claude`.
 | [review](skills/review/SKILL.md) | Gates and the installed subskills, after the change |
 | [release](skills/release/SKILL.md) | Ship a binary or a container image. Invokes `github-pipeline` when delivery changes |
 | [record](skills/record/SKILL.md) | Ids, the board, the history file, and the ADR index |
+| [project-report](skills/project-report/SKILL.md) | Generated requirements map, architecture review, and development review |
 | [migrate-docs](skills/migrate-docs/SKILL.md) | The only skill that reads an old board. Other skills stop until it has deleted those files |
 | [project-setup](skills/project-setup/SKILL.md) | Make is the only interface. `help` is the default goal. EditorConfig, one formatter, one linter, unit tests, one integration entry, and a diff-cover report are targets |
 | [github-pipeline](skills/github-pipeline/SKILL.md) | One GitHub workflow. Versions from a `vMAJOR.MINOR.PATCH` tag plus the run number |
@@ -25,7 +26,7 @@ Install so the files land in `.claude/skills/`. That is the APM target `claude`.
 | [shell](skills/shell/SKILL.md) | POSIX shell inside a recipe |
 | [jvm](skills/jvm/SKILL.md) | Java, Groovy, Grails, and Gradle |
 
-The `name` in each skill's frontmatter matches its directory. A project installs the stages, `record`, `project-setup`, the language skills it uses, and the subskills it wants. It installs `github-pipeline` when it publishes through GitHub. It installs `migrate-docs` when the old board is still present, and it runs that skill before the others.
+The `name` in each skill's frontmatter matches its directory. A project installs the stages, `record`, `project-setup`, `project-report`, the language skills it uses, and the subskills it wants. It installs `github-pipeline` when it publishes through GitHub. It installs `migrate-docs` when the old board is still present, and it runs that skill before the others.
 
 `project-setup` and `github-pipeline` each have setup mode and report mode, written in the skill. Setup mode changes only what is missing or off the contract. Report mode names what matches and what is missing, and it changes nothing.
 

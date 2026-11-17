@@ -38,7 +38,9 @@
 #   FORMAT_CMD       the one formatter. The language skill names the tool
 #   LINT_CMD         the one linter. The language skill names the tool
 #   INTEGRATION_CMD  the one integration entry
-#   COVERAGE_CMD     writes build/coverage/diff.md for lines this change touched
+#   COVERAGE_CMD     writes build/coverage/diff.md and the map test-changed reads
+#   TEST_CHANGED_CMD tests that cover the diff, selected from that map
+#   PROJECT_REPORT_CMD writes build/project-report.md
 #   RENDER_DOCS      1 when this repository renders docs
 #   DOCS_CMD         the renderer, required when RENDER_DOCS is 1
 #   PUBLISH_IMAGE    1 when an image is published
@@ -54,7 +56,7 @@ include $(PROJECT_MK_DIR)tools.mk
 HELP_LEAD ?= Make is the only interface. A target does the same thing locally and in CI.
 REGISTRY ?= ghcr.io
 
-.PHONY: help setup build test editorconfig format lint integration coverage
+.PHONY: help setup build test test-changed project-report editorconfig format lint integration coverage
 
 help: ## Show the targets
 	@printf '%s\n' "$(HELP_LEAD)"
@@ -146,6 +148,33 @@ ifeq ($(strip $(COVERAGE_CMD)),)
 else
 	mkdir -p build/coverage
 	$(COVERAGE_CMD)
+endif
+
+# Tests whose coverage includes a file in the diff. Not a CI substitute for test.
+test-changed: ## Run the tests that cover the diff
+ifeq ($(strip $(TEST_CHANGED_CMD)),)
+	@printf '%s\n' "test-changed: stub. Set TEST_CHANGED_CMD before the include. Select tests from coverage of the files in the diff." >&2
+	@exit 1
+else
+	@set -eu; \
+	mkdir -p build/coverage; \
+	base=$$(git merge-base HEAD origin/main 2>/dev/null || printf '%s' HEAD); \
+	git diff --name-only "$$base" > build/coverage/changed.txt; \
+	git diff --name-only >> build/coverage/changed.txt; \
+	git diff --name-only --cached >> build/coverage/changed.txt; \
+	git ls-files --others --exclude-standard >> build/coverage/changed.txt; \
+	sort -u build/coverage/changed.txt -o build/coverage/changed.txt; \
+	$(TEST_CHANGED_CMD)
+endif
+
+# Generated. Hand-editing build/project-report.md is a defect.
+project-report: ## Write the requirements map and the reviews
+ifeq ($(strip $(PROJECT_REPORT_CMD)),)
+	@printf '%s\n' "project-report: stub. Set PROJECT_REPORT_CMD before the include. Write build/project-report.md." >&2
+	@exit 1
+else
+	mkdir -p build
+	$(PROJECT_REPORT_CMD) > build/project-report.md
 endif
 
 # Stub. Set RENDER_DOCS=1 only when this repository renders docs.

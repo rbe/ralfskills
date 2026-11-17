@@ -35,6 +35,7 @@ class IdsTest(unittest.TestCase):
         return path
 
     def test_duplicate_id_fails(self):
+        """id: ADR-0013"""
         body = "---\nid: D-1\nstatus: open\n---\n\n# One\n"
         self.write("docs/DECISIONS.md", body)
         self.write("docs/proposals/P-1.md", "---\nid: D-1\nstatus: open\n---\n")
@@ -42,12 +43,14 @@ class IdsTest(unittest.TestCase):
         self.assertTrue(any("D-1" in error for error in errors))
 
     def test_retired_id_still_in_use_fails(self):
+        """id: ADR-0013"""
         self.write("docs/ids.yaml", "retired:\n- D-1\n")
         self.write("docs/DECISIONS.md", "---\nid: D-1\nstatus: decided\n---\n")
         errors = ids.check(self.root)
         self.assertTrue(any("retired" in error for error in errors))
 
     def test_retire_moves_an_unused_id(self):
+        """id: ADR-0013"""
         self.write("docs/ids.yaml", "retired: []\n")
         errors = ids.retire(self.root, "H-2026-11-15-old")
         self.assertEqual(errors, [])
@@ -57,6 +60,7 @@ class IdsTest(unittest.TestCase):
         self.assertEqual(ids.check(self.root), [])
 
     def test_retire_rejects_a_live_id(self):
+        """id: ADR-0013"""
         self.write("docs/history/H-1.md", "---\nid: H-1\n---\n")
         errors = ids.retire(self.root, "H-1")
         self.assertTrue(errors)
@@ -67,6 +71,7 @@ skill_index = load("skill_index", HERE / "skill_index.py")
 
 class SkillIndexTest(unittest.TestCase):
     def test_rows_come_from_kind_and_installed_skills_win(self):
+        """id: ADR-0006"""
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             bundled = root / "skills" / "jvm"
@@ -102,6 +107,7 @@ class SkillIndexTest(unittest.TestCase):
 
 class AdrIndexTest(unittest.TestCase):
     def test_index_lists_adr_links_and_not_skill_prose(self):
+        """id: ADR-0006"""
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             adr = root / "docs" / "adr"

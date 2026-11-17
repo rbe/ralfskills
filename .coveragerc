@@ -1,5 +1,6 @@
 [run]
 relative_files = true
+dynamic_context = test_function
 data_file = build/coverage/.coverage
 source =
     skills
