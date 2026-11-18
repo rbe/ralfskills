@@ -87,6 +87,28 @@ class SkillCollectionTest(unittest.TestCase):
         self.assertIn("who owns state", text)
         self.assertIn("what may call what", text)
 
+    def test_plan_waits_when_a_choice_is_expensive_to_reverse(self):
+        """id: ADR-0014"""
+        text = (SKILLS / "plan" / "SKILL.md").read_text(encoding="utf-8")
+        step = (
+            "Evaluate architecture, scalability, and code quality against the "
+            "constraints of this system. Prefer the smallest design that stays "
+            "operable and maintainable. When a choice is expensive to reverse, "
+            "name the options, recommend one, and wait. Otherwise implement it "
+            "in small modules."
+        )
+        work = text.split("## Work", 1)[1]
+        lines = [
+            line
+            for line in work.splitlines()
+            if line[:1].isdigit() and ". " in line[:4]
+        ]
+        boundary = next(
+            index for index, line in enumerate(lines) if "who owns state" in line
+        )
+        self.assertEqual(text.count(step), 1)
+        self.assertIn(step, lines[boundary + 1])
+
     def test_develop_stops_until_lint_and_test_pass(self):
         """id: ADR-0008"""
         text = (SKILLS / "develop" / "SKILL.md").read_text(encoding="utf-8")
