@@ -6,7 +6,9 @@ import sys
 from pathlib import Path
 
 ID_LINE = re.compile(r"^id:\s*[\"']?([^\"'#\s]+)")
+ROW_ID = re.compile(r"^\|\s*([A-Z]+-\d+)\s*\|")
 RETIRED_ITEM = re.compile(r"^-\s*[\"']?([^\"'#\s]+)")
+TABLE_FILES = ("REQUIREMENTS.md", "DECISIONS.md")
 
 
 def repo_root(start):
@@ -17,8 +19,23 @@ def repo_root(start):
     return current
 
 
-def live_ids(docs):
+def table_ids(docs):
     found = {}
+    if not docs.is_dir():
+        return found
+    for name in TABLE_FILES:
+        path = docs / name
+        if not path.is_file():
+            continue
+        for number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
+            match = ROW_ID.match(line.strip())
+            if match:
+                found.setdefault(match.group(1), []).append(f"{path}:{number}")
+    return found
+
+
+def live_ids(docs):
+    found = table_ids(docs)
     if not docs.is_dir():
         return found
     for path in sorted(docs.rglob("*")):

@@ -25,7 +25,7 @@ def frontmatter(text):
 
 class SkillCollectionTest(unittest.TestCase):
     def test_every_skill_has_a_matching_name_and_a_short_description(self):
-        """id: ADR-0004"""
+        """id: R-4"""
         found = list(SKILLS.glob("*/SKILL.md"))
         self.assertGreaterEqual(len(found), 16)
         for path in found:
@@ -35,7 +35,7 @@ class SkillCollectionTest(unittest.TestCase):
             self.assertGreater(len(data["description"]), 40)
 
     def test_github_pipeline_does_not_require_the_old_board(self):
-        """id: ADR-0005"""
+        """id: R-5"""
         text = (SKILLS / "github-pipeline" / "SKILL.md").read_text(encoding="utf-8")
         self.assertNotIn("Required files", text)
         self.assertNotIn("are the backlog", text)
@@ -44,7 +44,7 @@ class SkillCollectionTest(unittest.TestCase):
             self.assertEqual(text.count(name), 1)
 
     def test_only_migrate_docs_tells_the_agent_to_read_the_old_board(self):
-        """id: ADR-0005"""
+        """id: R-5"""
         migrate = (SKILLS / "migrate-docs" / "SKILL.md").read_text(encoding="utf-8")
         self.assertIn("only skill that reads", migrate)
         for path in SKILLS.glob("*/SKILL.md"):
@@ -58,7 +58,7 @@ class SkillCollectionTest(unittest.TestCase):
             self.assertNotIn(".agents/", text)
 
     def test_make_reaches_the_toon_target(self):
-        """id: ADR-0006"""
+        """id: R-6"""
         index = (SKILLS / "record" / "index.mk").read_text(encoding="utf-8")
         self.assertIn("toon:", index)
         self.assertIn("$(PYTHON)", index)
@@ -80,15 +80,25 @@ class SkillCollectionTest(unittest.TestCase):
                 "-include .claude/skills/record/index.mk",
                 makefile.read_text(encoding="utf-8"),
             )
+        record = (SKILLS / "record" / "SKILL.md").read_text(encoding="utf-8")
+        self.assertIn(
+            "`make toon` writes the ADR index and the skill index through `$(PYTHON)`.",
+            record,
+        )
+        self.assertIn("docs/adr/index.toon", record)
+        self.assertIn("docs/requirements-index.toon", record)
+        self.assertIn("does not create `docs/adr/`", record)
 
     def test_plan_names_the_boundary_and_the_pattern(self):
-        """id: ADR-0007"""
+        """id: R-7"""
         text = (SKILLS / "plan" / "SKILL.md").read_text(encoding="utf-8")
         self.assertIn("who owns state", text)
         self.assertIn("what may call what", text)
+        review = (SKILLS / "review" / "SKILL.md").read_text(encoding="utf-8")
+        self.assertIn("pattern Plan named", review)
 
     def test_plan_waits_when_a_choice_is_expensive_to_reverse(self):
-        """id: ADR-0014"""
+        """id: R-14"""
         text = (SKILLS / "plan" / "SKILL.md").read_text(encoding="utf-8")
         step = (
             "Evaluate architecture, scalability, and code quality against the "
@@ -110,14 +120,14 @@ class SkillCollectionTest(unittest.TestCase):
         self.assertIn(step, lines[boundary + 1])
 
     def test_develop_stops_until_lint_and_test_pass(self):
-        """id: ADR-0008"""
+        """id: R-8"""
         text = (SKILLS / "develop" / "SKILL.md").read_text(encoding="utf-8")
         self.assertIn("`make lint` and `make test`", text)
         self.assertIn("Do not write a linter.", text)
         self.assertIn("one integration entry", text)
 
     def test_linters_are_existing_tools(self):
-        """id: ADR-0009"""
+        """id: R-9"""
         node = (SKILLS / "node" / "SKILL.md").read_text(encoding="utf-8")
         python = (SKILLS / "python" / "SKILL.md").read_text(encoding="utf-8")
         shell = (SKILLS / "shell" / "SKILL.md").read_text(encoding="utf-8")
@@ -132,7 +142,7 @@ class SkillCollectionTest(unittest.TestCase):
         self.assertFalse((SKILLS / "project-setup" / "scripts").exists())
 
     def test_api_design_covers_a_module_export(self):
-        """id: ADR-0010"""
+        """id: R-10"""
         text = (SKILLS / "api-design" / "SKILL.md").read_text(encoding="utf-8")
         self.assertIn("What is exported?", text)
         self.assertIn("What stays internal?", text)
@@ -141,7 +151,7 @@ class SkillCollectionTest(unittest.TestCase):
         )
 
     def test_make_with_no_arguments_is_help(self):
-        """id: ADR-0011"""
+        """id: R-11"""
         files = [
             ROOT / "Makefile",
             SKILLS / "project-setup" / "project.mk",
@@ -156,13 +166,28 @@ class SkillCollectionTest(unittest.TestCase):
             self.assertNotIn(".DEFAULT_GOAL := test", text)
 
     def test_coverage_is_the_diff_report(self):
-        """id: ADR-0012"""
+        """id: R-12"""
         text = (SKILLS / "project-setup" / "SKILL.md").read_text(encoding="utf-8")
         tools = (SKILLS / "project-setup" / "tools.mk").read_text(encoding="utf-8")
         self.assertIn("diff-cover", text)
         self.assertIn("repository-wide percentage", text)
         self.assertIn("diff-cover==", tools)
         self.assertIn("editorconfig-checker", tools)
+        review = (SKILLS / "review" / "SKILL.md").read_text(encoding="utf-8")
+        self.assertIn("build/coverage/diff.md", review)
+
+    def test_a_product_repository_keeps_a_roadmap_and_adrs(self):
+        """id: R-15"""
+        record = (SKILLS / "record" / "SKILL.md").read_text(encoding="utf-8")
+        plan = (SKILLS / "plan" / "SKILL.md").read_text(encoding="utf-8")
+        migrate = (SKILLS / "migrate-docs" / "SKILL.md").read_text(encoding="utf-8")
+        self.assertIn("docs/ROADMAP.md", record)
+        self.assertIn("docs/adr/", record)
+        self.assertIn("docs/DECISIONS.md", record)
+        self.assertIn("docs/ROADMAP.md", plan)
+        self.assertIn("docs/adr/index.toon", plan)
+        self.assertIn("`docs/adr/`", migrate)
+        self.assertIn("`docs/ROADMAP.md`", migrate)
 
 
 if __name__ == "__main__":

@@ -25,6 +25,8 @@ This skill is the only writer of ids and of the board. A stage that writes a doc
 | Implement later | `docs/proposals/<id>.md` | `P-` plus a number. This is the backlog |
 | Implement now | `docs/history/<id>.md` | `H-` plus the date and a slug |
 
+A product repository keeps in-progress work in `docs/ROADMAP.md` and a rule in `docs/adr/`. This collection is not a product repository. Each requirement is one statement in `docs/REQUIREMENTS.md`. An Open row in `docs/DECISIONS.md` is work that is not finished. A Decided row is a choice in force. This collection does not keep `docs/ROADMAP.md` or `docs/adr/`.
+
 `plan` reads these before it asks. It does not ask a question an accepted ADR, a Decided entry, or an open proposal already answered.
 
 ## Links
@@ -75,21 +77,22 @@ An agent on another task opens a history file only when an id names it.
 
 ## Tests
 
-A test names the requirement it proves with `id:` in its header or metadata. That is the same line this skill matches. The id is a roadmap id, a known-issue id, an ADR id, or a decision id. The test name states what the system does when that requirement holds. The test does not build a path to the document.
+A test names the requirement it proves with `id:` in its header or metadata. That is the same line this skill matches. The id is a roadmap id, a known-issue id, an ADR id, or a decision id. When the repository keeps `docs/REQUIREMENTS.md` and does not keep `docs/adr/`, the id is a row in that list. The test name states what the system does when that requirement holds. The test does not build a path to the document.
 
 ## Indexes
 
-`make toon` writes both indexes. `project.mk` and `sdlc.mk` include `.claude/skills/record/index.mk`, so a project Makefile that includes either of those already has the target. `make setup` runs `toon` first when that include is present.
+`make toon` writes the ADR index and the skill index through `$(PYTHON)`. A repository that keeps `docs/REQUIREMENTS.md` and does not keep `docs/adr/` gets `docs/requirements-index.toon` from that list, and it still gets the skill index. `make toon` does not create `docs/adr/` there. When a repository has both an ADR file and `docs/REQUIREMENTS.md`, `make toon` writes the ADR index. `project.mk` and `sdlc.mk` include `.claude/skills/record/index.mk`, so a project Makefile that includes either of those already has the target. `make setup` runs `toon` first when that include is present.
 
 Make is the interface. Python reads the frontmatter, because a makefile recipe is the wrong place for that parser. `toon` and `ids` call `$(PYTHON)` from `project-setup`. That is Podman on the machine where Make runs. The host does not need Python.
 
-Run `make toon` after a skill is installed or removed, after ADR frontmatter changes, and before `plan`, `develop`, or `review` reads an index. Hand-editing either file is a defect.
+Run `make toon` after a skill is installed or removed, after ADR frontmatter changes, after the requirements list changes, and before `plan`, `develop`, or `review` reads an index. Hand-editing an index is a defect.
 
 | File | Columns | What it lists |
 | --- | --- | --- |
 | `docs/adr/index.toon` | `id`, `status`, `title`, `adrs`, `skills`, `decisions` | ADR frontmatter. `plan` opens one ADR when the id matches |
+| `docs/requirements-index.toon` | `id`, `statement` | The requirements list, when that list is the board and `docs/adr/` has no ADR file |
 | `docs/skill-index.toon` | `name`, `kind`, `order`, `files`, `names` | Installed skills whose frontmatter `kind` is `language` or `check` |
 
-The skill index is the installed set under `.claude/skills/`. In this collection, before install, it is `skills/`. It does not copy skill prose. A language skill sets `files` to extensions and `names` to exact filenames such as `Makefile`. A check skill sets `order`. `plan` and `review` follow that order. `develop` invokes the language row whose `files` or `names` match the files in hand.
+The skill index is the installed set under `.claude/skills/`. In this collection, before install, it is `skills/`. It does not copy skill prose. The `name` in a skill's frontmatter matches its directory. A language skill sets `files` to extensions and `names` to exact filenames such as `Makefile`. A check skill sets `order`. `plan` and `review` follow that order. `develop` invokes the language row whose `files` or `names` match the files in hand.
 
 `make ids` is separate. It checks ids. It does not write a TOON file. It uses `$(PYTHON)`, the same Podman command as `make toon`.

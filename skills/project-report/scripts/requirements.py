@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 ID_LINE = re.compile(r"^id:\s*[\"']?([^\"'#\s]+)")
+ID_CELL = re.compile(r"^[A-Z]+-\d+$")
 ROADMAP_ID = re.compile(
     r"(?<![A-Za-z0-9-])(?:ADR-\d+|D-\d+|P-\d+|H-[A-Za-z0-9-]+)(?![A-Za-z0-9-])"
 )
@@ -22,10 +23,62 @@ class Requirement:
 
 
 @dataclass(frozen=True)
+class DecisionRow:
+    id: str
+    status: str
+    choice: str
+
+
+@dataclass(frozen=True)
 class TestProof:
     requirement_id: str | None
     qualified_name: str
     path: str
+
+
+def adr_markdown(root: Path) -> list[Path]:
+    adr_dir = root / "docs" / "adr"
+    if not adr_dir.is_dir():
+        return []
+    return sorted(path for path in adr_dir.glob("*.md") if path.is_file())
+
+
+def uses_requirements_list(root: Path) -> bool:
+    listed = root / "docs" / "REQUIREMENTS.md"
+    return listed.is_file() and not adr_markdown(root)
+
+
+def table_rows(path: Path) -> list[list[str]]:
+    if not path.is_file():
+        return []
+    found = []
+    for line in path.read_text(encoding="utf-8").splitlines():
+        stripped = line.strip()
+        if not stripped.startswith("|"):
+            continue
+        cells = [part.strip() for part in stripped.strip("|").split("|")]
+        if not cells or ID_CELL.match(cells[0]) is None:
+            continue
+        found.append(cells)
+    return found
+
+
+def decision_rows(root: Path) -> list[DecisionRow]:
+    found = []
+    for cells in table_rows(root / "docs" / "DECISIONS.md"):
+        if len(cells) < 3:
+            continue
+        found.append(DecisionRow(cells[0], cells[1], cells[2]))
+    return found
+
+
+def collect_requirements_list(root: Path) -> list[Requirement]:
+    found = []
+    for cells in table_rows(root / "docs" / "REQUIREMENTS.md"):
+        if len(cells) < 2:
+            continue
+        found.append(Requirement(cells[0], "requirement", cells[1], ""))
+    return found
 
 
 def repo_root(start: Path) -> Path:
@@ -130,7 +183,7 @@ def roadmap_requirements(path: Path, existing: set[str]) -> list[Requirement]:
     return found
 
 
-def collect(root: Path) -> list[Requirement]:
+def collect_board(root: Path) -> list[Requirement]:
     docs = root / "docs"
     found = []
     adr_dir = docs / "adr"
@@ -150,6 +203,12 @@ def collect(root: Path) -> list[Requirement]:
         seen.add(item.id)
         unique.append(item)
     return sorted(unique, key=lambda item: item.id)
+
+
+def collect(root: Path) -> list[Requirement]:
+    if uses_requirements_list(root):
+        return collect_requirements_list(root)
+    return collect_board(root)
 
 
 def parents_of(tree: ast.AST) -> dict[ast.AST, ast.AST]:

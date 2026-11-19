@@ -7,6 +7,9 @@
 #   make ids-retire ID=H-2026-11-15-old
 #
 # toon writes docs/adr/index.toon and docs/skill-index.toon.
+# A repository with docs/REQUIREMENTS.md and no ADR file writes
+# docs/requirements-index.toon instead, and does not create docs/adr/.
+# When both exist, toon writes the ADR index.
 # make setup runs toon first when this file is included.
 
 ifndef RECORD_INDEX_MK
@@ -20,7 +23,7 @@ endif
 
 .PHONY: toon ids ids-retire
 
-toon: ## Write the ADR index and the skill index
+toon: ## Write the ADR or requirements index, and the skill index
 	$(PYTHON) "$(RECORD_DIR)scripts/toon.py"
 
 ids: ## Reject a repeated document id

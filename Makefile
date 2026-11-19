@@ -22,5 +22,9 @@ COVERAGE_CMD = set -eu; \
 	REPORT=build/coverage/coverage.xml $(DIFF_COVER)
 
 include skills/project-setup/project.mk
+# This collection is not installed under .claude/skills, so the index
+# target is included from the skill source. A product Makefile includes
+# project.mk, which includes the installed copy.
+include skills/record/index.mk
 
 .DEFAULT_GOAL := help

@@ -1,5 +1,6 @@
 __pycache__/
 *.pyc
 docs/adr/index.toon
+docs/requirements-index.toon
 docs/skill-index.toon
 build/

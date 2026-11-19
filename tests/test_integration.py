@@ -1,34 +1,39 @@
 #!/usr/bin/env python3
-"""One integration entry: the Make contract and the language tools together."""
+"""One integration entry: each requirement is still said by a skill."""
 
 import unittest
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+SKILLS = ROOT / "skills"
 
 
-class QualityContractTest(unittest.TestCase):
-    def test_make_targets_use_the_existing_tools(self):
-        """id: ADR-0009"""
-        makefile = (ROOT / "Makefile").read_text(encoding="utf-8")
-        project = (ROOT / "skills" / "project-setup" / "project.mk").read_text(
-            encoding="utf-8"
+def requirement_rows(text):
+    found = []
+    for line in text.splitlines():
+        stripped = line.strip()
+        if not stripped.startswith("|"):
+            continue
+        cells = [part.strip() for part in stripped.strip("|").split("|")]
+        if len(cells) < 2 or not cells[0].startswith("R-"):
+            continue
+        if not cells[0][2:].isdigit():
+            continue
+        found.append((cells[0], cells[1]))
+    return found
+
+
+class RequirementWordingTest(unittest.TestCase):
+    def test_a_skill_still_says_each_requirement(self):
+        """id: R-1"""
+        rows = requirement_rows(
+            (ROOT / "docs" / "REQUIREMENTS.md").read_text(encoding="utf-8")
         )
-        review = (ROOT / "skills" / "review" / "SKILL.md").read_text(encoding="utf-8")
-        editorconfig = (ROOT / ".editorconfig").read_text(encoding="utf-8")
-        template = (
-            ROOT / "skills" / "project-setup" / "templates" / "editorconfig"
-        ).read_text(encoding="utf-8")
-        self.assertEqual(editorconfig, template)
-        for name in ("editorconfig:", "format:", "lint:", "integration:", "coverage:"):
-            self.assertIn(name, project)
-        for name in (
-            "FORMAT_CMD",
-            "LINT_CMD",
-            "INTEGRATION_CMD",
-            "COVERAGE_CMD",
-            "RUFF_IMAGE",
-        ):
-            self.assertIn(name, makefile)
-        self.assertIn("pattern Plan named", review)
-        self.assertIn("build/coverage/diff.md", review)
+        self.assertGreaterEqual(len(rows), 15)
+        blob = "\n".join(
+            path.read_text(encoding="utf-8")
+            for path in SKILLS.rglob("*")
+            if path.suffix in {".md", ".mk"}
+        )
+        missing = [ident for ident, statement in rows if statement not in blob]
+        self.assertEqual(missing, [])

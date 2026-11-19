@@ -34,7 +34,7 @@ def write(root, relative, text):
 
 class RequirementIdTest(unittest.TestCase):
     def test_a_missing_id_fails_the_check(self):
-        """id: ADR-0001"""
+        """id: R-1"""
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             write(
@@ -53,7 +53,7 @@ class RequirementIdTest(unittest.TestCase):
             self.assertTrue(any("has no id" in error for error in errors))
 
     def test_a_path_does_not_name_the_requirement(self):
-        """id: ADR-0001"""
+        """id: R-1"""
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             write(
@@ -72,7 +72,7 @@ class RequirementIdTest(unittest.TestCase):
             self.assertTrue(any("has no id" in error for error in errors))
 
     def test_an_id_that_is_not_a_requirement_fails(self):
-        """id: ADR-0001"""
+        """id: R-1"""
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             write(
@@ -91,7 +91,7 @@ class RequirementIdTest(unittest.TestCase):
             self.assertTrue(any("not a requirement" in error for error in errors))
 
     def test_review_fails_a_test_that_has_no_id(self):
-        """id: ADR-0001"""
+        """id: R-1"""
         for name in ("develop", "review", "project-setup"):
             text = (ROOT / "skills" / name / "SKILL.md").read_text(encoding="utf-8")
             self.assertIn("Stop when a test has no id.", text)
@@ -100,16 +100,23 @@ class RequirementIdTest(unittest.TestCase):
         self.assertIn("does not build a path", record)
 
     def test_every_test_in_this_repository_names_a_requirement(self):
-        """id: ADR-0001"""
+        """id: R-1"""
         errors = requirements.problems(
             requirements.collect(ROOT), requirements.proofs(ROOT)
         )
         self.assertEqual(errors, [])
 
+    def test_every_requirement_in_this_repository_has_a_test(self):
+        """id: R-1"""
+        items = requirements.collect(ROOT)
+        proved = {proof.requirement_id for proof in requirements.proofs(ROOT)}
+        missing = [item.id for item in items if item.id not in proved]
+        self.assertEqual(missing, [])
+
 
 class ChangedTestsTest(unittest.TestCase):
     def test_coverage_of_a_file_selects_its_tests(self):
-        """id: ADR-0002"""
+        """id: R-2"""
         covered = select_tests.merge_covered(
             {"pkg.Test.test_one": ["pkg/app.py"]},
             {
@@ -131,7 +138,7 @@ class ChangedTestsTest(unittest.TestCase):
         self.assertNotIn("SKILL.md", script)
 
     def test_a_missing_coverage_map_stops_test_changed(self):
-        """id: ADR-0002"""
+        """id: R-2"""
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             error = io.StringIO()
@@ -141,7 +148,7 @@ class ChangedTestsTest(unittest.TestCase):
             self.assertIn("make coverage", error.getvalue())
 
     def test_no_covering_test_still_names_the_full_suite(self):
-        """id: ADR-0002"""
+        """id: R-2"""
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             coverage = root / "build" / "coverage"
@@ -155,7 +162,7 @@ class ChangedTestsTest(unittest.TestCase):
             self.assertIn("make test runs the full suite", output.getvalue())
 
     def test_ci_runs_the_full_suite(self):
-        """id: ADR-0002"""
+        """id: R-2"""
         makefile = (ROOT / "Makefile").read_text(encoding="utf-8")
         self.assertIn("TEST_CHANGED_CMD", makefile)
         self.assertIn("cover_tests.py", makefile)
@@ -208,7 +215,7 @@ class ProjectReportTest(unittest.TestCase):
         )
 
     def test_the_report_names_the_tests_and_the_gaps(self):
-        """id: ADR-0003"""
+        """id: R-3"""
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             self.sample(root)
@@ -225,8 +232,44 @@ class ProjectReportTest(unittest.TestCase):
             self.assertNotIn("ADR-0001 (adr)", gap)
             self.assertIn("Hand-editing this file is a defect.", text)
 
+    def test_a_requirements_list_is_the_map_when_there_is_no_adr_file(self):
+        """id: R-3"""
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write(
+                root,
+                "docs/REQUIREMENTS.md",
+                "| Id | Statement |\n| --- | --- |\n| R-1 | A test names the requirement. |\n",
+            )
+            write(
+                root,
+                "tests/test_sample.py",
+                'def test_names_it():\n    """id: R-1"""\n    assert True\n',
+            )
+            text, errors = project_report.build(root)
+            self.assertEqual(errors, [])
+            self.assertIn("| R-1 | requirement |", text)
+            self.assertIn("The id is a row in `docs/REQUIREMENTS.md`.", text)
+            self.assertNotIn("### ADRs", text)
+
+    def test_an_adr_file_keeps_the_product_report(self):
+        """id: R-3"""
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            self.sample(root)
+            write(
+                root,
+                "docs/REQUIREMENTS.md",
+                "| Id | Statement |\n| --- | --- |\n| R-9 | Other. |\n",
+            )
+            text, errors = project_report.build(root)
+            self.assertEqual(errors, [])
+            self.assertIn("| ADR-0001 | adr | Accepted |", text)
+            self.assertIn("### ADRs", text)
+            self.assertNotIn("R-9", text)
+
     def test_the_reviews_quote_the_stage_checks(self):
-        """id: ADR-0003"""
+        """id: R-3"""
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             self.sample(root)
@@ -243,7 +286,7 @@ class ProjectReportTest(unittest.TestCase):
             self.assertIn("project-setup: not installed", development)
 
     def test_make_project_report_is_the_writer(self):
-        """id: ADR-0003"""
+        """id: R-3"""
         for name in ("review", "project-setup", "project-report"):
             text = (ROOT / "skills" / name / "SKILL.md").read_text(encoding="utf-8")
             self.assertIn("`make project-report`", text)
@@ -253,20 +296,22 @@ class ProjectReportTest(unittest.TestCase):
         )
         self.assertIn("project-report:", project)
 
-    def test_this_repository_report_maps_requirements(self):
-        """id: ADR-0003"""
+    def test_this_repository_report_maps_the_requirements_list(self):
+        """id: R-3"""
         text, errors = project_report.build(ROOT)
         self.assertEqual(errors, [])
         self.assertIn("## Requirements", text)
         self.assertIn("## Architecture review", text)
         self.assertIn("## Development review", text)
+        self.assertIn("| R-7 | requirement |", text)
         self.assertIn(
             "tests.test_skills.SkillCollectionTest.test_plan_names_the_boundary", text
         )
         gap = text.split("### Ids with no test", 1)[1].split("### Tests with no id", 1)[
             0
         ]
-        self.assertIn("H-2026-11-16-requirement-tests (roadmap)", gap)
+        self.assertIn("None.", gap)
+        self.assertNotIn("(roadmap)", gap)
         architecture = text.split("## Architecture review", 1)[1].split(
             "## Development review", 1
         )[0]
@@ -274,7 +319,12 @@ class ProjectReportTest(unittest.TestCase):
         self.assertIn("who owns state", architecture)
         self.assertIn("one integration entry", development)
         self.assertIn("### Decisions", development)
-        self.assertIn("None.", development)
+        self.assertIn("D-1, Open. H-2026-11-16-requirement-tests.", development)
+        self.assertIn(
+            "D-3, Decided. This collection keeps one requirements list and records open work and choices in force in this list.",
+            development,
+        )
+        self.assertNotIn("list..", development)
 
 
 if __name__ == "__main__":
