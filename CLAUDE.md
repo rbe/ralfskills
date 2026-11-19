@@ -8,7 +8,7 @@ Language skills: `node`, `python`, `shell`, `jvm`. Subskills `plan` asks and `re
 
 `plan` names who owns state and what may call what. `develop` is not done until `make lint` and `make test` pass. The linter is the one the language skill names. `make test` is the full suite. `make test-changed` runs the tests that cover the diff. `make coverage` lists the lines the change touched. `make project-report` writes the generated report.
 
-The board is `docs/ROADMAP.md`, `docs/KNOWN_ISSUES.md`, `docs/DECISIONS.md`, `docs/adr/`, `docs/proposals/`, and `docs/history/`. `make toon` writes `docs/adr/index.toon` and `docs/skill-index.toon`. Run it before reading either index.
+This collection records each requirement as one statement in `docs/REQUIREMENTS.md`. An Open row in `docs/DECISIONS.md` is work that is not finished. A Decided row is a choice in force. This collection does not keep `docs/ROADMAP.md` or `docs/adr/`. The skills still teach a product repository to keep in-progress work in `docs/ROADMAP.md`, choices in `docs/DECISIONS.md`, and a rule in `docs/adr/`. `make toon` writes `docs/requirements-index.toon` and `docs/skill-index.toon` here. In a product repository it writes `docs/adr/index.toon` and the skill index. Run `make toon` before reading an index.
 
 If `docs/BUGS.md`, `docs/WAVES.md`, `docs/FEATURES.md`, `docs/bugs/`, `docs/waves/`, or `docs/features/` exists, the only skill is `migrate-docs`.
 

@@ -35,7 +35,7 @@ class IdsTest(unittest.TestCase):
         return path
 
     def test_duplicate_id_fails(self):
-        """id: ADR-0013"""
+        """id: R-13"""
         body = "---\nid: D-1\nstatus: open\n---\n\n# One\n"
         self.write("docs/DECISIONS.md", body)
         self.write("docs/proposals/P-1.md", "---\nid: D-1\nstatus: open\n---\n")
@@ -43,14 +43,14 @@ class IdsTest(unittest.TestCase):
         self.assertTrue(any("D-1" in error for error in errors))
 
     def test_retired_id_still_in_use_fails(self):
-        """id: ADR-0013"""
+        """id: R-13"""
         self.write("docs/ids.yaml", "retired:\n- D-1\n")
         self.write("docs/DECISIONS.md", "---\nid: D-1\nstatus: decided\n---\n")
         errors = ids.check(self.root)
         self.assertTrue(any("retired" in error for error in errors))
 
     def test_retire_moves_an_unused_id(self):
-        """id: ADR-0013"""
+        """id: R-13"""
         self.write("docs/ids.yaml", "retired: []\n")
         errors = ids.retire(self.root, "H-2026-11-15-old")
         self.assertEqual(errors, [])
@@ -60,7 +60,7 @@ class IdsTest(unittest.TestCase):
         self.assertEqual(ids.check(self.root), [])
 
     def test_retire_rejects_a_live_id(self):
-        """id: ADR-0013"""
+        """id: R-13"""
         self.write("docs/history/H-1.md", "---\nid: H-1\n---\n")
         errors = ids.retire(self.root, "H-1")
         self.assertTrue(errors)
@@ -71,7 +71,7 @@ skill_index = load("skill_index", HERE / "skill_index.py")
 
 class SkillIndexTest(unittest.TestCase):
     def test_rows_come_from_kind_and_installed_skills_win(self):
-        """id: ADR-0006"""
+        """id: R-6"""
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             bundled = root / "skills" / "jvm"
@@ -107,7 +107,7 @@ class SkillIndexTest(unittest.TestCase):
 
 class AdrIndexTest(unittest.TestCase):
     def test_index_lists_adr_links_and_not_skill_prose(self):
-        """id: ADR-0006"""
+        """id: R-6"""
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             adr = root / "docs" / "adr"
@@ -124,6 +124,91 @@ class AdrIndexTest(unittest.TestCase):
                 text,
             )
             self.assertNotIn("Body", text)
+
+
+toon = load("toon", HERE / "toon.py")
+
+
+class IndexTargetTest(unittest.TestCase):
+    def test_a_requirements_list_is_indexed_without_an_adr_directory(self):
+        """id: R-6"""
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            docs = root / "docs"
+            docs.mkdir()
+            (docs / "REQUIREMENTS.md").write_text(
+                "| Id | Statement |\n| --- | --- |\n| R-1 | One, two. |\n",
+                encoding="utf-8",
+            )
+            toon.write_indexes(root)
+            text = (docs / "requirements-index.toon").read_text(encoding="utf-8")
+            self.assertIn("requirements[1]{id,statement}:", text)
+            self.assertIn('R-1,"One, two."', text)
+            self.assertFalse((docs / "adr").exists())
+            self.assertTrue((docs / "skill-index.toon").is_file())
+
+    def test_a_product_repository_still_gets_an_adr_index(self):
+        """id: R-6"""
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "docs").mkdir()
+            toon.write_indexes(root)
+            index = root / "docs" / "adr" / "index.toon"
+            self.assertTrue(index.is_file())
+            self.assertIn("adr_index[0]", index.read_text(encoding="utf-8"))
+            self.assertFalse((root / "docs" / "requirements-index.toon").exists())
+
+    def test_adr_files_keep_the_adr_index_when_a_requirements_list_is_also_present(
+        self,
+    ):
+        """id: R-6"""
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            adr = root / "docs" / "adr"
+            adr.mkdir(parents=True)
+            (adr / "ADR-0004.md").write_text(
+                "---\nid: ADR-0004\ntitle: Listen\nstatus: Accepted\n---\n",
+                encoding="utf-8",
+            )
+            (root / "docs" / "REQUIREMENTS.md").write_text(
+                "| Id | Statement |\n| --- | --- |\n| R-1 | One. |\n",
+                encoding="utf-8",
+            )
+            toon.write_indexes(root)
+            text = (adr / "index.toon").read_text(encoding="utf-8")
+            self.assertIn("ADR-0004,Accepted,Listen,,,", text)
+            self.assertFalse((root / "docs" / "requirements-index.toon").exists())
+
+
+class TableIdTest(unittest.TestCase):
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.root = Path(self.tmp.name)
+        (self.root / "docs").mkdir()
+
+    def tearDown(self):
+        self.tmp.cleanup()
+
+    def write(self, relative, text):
+        path = self.root / relative
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(text, encoding="utf-8")
+        return path
+
+    def test_a_table_id_is_live_and_a_repeat_fails(self):
+        """id: R-13"""
+        self.write(
+            "docs/REQUIREMENTS.md",
+            "| Id | Statement |\n| --- | --- |\n| R-1 | One. |\n",
+        )
+        self.write(
+            "docs/DECISIONS.md",
+            "| Id | Status | Choice |\n| --- | --- | --- |\n| D-1 | Open | Later. |\n",
+        )
+        self.assertEqual(ids.check(self.root), [])
+        self.write("docs/history/extra.md", "---\nid: R-1\n---\n")
+        errors = ids.check(self.root)
+        self.assertTrue(any("R-1" in error for error in errors))
 
 
 if __name__ == "__main__":

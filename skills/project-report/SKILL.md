@@ -7,7 +7,7 @@ description: Generate the project report from the board and the tests. Use when 
 
 `make project-report` writes `build/project-report.md`. The file has the requirements-to-tests map, the architecture review, and the development review. Hand-editing it is a defect.
 
-The map names which requirement id is proved by which tests, and which ids have no test. A requirement id is a roadmap id, a known-issue id, an ADR id, or a decision id. A test names that id with `id:` in its header or metadata, the line `record` matches.
+The map names which requirement id is proved by which tests, and which ids have no test. A requirement id is a roadmap id, a known-issue id, an ADR id, or a decision id. When the repository keeps `docs/REQUIREMENTS.md` and does not keep `docs/adr/`, a requirement id is a row in that list. A test names that id with `id:` in its header or metadata, the line `record` matches.
 
 The architecture review is drawn from the ADRs, the roadmap, known issues, and the checks in `plan` and `review`. The development review is drawn from the ADRs, the decisions, the roadmap, known issues, and the checks in `develop`, `review`, `release`, and `project-setup`.
 

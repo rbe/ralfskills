@@ -16,6 +16,8 @@ order: 40
 
 The list of routes for one product stays in a project skill named from `CLAUDE.md`. This skill is the shape of a change. HTTP is one part. The public API of a module or a library is the other part.
 
+`api-design` asks what is exported, what stays internal, and what the resource, the verb, and the status on success are.
+
 ## Questions for plan
 
 HTTP, when the slice changes a route. Otherwise answer `not HTTP`.

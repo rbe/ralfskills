@@ -12,7 +12,7 @@ Install so the files land in `.claude/skills/`. That is the APM target `claude`.
 | [develop](skills/develop/SKILL.md) | Implement the slice with the installed language skill |
 | [review](skills/review/SKILL.md) | Gates and the installed subskills, after the change |
 | [release](skills/release/SKILL.md) | Ship a binary or a container image. Invokes `github-pipeline` when delivery changes |
-| [record](skills/record/SKILL.md) | Ids, the board, the history file, and the ADR index |
+| [record](skills/record/SKILL.md) | Ids, the board, the history file, the ADR index, and this collection's requirements index |
 | [project-report](skills/project-report/SKILL.md) | Generated requirements map, architecture review, and development review |
 | [migrate-docs](skills/migrate-docs/SKILL.md) | The only skill that reads an old board. Other skills stop until it has deleted those files |
 | [project-setup](skills/project-setup/SKILL.md) | Make is the only interface. `help` is the default goal. EditorConfig, one formatter, one linter, unit tests, one integration entry, and a diff-cover report are targets |
@@ -30,7 +30,7 @@ The `name` in each skill's frontmatter matches its directory. A project installs
 
 `project-setup` and `github-pipeline` each have setup mode and report mode, written in the skill. Setup mode changes only what is missing or off the contract. Report mode names what matches and what is missing, and it changes nothing.
 
-`make toon` writes the ADR index and the skill index. `project.mk` and `sdlc.mk` include that target from `record` when the skill is installed, and `make setup` runs it first. Every Python command, including a one-off `make py ARGS='...'`, runs in Podman on the machine where Make runs. Set `PYTHON_IMAGE` before the include to pick the version. The host does not need Python.
+`make toon` writes the ADR index and the skill index for a product repository. In this collection it writes `docs/requirements-index.toon` and the skill index, and it does not create `docs/adr/`. `project.mk` and `sdlc.mk` include that target from `record` when the skill is installed, and `make setup` runs it first. Every Python command, including a one-off `make py ARGS='...'`, runs in Podman on the machine where Make runs. Set `PYTHON_IMAGE` before the include to pick the version. The host does not need Python.
 
 ## How APM loads them
 

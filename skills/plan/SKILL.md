@@ -14,7 +14,7 @@ description: Grill a change before editing. Use when a request is new, vague, or
 
 ## Work
 
-1. Run `make toon`. Read `docs/ROADMAP.md`, `docs/KNOWN_ISSUES.md`, `docs/DECISIONS.md`, `docs/adr/index.toon`, `docs/skill-index.toon`, and the open files in `docs/proposals/`. Read an ADR when the index names an id this slice can change. Do not ask a question an accepted ADR, a Decided entry, or an open proposal already answered.
+1. Run `make toon`. Read `docs/ROADMAP.md`, `docs/KNOWN_ISSUES.md`, `docs/DECISIONS.md`, `docs/adr/index.toon`, `docs/skill-index.toon`, and the open files in `docs/proposals/`. When the repository keeps `docs/REQUIREMENTS.md` and does not keep `docs/adr/`, read that list and `docs/DECISIONS.md` instead of `docs/ROADMAP.md` and `docs/adr/index.toon`. Read an ADR when the index names an id this slice can change. Do not ask a question an accepted ADR, a Decided entry, or an open proposal already answered.
 2. For each `skill-index` row whose `kind` is `check`, in file order: read that skill and ask its questions. If there is no `check` row, write `checks: none installed`. A missing line for a row fails this step.
 3. Ask one question, then wait. Stop when the slice is one sentence, with an out-of-scope line. A request that already names a file or a failing test is `develop`.
 4. Name the boundary and the pattern for this slice: who owns state, and what may call what. Architectural patterns are part of the grill in step 3. Stop when that sentence is missing. Do not take a later step.
