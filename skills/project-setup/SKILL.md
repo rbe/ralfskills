@@ -37,14 +37,15 @@ A target is filled in when its command variable has a non-empty value, or the pr
 
 The order of setup mode:
 
-1. Copy the Makefile template of the language skill and the other files that template names, or add the lines an existing Makefile lacks.
-2. Create the manifest of a new project through the Make target the template names: `make npm` for Node, `make wrapper` for Gradle, `make go` for Go. A Python project with no dependency has no manifest.
-3. Add the missing lines to `.gitignore`.
-4. Run `make toon`.
-5. Write `CLAUDE.md` from the template, or add the paragraphs an existing file lacks. Ask the owner how the project ships, for the ship sentence.
-6. Do the Quality targets steps.
-7. Run `make setup`.
-8. Commit every file this mode wrote, the manifest and its lockfile, `.claude/skills/`, `apm.yml`, and `apm.lock.yaml` on the default branch, and push. The setup of a project is not a slice.
+1. Ask the owner how the project ships: a binary, a container image, a library package, or with the merge only. Do not copy a template before the answer.
+2. Copy the Makefile template of the language skill and the other files that template names, or add the lines an existing Makefile lacks. When the project ships a binary, set what the language skill names for a binary, such as `BIN` for Go, or set `BUILD_CMD` to the command that writes the binary. Then `make build` writes the binary from the first run.
+3. Create the manifest of a new project through the Make target the template names: `make npm` for Node, `make wrapper` for Gradle, `make go` for Go. A Python project with no dependency has no manifest.
+4. Add the missing lines to `.gitignore`.
+5. Run `make toon`.
+6. Write `CLAUDE.md` from the template, or add the paragraphs an existing file lacks. The answer of step 1 is the ship sentence.
+7. Do the Quality targets steps.
+8. Run `make setup`.
+9. Commit every file this mode wrote, the manifest and its lockfile, `.claude/skills/`, `apm.yml`, and `apm.lock.yaml` on the default branch, and push. The setup of a project is not a slice.
 
 The paragraphs below say what each step writes.
 
