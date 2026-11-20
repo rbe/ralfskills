@@ -1,0 +1,48 @@
+# The Makefile of a Go project on project.mk, from the template of the
+# go skill.
+#
+# Go runs through $(GO), which is Podman on this machine. gofmt is the
+# formatter. go vet is the linter. The Go caches are container volumes,
+# not directories of the project. A project with no integration entry
+# keeps that command as `true`.
+#
+# A new project has no go.mod yet. Create it through Make:
+#   make go ARGS='mod init example.com/<project>'
+# Add build/ and bin/ to .gitignore.
+#
+# coverage and test-changed fail until the first unit test exists.
+
+GO_IMAGE ?= docker.io/library/golang:1.25-bookworm
+GO_RUN = podman run --rm -e HOME=/tmp -e CI -e GOFLAGS=-buildvcs=false \
+	-v go-build-cache:/tmp/.cache/go-build -v go-mod-cache:/go/pkg/mod \
+	-v "$(CURDIR)":/work:Z -w /work $(GO_IMAGE)
+GO = $(GO_RUN) go
+
+SETUP_CMD = $(GO) mod download
+BUILD_CMD = mkdir -p build && $(GO) build -o build/ ./...
+TEST_CMD = $(GO) test ./...
+INTEGRATION_CMD = true
+# gofmt reads the package directories of the project and no other directory.
+FORMAT_CMD = $(GO_RUN) sh -c 'files=$$(gofmt -l $$(go list -f "{{.Dir}}" ./...)); if [ -n "$$files" ]; then printf "%s\n" "gofmt would change:" "$$files"; exit 1; fi'
+FORMAT_FIX_CMD = $(GO_RUN) sh -c 'gofmt -w $$(go list -f "{{.Dir}}" ./...)'
+LINT_CMD = $(GO) vet ./...
+COVERAGE_CMD = set -eu; \
+	base=$$(git merge-base HEAD origin/$(DEFAULT_BRANCH) 2>/dev/null || git rev-parse -q --verify HEAD 2>/dev/null || git hash-object -t tree /dev/null); \
+	git add -N .; \
+	git diff "$$base" > build/coverage/change.diff; \
+	$(GO_RUN) sh -c 'set -eu; mkdir -p build/coverage/go; for pkg in $$(go list ./...); do go test -coverpkg=./... -coverprofile="build/coverage/go/$$(printf "%s" "$$pkg" | tr "/" "_").out" "$$pkg"; done'; \
+	$(PYTHON) .claude/skills/project-report/scripts/go_cover_map.py; \
+	REPORT=build/coverage/coverage.xml $(DIFF_COVER)
+TEST_CHANGED_CMD = chosen=$$($(PYTHON) .claude/skills/project-report/scripts/changed_tests.py --print); \
+	if [ -z "$$chosen" ]; then printf '%s\n' "test-changed: no test covers the changed files. make test runs the full suite."; \
+	else printf 'test-changed: %s\n' "$$chosen"; $(GO) test $$chosen; fi
+
+include .claude/skills/project-setup/project.mk
+
+# Project targets and overrides.
+
+.PHONY: go
+go: ## Run go in Podman on this machine. Set ARGS.
+	@set -eu; \
+	if [ -z "$(ARGS)" ]; then printf '%s\n' "go: set ARGS to the go arguments." >&2; exit 1; fi
+	$(GO) $(ARGS)

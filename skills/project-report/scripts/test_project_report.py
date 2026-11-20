@@ -27,6 +27,7 @@ project_report = load("project_report", HERE / "project_report.py")
 changed_tests = load("changed_tests", HERE / "changed_tests.py")
 node_cover_map = load("node_cover_map", HERE / "node_cover_map.py")
 jacoco_cover_map = load("jacoco_cover_map", HERE / "jacoco_cover_map.py")
+go_cover_map = load("go_cover_map", HERE / "go_cover_map.py")
 
 
 def write(root, relative, text):
@@ -300,6 +301,76 @@ class ChangedTestsTest(unittest.TestCase):
                     },
                 },
             )
+
+    def test_a_go_package_covers_the_files_its_tests_ran(self):
+        """id: R-68"""
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write(root, "go.mod", "module example.com/app\n\ngo 1.22\n")
+            write(root, "internal/fmt/fmt.go", "package fmt\n")
+            write(root, "internal/fmt/fmt_test.go", "// id: D-1\npackage fmt\n")
+            write(root, "internal/ui/ui.go", "package ui\n")
+            write(root, "internal/ui/ui_test.go", "// id: D-1\npackage ui\n")
+            write(
+                root,
+                "build/coverage/go/example.com_app_internal_fmt.out",
+                "mode: set\n"
+                "example.com/app/internal/fmt/fmt.go:3.20,5.2 1 1\n"
+                "example.com/app/internal/fmt/fmt.go:7.20,9.2 1 0\n"
+                "example.com/app/internal/ui/ui.go:3.20,4.2 1 0\n",
+            )
+            write(
+                root,
+                "build/coverage/go/example.com_app_internal_ui.out",
+                "mode: set\n"
+                "example.com/app/internal/fmt/fmt.go:3.20,5.2 1 1\n"
+                "example.com/app/internal/ui/ui.go:3.20,4.2 1 1\n"
+                "other.org/lib/x.go:1.1,2.2 1 1\n",
+            )
+            by_test, lines = go_cover_map.covered(root / "build/coverage/go", root)
+            self.assertEqual(
+                by_test,
+                {
+                    "./internal/fmt": {
+                        "internal/fmt/fmt.go",
+                        "internal/fmt/fmt_test.go",
+                    },
+                    "./internal/ui": {
+                        "internal/fmt/fmt.go",
+                        "internal/ui/ui.go",
+                        "internal/ui/ui_test.go",
+                    },
+                },
+            )
+            self.assertEqual(lines["internal/fmt/fmt.go"][4], 1)
+            self.assertEqual(lines["internal/fmt/fmt.go"][8], 0)
+            self.assertNotIn("x.go", "".join(lines))
+            xml = go_cover_map.cobertura(lines)
+            self.assertIn('filename="internal/fmt/fmt.go"', xml)
+            self.assertIn('<line number="8" hits="0"/>', xml)
+            previous = Path.cwd()
+            try:
+                os.chdir(root)
+                self.assertEqual(go_cover_map.main(["go_cover_map.py"]), 0)
+                errors = io.StringIO()
+                with redirect_stderr(errors):
+                    self.assertEqual(go_cover_map.main(["go_cover_map.py"]), 1)
+            finally:
+                os.chdir(previous)
+            self.assertIn("no Go cover profile", errors.getvalue())
+            self.assertTrue((root / "build/coverage/coverage.xml").is_file())
+
+    def test_a_go_test_file_names_its_id_in_a_comment(self):
+        """id: R-63"""
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write(root, "internal/fmt/fmt_test.go", "// id: D-1\npackage fmt\n")
+            write(root, "internal/ui/ui_test.go", "package ui\n")
+            named = {
+                proof.path: proof.requirement_id for proof in requirements.proofs(root)
+            }
+            self.assertEqual(named["internal/fmt/fmt_test.go"], "D-1")
+            self.assertIsNone(named["internal/ui/ui_test.go"])
 
     def test_the_print_mode_names_the_chosen_tests_and_runs_none(self):
         """id: R-2"""

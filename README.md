@@ -25,6 +25,7 @@ Install so the files land in `.claude/skills/`. That is the APM target `claude`.
 | [python](skills/python/SKILL.md) | Python |
 | [shell](skills/shell/SKILL.md) | POSIX shell inside a recipe |
 | [jvm](skills/jvm/SKILL.md) | Java, Groovy, Grails, and Gradle |
+| [go](skills/go/SKILL.md) | Go |
 
 The `name` in each skill's frontmatter matches its directory. A project installs the stages, `record`, `project-setup`, `project-report`, the language skills it uses, and the subskills it wants. It installs `github-pipeline` when it publishes through GitHub. It installs `migrate-docs` when the old board is still present, and it runs that skill before the others.
 
