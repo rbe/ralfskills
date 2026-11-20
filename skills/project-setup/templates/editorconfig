@@ -18,3 +18,8 @@ indent_size = unset
 [*.md]
 indent_style = unset
 indent_size = unset
+
+# gofmt owns the layout of a Go file.
+[{*.go,go.mod,go.sum}]
+indent_style = unset
+indent_size = unset
