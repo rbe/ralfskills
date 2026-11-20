@@ -98,33 +98,41 @@ def superseded(item) -> bool:
     return item.kind == "adr" and item.status.strip().lower() == "superseded"
 
 
-def format_requirement(item, proofs_found) -> str:
+def linker(requirements, extra=()):
+    """A function that links the known ids in a text."""
+    known = {item.id for item in requirements} | set(extra)
+    module = sibling("report_links")
+    return lambda text: module.link_text(text, known)
+
+
+def format_requirement(item, proofs_found, link) -> str:
     proved = tests_for(item.id, proofs_found)
     names = "; ".join(proved) if proved else "no test"
     status = item.status or "unspecified"
-    title = (item.title or item.id).rstrip(".")
+    title = link((item.title or item.id).rstrip("."))
+    ident = sibling("report_links").link(item.id)
     if item.kind not in sibling("requirements").PROVABLE:
-        return f"- {item.id}, {status}, {item.kind}. {title}."
-    return f"- {item.id}, {status}, {item.kind}. {title}. Proved by: {names}."
+        return f"- {ident}, {status}, {item.kind}. {title}."
+    return f"- {ident}, {status}, {item.kind}. {title}. Proved by: {names}."
 
 
-def append_requirements(lines: list[str], items, proofs_found, kind: str) -> None:
+def append_requirements(lines: list[str], items, proofs_found, kind: str, link) -> None:
     chosen = [item for item in items if item.kind == kind]
     if not chosen:
         lines.append("None.")
         lines.append("")
         return
     for item in chosen:
-        lines.append(format_requirement(item, proofs_found))
+        lines.append(format_requirement(item, proofs_found, link))
     lines.append("")
 
 
-def append_lines(lines: list[str], entries: list[str]) -> None:
+def append_lines(lines: list[str], entries: list[str], link=str) -> None:
     if not entries:
         lines.append("None.")
     else:
         for entry in entries:
-            lines.append(f"- {entry}")
+            lines.append(f"- {link(entry)}")
     lines.append("")
 
 
@@ -147,6 +155,7 @@ def append_checks(lines: list[str], root: Path, checks) -> None:
 
 
 def append_proof_map(lines: list[str], requirements, proofs_found) -> None:
+    ident_link = sibling("report_links").link
     provable = sibling("requirements").PROVABLE
     requirements = [item for item in requirements if item.kind in provable]
     lines.append("| Id | Kind | Status | Tests |")
@@ -155,7 +164,7 @@ def append_proof_map(lines: list[str], requirements, proofs_found) -> None:
         proved = tests_for(item.id, proofs_found)
         names = "; ".join(proved) if proved else "no test"
         lines.append(
-            f"| {cell(item.id)} | {cell(item.kind)} | {cell(item.status)} | {cell(names)} |"
+            f"| {cell(ident_link(item.id))} | {cell(item.kind)} | {cell(item.status)} | {cell(names)} |"
         )
     lines.append("")
     lines.append("### Ids with no test")
@@ -169,7 +178,7 @@ def append_proof_map(lines: list[str], requirements, proofs_found) -> None:
         lines.append("None.")
     else:
         for item in gaps:
-            lines.append(f"- {item.id} ({item.kind})")
+            lines.append(f"- {ident_link(item.id)} ({item.kind})")
     lines.append("")
     lines.append("### Tests with no id")
     lines.append("")
@@ -189,6 +198,7 @@ def append_proof_map(lines: list[str], requirements, proofs_found) -> None:
 
 
 def render_product(root: Path, requirements, proofs_found) -> str:
+    link = linker(requirements)
     lines = [
         "# Project report",
         "",
@@ -209,13 +219,13 @@ def render_product(root: Path, requirements, proofs_found) -> str:
     lines.append("")
     lines.append("### ADRs")
     lines.append("")
-    append_requirements(lines, requirements, proofs_found, "adr")
+    append_requirements(lines, requirements, proofs_found, "adr", link)
     lines.append("### Roadmap")
     lines.append("")
-    append_lines(lines, content_lines(root / "docs" / "ROADMAP.md"))
+    append_lines(lines, content_lines(root / "docs" / "ROADMAP.md"), link)
     lines.append("### Known issues")
     lines.append("")
-    append_requirements(lines, requirements, proofs_found, "issue")
+    append_requirements(lines, requirements, proofs_found, "issue", link)
     lines.append("### Checks")
     lines.append("")
     append_checks(lines, root, ARCHITECTURE_CHECKS)
@@ -228,16 +238,16 @@ def render_product(root: Path, requirements, proofs_found) -> str:
     lines.append("")
     lines.append("### ADRs")
     lines.append("")
-    append_requirements(lines, requirements, proofs_found, "adr")
+    append_requirements(lines, requirements, proofs_found, "adr", link)
     lines.append("### Decisions")
     lines.append("")
-    append_requirements(lines, requirements, proofs_found, "decision")
+    append_requirements(lines, requirements, proofs_found, "decision", link)
     lines.append("### Roadmap")
     lines.append("")
-    append_lines(lines, content_lines(root / "docs" / "ROADMAP.md"))
+    append_lines(lines, content_lines(root / "docs" / "ROADMAP.md"), link)
     lines.append("### Known issues")
     lines.append("")
-    append_requirements(lines, requirements, proofs_found, "issue")
+    append_requirements(lines, requirements, proofs_found, "issue", link)
     lines.append("### Checks")
     lines.append("")
     append_checks(lines, root, DEVELOPMENT_CHECKS)
@@ -246,6 +256,8 @@ def render_product(root: Path, requirements, proofs_found) -> str:
 
 def render_requirements_list(root: Path, requirements, proofs_found) -> str:
     requirements_module = sibling("requirements")
+    choices = requirements_module.decision_rows(root)
+    link = linker(requirements, [choice.id for choice in choices])
     lines = [
         "# Project report",
         "",
@@ -257,8 +269,9 @@ def render_requirements_list(root: Path, requirements, proofs_found) -> str:
         "The test names that id with `id:` in its header or metadata.",
         "",
     ]
+    ident_link = sibling("report_links").link
     for item in requirements:
-        lines.append(f"- {item.id}. {item.title}")
+        lines.append(f"- {ident_link(item.id)}. {link(item.title)}")
     lines.append("")
     append_proof_map(lines, requirements, proofs_found)
     lines.append("## Architecture review")
@@ -280,14 +293,14 @@ def render_requirements_list(root: Path, requirements, proofs_found) -> str:
     lines.append("")
     lines.append("### Decisions")
     lines.append("")
-    choices = requirements_module.decision_rows(root)
     if not choices:
         lines.append("None.")
         lines.append("")
     else:
         for choice in choices:
             text = choice.choice if choice.choice.endswith(".") else f"{choice.choice}."
-            lines.append(f"- {choice.id}, {choice.status}. {text}")
+            ident = sibling("report_links").link(choice.id)
+            lines.append(f"- {ident}, {choice.status}. {link(text)}")
         lines.append("")
     lines.append("### Checks")
     lines.append("")

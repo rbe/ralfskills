@@ -27,4 +27,4 @@ description: Implement a slice plan already closed, or a request that names a so
 11. Run `make lint` and `make test`. The linter is the one the language skill names. Do not write a linter. Stop when either target fails. Do not take a later step.
 12. Run `make coverage` again when a file changed after the last run. It writes `build/coverage/diff.md` for the lines this change touched. The recipe marks a new file with `git add -N`, so a file git does not track yet is in the report. A change with only test files or documents has no line in the report. Write that in Develop. Stop when that report is missing. Do not take a later step.
 13. CI runs these same Make targets. `test-changed` is not a CI target. Stop when lint, test, or coverage runs outside Make. Do not take a later step.
-14. An id, a roadmap line, or a known-issue change goes through `record`.
+14. An id, a roadmap line, or a known-issue change goes through `record`. Run `make links` after the documents are written.

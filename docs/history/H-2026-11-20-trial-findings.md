@@ -21,7 +21,7 @@ Pattern: what an agent had to guess is now a template or a numbered step.
 
 ## Develop
 
-A test names an ADR or a decision. It does not name a roadmap line or a known issue. Those ids are retired when the work ends, and the project report then failed. D-9 records the choice. The report reads a decision and a known issue as table rows.
+A test names an ADR or a decision. It does not name a roadmap line or a known issue. Those ids are retired when the work ends, and the project report then failed. [D-9](../DECISIONS.md#d-9) records the choice. The report reads a decision and a known issue as table rows.
 
 `record` has a template for each board document. A decision and a known issue are table rows. `record` adds the roadmap line when it creates a history file.
 

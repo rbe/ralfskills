@@ -23,7 +23,7 @@ Pattern: a check that cannot run shows a defect in the recipe or a limit of the 
 
 diff-cover needs git. The recipe installed git with the package tool of the container on every run. `DIFF_COVER_IMAGE` is now an image that has git and Python, and the recipe installs no system package.
 
-The Node coverage map is exact with `node --test` and with Jest, in ESM mode and in the default mode. The workers of Vitest write no V8 coverage, so the map is empty there. `vitest related --run` selects the right tests from the module graph. The `node` skill and the Makefile template name that command. D-8 records the choice.
+The Node coverage map is exact with `node --test` and with Jest, in ESM mode and in the default mode. The workers of Vitest write no V8 coverage, so the map is empty there. `vitest related --run` selects the right tests from the module graph. The `node` skill and the Makefile template name that command. [D-8](../DECISIONS.md#d-8) records the choice.
 
 The `gitignore` template lists `.gradle/`. Without it, the Gradle cache of the project was in the list of changed files.
 

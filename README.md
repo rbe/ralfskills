@@ -37,7 +37,7 @@ The `name` in each skill's frontmatter matches its directory. A project installs
 
 A request goes through `plan`, `develop`, `review`, and `release`. A new or vague request starts at `plan`. A fix that names a source file, a failing test, or a known issue starts at `develop`. `release` commits the slice on one branch, pushes it, merges it into the default branch when CI passed, and asks `record` to close the task. With `github-pipeline` installed, that merge publishes.
 
-`record` keeps the decisions. A choice that is expensive to reverse becomes an ADR in `docs/adr/`. A small choice is an entry in `docs/DECISIONS.md`. `develop` and `review` open each accepted ADR that names a skill the slice uses, so an agent follows the rules of this one project. `make decision-log` writes `build/decision-log.md`, the same decisions as one document for a person.
+`record` keeps the decisions. A choice that is expensive to reverse becomes an ADR in `docs/adr/`. A small choice is an entry in `docs/DECISIONS.md`. `develop` and `review` open each accepted ADR that names a skill the slice uses, so an agent follows the rules of this one project. `make decision-log` writes `build/decision-log.md`, the same decisions as one document for a person. Each id in a document is a link to its item, written by `make links`.
 
 ## A new project
 

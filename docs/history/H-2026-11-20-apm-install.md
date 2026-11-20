@@ -21,7 +21,7 @@ Pattern: a coverage map is one JSON file, test to files, for every language. A s
 
 ## Develop
 
-APM 0.36.1 refused to install the collection. The descriptions of `security`, `privacy`, `ux-ui-design`, and `api-design` had a colon followed by a space, which is not one YAML string. The descriptions are changed. `make toon` fails on that defect. R-65 states the rule.
+APM 0.36.1 refused to install the collection. The descriptions of `security`, `privacy`, `ux-ui-design`, and `api-design` had a colon followed by a space, which is not one YAML string. The descriptions are changed. `make toon` fails on that defect. [R-65](../REQUIREMENTS.md#r-65) states the rule.
 
 The project report read the tests in `apm_modules/`, the copy APM keeps. It skips that directory now.
 

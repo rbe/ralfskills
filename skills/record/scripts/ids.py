@@ -6,7 +6,7 @@ import sys
 from pathlib import Path
 
 ID_LINE = re.compile(r"^id:\s*[\"']?([^\"'#\s]+)")
-ROW_ID = re.compile(r"^\|\s*([A-Z]+-\d+)\s*\|")
+ROW_ID = re.compile(r'^\|\s*(?:<a id="[^"]*"></a>)?\s*([A-Z]+-\d+)\s*\|')
 RETIRED_ITEM = re.compile(r"^-\s*[\"']?([^\"'#\s]+)")
 TABLE_FILES = ("REQUIREMENTS.md", "DECISIONS.md", "KNOWN_ISSUES.md")
 
