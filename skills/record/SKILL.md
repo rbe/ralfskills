@@ -42,9 +42,20 @@ skills: [security, review]
 decisions: [D-12]
 proposals: []
 issues: []
+supersedes: []
 ```
 
 A decision, a proposal, and a history file use the same keys.
+
+## ADRs
+
+In a product repository, when the owner answers a choice that is expensive to reverse, `plan` asks this skill for an ADR id. This skill writes `docs/adr/<id>.md` with the status `Accepted`. The Plan section cites that id. A choice that is cheap to reverse stays a Decided entry.
+
+This skill owns the ADR status. The values are `Accepted` and `Superseded`. A new ADR names the ADR it replaces in `supersedes`. This skill then sets the status of the replaced ADR to `Superseded`. `plan`, `develop`, and `review` follow only an accepted ADR. The project report does not list a superseded ADR as an id with no test.
+
+`skills` names each skill whose work the ADR governs. `develop` and `review` open an accepted ADR when `skills` names a skill the slice uses. An ADR with an empty `skills` list has no reader.
+
+An accepted ADR replaces a skill rule only when the ADR is a divergence. A divergence names the rule, what differs, and why. An ADR that differs from a skill rule and does not name these three is a finding in `review`. What `github-pipeline` says is not a divergence stays not allowed.
 
 ## Ids
 

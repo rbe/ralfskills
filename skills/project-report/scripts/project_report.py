@@ -94,6 +94,10 @@ def tests_for(requirement_id: str, proofs_found) -> list[str]:
     )
 
 
+def superseded(item) -> bool:
+    return item.kind == "adr" and item.status.strip().lower() == "superseded"
+
+
 def format_requirement(item, proofs_found) -> str:
     proved = tests_for(item.id, proofs_found)
     names = "; ".join(proved) if proved else "no test"
@@ -152,7 +156,11 @@ def append_proof_map(lines: list[str], requirements, proofs_found) -> None:
     lines.append("")
     lines.append("### Ids with no test")
     lines.append("")
-    gaps = [item for item in requirements if not tests_for(item.id, proofs_found)]
+    gaps = [
+        item
+        for item in requirements
+        if not superseded(item) and not tests_for(item.id, proofs_found)
+    ]
     if not gaps:
         lines.append("None.")
     else:

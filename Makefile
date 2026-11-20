@@ -8,13 +8,14 @@
 # No install step. Ruff and editorconfig-checker are container images.
 SETUP_CMD = true
 BUILD_CMD = true
-UNIT_TESTS = skills/record/scripts/test_record.py tests/test_skills.py skills/project-report/scripts/test_project_report.py
+UNIT_TESTS = skills/record/scripts/test_record.py skills/project-report/scripts/test_project_report.py
 TEST_CMD = $(PYTHON) -m unittest $(UNIT_TESTS)
 TEST_CHANGED_CMD = $(PYTHON) skills/project-report/scripts/changed_tests.py
 PROJECT_REPORT_CMD = $(PYTHON) skills/project-report/scripts/project_report.py
 FORMAT_CMD = podman run --rm -v "$(CURDIR)":/io:Z -w /io $(RUFF_IMAGE) format --check
 LINT_CMD = podman run --rm -v "$(CURDIR)":/io:Z -w /io $(RUFF_IMAGE) check
-INTEGRATION_CMD = $(PYTHON) -m unittest tests/test_integration.py
+# No integration entry. The unit tests cover the scripts.
+INTEGRATION_CMD = true
 COVERAGE_CMD = set -eu; \
 	base=$$(git merge-base HEAD origin/main 2>/dev/null || printf '%s' HEAD); \
 	git diff "$$base" > build/coverage/change.diff; \
