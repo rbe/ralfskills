@@ -67,11 +67,11 @@ Write:
 
 `CLAUDE.md` is the only entry file. It names the stages, the installed language skills and subskills, each project skill, where each record is kept, and the communication contract. The template is the one source of that text for a project. An existing project keeps what its `CLAUDE.md` already says.
 
-A new project has no toolchain yet. Ask which installed language skill the project uses. Copy the Makefile template of that skill: `templates/Makefile.python` in `python`, or `templates/Makefile.node` in `node`. The template names each command variable. Create the manifest of the project through a Make target, not on the host. An existing project gets only the lines of the template it lacks.
+A new project has no toolchain yet. Ask which installed language skill the project uses. Copy the Makefile template of that skill: `templates/Makefile.python` in `python`, `templates/Makefile.node` in `node`, or `templates/Makefile.gradle` in `jvm`. Copy the other files the comment at the top of that template names. The template names each command variable. Create the manifest of the project through a Make target, not on the host. An existing project gets only the lines of the template it lacks.
 
 Run `make toon` before the entry file is written. The brackets of the template are filled from `docs/skill-index.toon`.
 
-A recipe the project already has stays, unless it runs a toolchain on the host. A recipe that runs Gradle, npm, node, or python on the host is off the contract. Rewrite it to the command variable, and keep what it does. A target with no command variable, such as `run`, keeps its name and its place after the include, and its recipe uses `$(PYTHON)` or `$(NODE)`.
+A recipe the project already has stays, unless it runs a toolchain on the host. A recipe that runs Gradle, npm, node, or python on the host is off the contract. Rewrite it to the command variable, and keep what it does. A target with no command variable, such as `run`, keeps its name and its place after the include, and its recipe uses `$(PYTHON)`, `$(NODE)`, or `$(GRADLE)`.
 
 A project with no dependency to resolve, no artifact to build, or no integration entry sets that command to `true`. `true` is a filled-in value.
 

@@ -1,0 +1,51 @@
+# The Makefile of a Gradle project on project.mk. Copy this file to
+# Makefile, or copy the lines the project lacks above its include.
+# Copy build.gradle and checkstyle.xml beside this file to build.gradle
+# and config/checkstyle/checkstyle.xml when the project has none.
+#
+# Gradle runs through $(GRADLE), which is the Gradle wrapper in Podman
+# on this machine. google-java-format through Spotless is the formatter.
+# Checkstyle is the linter. JaCoCo feeds diff-cover and the coverage map.
+# A project with no integration entry keeps that command as `true`.
+#
+# A new project has no Gradle wrapper yet. Write it through Make:
+#   make wrapper
+# Add build/ and .gradle/ to .gitignore. Commit gradlew, gradlew.bat,
+# and gradle/wrapper/.
+#
+# coverage and test-changed fail until the first unit test exists.
+
+JDK_IMAGE ?= docker.io/library/eclipse-temurin:25-jdk
+GRADLE_VERSION ?= 9.1.0
+GRADLE_IMAGE ?= docker.io/library/gradle:$(GRADLE_VERSION)-jdk25
+GRADLE_RUN = mkdir -p "$$HOME/.gradle" && podman run --rm -e CI -e GRADLE_USER_HOME=/gradle \
+	-v "$$HOME/.gradle":/gradle:Z -v "$(CURDIR)":/work:Z -w /work
+GRADLE = $(GRADLE_RUN) $(JDK_IMAGE) ./gradlew --console=plain
+
+SETUP_CMD = $(GRADLE) --version && $(GRADLE) -q dependencies --configuration testRuntimeClasspath > /dev/null
+BUILD_CMD = $(GRADLE) assemble
+TEST_CMD = $(GRADLE) test
+INTEGRATION_CMD = true
+FORMAT_CMD = $(GRADLE) spotlessCheck
+FORMAT_FIX_CMD = $(GRADLE) spotlessApply
+LINT_CMD = $(GRADLE) checkstyleMain checkstyleTest
+COVERAGE_CMD = set -eu; \
+	base=$$(git merge-base HEAD origin/main 2>/dev/null || git rev-parse -q --verify HEAD 2>/dev/null || git hash-object -t tree /dev/null); \
+	git add -N .; \
+	git diff "$$base" > build/coverage/change.diff; \
+	$(GRADLE) test jacocoTestReport; \
+	$(PYTHON) .claude/skills/project-report/scripts/jacoco_cover_map.py; \
+	report=$$(find build -name jacocoTestReport.xml | head -n 1); \
+	test -n "$$report"; \
+	REPORT="$$report" $(DIFF_COVER)
+TEST_CHANGED_CMD = chosen=$$($(PYTHON) .claude/skills/project-report/scripts/changed_tests.py --print); \
+	if [ -z "$$chosen" ]; then printf '%s\n' "test-changed: no test covers the changed files. make test runs the full suite."; \
+	else args=""; for name in $$chosen; do args="$$args --tests $$name"; done; $(GRADLE) test $$args; fi
+
+include .claude/skills/project-setup/project.mk
+
+# Project targets and overrides.
+
+.PHONY: wrapper
+wrapper: ## Write the Gradle wrapper in Podman. A new project runs this once
+	$(GRADLE_RUN) $(GRADLE_IMAGE) gradle --console=plain wrapper --gradle-version $(GRADLE_VERSION)
