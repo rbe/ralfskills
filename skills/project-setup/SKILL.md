@@ -148,9 +148,9 @@ A shell `$` in a command is `$$`.
 
 Defining `setup`, `build`, or `test` again replaces the recipe from `project.mk`.
 
-`project.mk` marks `help`, `setup`, `build`, `test`, `test-changed`, `project-report`, `editorconfig`, `format`, `lint`, `integration`, and `coverage` `.PHONY`, and `docs` and `login` when they exist. A `build/` directory would otherwise satisfy `build`. `project.mk` sets `.DEFAULT_GOAL` to `help` after the fragments it includes. `podman-python.mk`, `tools.mk`, and `record`'s `index.mk` set the same goal and do not set another. A project Makefile does not set `.DEFAULT_GOAL` to another target.
+`project.mk` marks `help`, `setup`, `build`, `test`, `test-changed`, `project-report`, `editorconfig`, `format`, `lint`, `integration`, and `coverage` `.PHONY`, and `docs` and `login` when they exist. A `build/` directory would otherwise satisfy `build`. `project.mk` sets `.DEFAULT_GOAL` to `help` after the fragments it includes. `podman-python.mk`, `tools.mk`, `test-changed.mk`, `record`'s `index.mk`, and `project-report`'s `report.mk` set the same goal and do not set another. A project Makefile does not set `.DEFAULT_GOAL` to another target.
 
-A repository that includes `.claude/skills/github-pipeline/sdlc.mk` already has `help` and does not also include `project.mk`. That repository defines its own project targets.
+A repository that includes `.claude/skills/github-pipeline/sdlc.mk` already has `help` and does not also include `project.mk`. That repository defines its own project targets. `test-changed.mk` beside `project.mk` holds the `test-changed` target. Both includes read it, so that repository has `test-changed` too. This collection ships the selection for Python. A Node or JVM project sets `TEST_CHANGED_CMD` to a command that selects tests from coverage. Empty, the target fails and names the variable.
 
 ## Podman and local paths
 

@@ -76,4 +76,6 @@ dependencies:
 
 A Make-only repository leaves `github-pipeline` out. A repository that still has `docs/BUGS.md`, `docs/WAVES.md`, `docs/FEATURES.md`, `docs/bugs/`, `docs/waves/`, or `docs/features/` adds `migrate-docs` and runs it first.
 
+The APM documentation says that `apm compile` writes a `CLAUDE.md` at the project root for the target `claude`. This collection ships no APM instructions, and `project-setup` owns the entry file. Check the diff of `CLAUDE.md` after a compile.
+
 Install one skill with `--skill`. Repeat the flag to add another. `apm install rbe/ralfskills --skill '*'` installs every skill again.

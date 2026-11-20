@@ -196,14 +196,18 @@ class ChangedTestsTest(unittest.TestCase):
         self.assertIn("TEST_CHANGED_CMD", makefile)
         self.assertIn("cover_tests.py", makefile)
         self.assertIn("$(PYTHON) -m unittest $(UNIT_TESTS)", makefile)
-        project = (ROOT / "skills" / "project-setup" / "project.mk").read_text(
-            encoding="utf-8"
-        )
-        self.assertIn("test-changed:", project)
+        setup = ROOT / "skills" / "project-setup"
+        fragment = (setup / "test-changed.mk").read_text(encoding="utf-8")
+        self.assertIn("test-changed:", fragment)
+        project = (setup / "project.mk").read_text(encoding="utf-8")
+        self.assertIn("include $(PROJECT_MK_DIR)test-changed.mk", project)
         sdlc = (ROOT / "skills" / "github-pipeline" / "sdlc.mk").read_text(
             encoding="utf-8"
         )
-        self.assertNotIn("test-changed", sdlc)
+        self.assertIn("project-setup/test-changed.mk", sdlc)
+        ci_targets = [line for line in sdlc.splitlines() if line.startswith("SDLC_CI")]
+        self.assertEqual(len(ci_targets), 1)
+        self.assertNotIn("test-changed", ci_targets[0])
         for name in ("develop", "review", "project-setup"):
             text = (ROOT / "skills" / name / "SKILL.md").read_text(encoding="utf-8")
             self.assertIn("A green `test-changed` does not replace `make test`.", text)

@@ -52,6 +52,7 @@ PROJECT_MK := 1
 PROJECT_MK_DIR := $(dir $(lastword $(MAKEFILE_LIST)))
 include $(PROJECT_MK_DIR)podman-python.mk
 include $(PROJECT_MK_DIR)tools.mk
+include $(PROJECT_MK_DIR)test-changed.mk
 -include .claude/skills/project-report/report.mk
 
 HELP_LEAD ?= Make is the only interface. A target does the same thing locally and in CI.
@@ -151,22 +152,7 @@ else
 	$(COVERAGE_CMD)
 endif
 
-# Tests whose coverage includes a file in the diff. Not a CI substitute for test.
-test-changed: ## Run the tests that cover the diff
-ifeq ($(strip $(TEST_CHANGED_CMD)),)
-	@printf '%s\n' "test-changed: stub. Set TEST_CHANGED_CMD before the include. Select tests from coverage of the files in the diff." >&2
-	@exit 1
-else
-	@set -eu; \
-	mkdir -p build/coverage; \
-	base=$$(git merge-base HEAD origin/main 2>/dev/null || printf '%s' HEAD); \
-	git diff --name-only "$$base" > build/coverage/changed.txt; \
-	git diff --name-only >> build/coverage/changed.txt; \
-	git diff --name-only --cached >> build/coverage/changed.txt; \
-	git ls-files --others --exclude-standard >> build/coverage/changed.txt; \
-	sort -u build/coverage/changed.txt -o build/coverage/changed.txt; \
-	$(TEST_CHANGED_CMD)
-endif
+# test-changed is test-changed.mk beside this file. sdlc.mk includes it too.
 
 # Generated. Hand-editing build/project-report.md is a defect.
 # report.mk in the project-report skill owns this target when that skill

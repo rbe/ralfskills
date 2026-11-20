@@ -2,6 +2,7 @@
 """Tests for the id check and the ADR index."""
 
 import importlib.util
+import os
 import tempfile
 import unittest
 from pathlib import Path
@@ -203,6 +204,22 @@ class SkillNameTest(unittest.TestCase):
             errors = skill_index.name_errors(root)
             self.assertEqual(len(errors), 1)
             self.assertIn("review", errors[0])
+
+    def test_make_toon_fails_when_a_skill_name_differs(self):
+        """id: R-4"""
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "docs").mkdir()
+            write_file(root, "skills/review/SKILL.md", "---\nname: check\n---\n")
+            previous = Path.cwd()
+            try:
+                os.chdir(root)
+                self.assertEqual(toon.main(), 1)
+                write_file(root, "skills/review/SKILL.md", "---\nname: review\n---\n")
+                self.assertEqual(toon.main(), 0)
+            finally:
+                os.chdir(previous)
+            self.assertTrue((root / "docs" / "skill-index.toon").is_file())
 
     def test_every_skill_in_this_collection_has_its_directory_name(self):
         """id: R-4"""
