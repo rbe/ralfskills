@@ -1,6 +1,6 @@
 ---
 name: project-setup
-description: Apply or check the Make contract in setup mode or report mode. Make is the only interface, help is the default goal, and a target does the same thing locally and in CI. Use setup mode when adding a Makefile, naming setup, build, test, docs, or login, moving Gradle, npm, Podman, python, or tar into a target, or installing Homebrew tools such as jq. Setup also writes EditorConfig and the targets format, lint, integration, coverage, and test-changed. The formatter and the linter are existing tools the language skill names. Setup changes only what is missing or off the contract and leaves a target the project already filled in. Use report mode to fill templates/contract-report.md and name what matches and what is missing, without changing the project. Stands alone. The shared makefile is project.mk. A repository that does not publish through GitHub installs only this skill.
+description: Apply or check the Make contract in setup mode or report mode. Make is the only interface, help is the default goal, and a target does the same thing locally and in CI. Use setup mode when adding a Makefile, naming setup, build, test, docs, or login, moving Gradle, npm, Podman, python, or tar into a target, or installing Homebrew tools such as jq. Setup also writes CLAUDE.md from the template when it is missing, EditorConfig, and the targets format, lint, integration, coverage, and test-changed. The formatter and the linter are existing tools the language skill names. Setup changes only what is missing or off the contract and leaves a target the project already filled in. Use report mode to fill templates/contract-report.md and name what matches and what is missing, without changing the project. Stands alone. The shared makefile is project.mk. A repository that does not publish through GitHub installs only this skill.
 ---
 
 # Project setup
@@ -40,6 +40,8 @@ Read:
 | File | Where |
 | --- | --- |
 | `SKILL.md`, `project.mk` | This skill. The project includes `project.mk` from here |
+| `templates/CLAUDE.md` | The source for the project's entry file |
+| `CLAUDE.md` | The project, when present |
 | `Makefile` | The project, when present |
 | `.claude/skills/github-pipeline/sdlc.mk` | Present when that skill is installed. That include already provides `help` |
 
@@ -48,6 +50,9 @@ Write:
 | File | Write when |
 | --- | --- |
 | `Makefile` | It is missing, the include is missing or sits after a target, or a required variable is unset |
+| `CLAUDE.md` | It is missing. Copy `templates/CLAUDE.md` and fill each bracket from the project and from `docs/skill-index.toon`. When the file exists, leave its text and add only a paragraph of the template that is missing |
+
+`CLAUDE.md` is the only entry file. It names the stages, the installed language skills and subskills, each project skill, where each record is kept, and the communication contract. The template is the one source of that text for a project. An existing project keeps what its `CLAUDE.md` already says.
 
 Do not write `project.mk` at the repository root. A root `project.mk` is off the contract. Leave its bytes and name it in the report.
 
@@ -69,7 +74,7 @@ When the required command variables are set, or the Makefile already defines tho
 
 ### Report mode
 
-Read `templates/contract-report.md` in this skill, this skill's `project.mk`, and the Check section. Read the project's `Makefile`. `make -qp` shows `.DEFAULT_GOAL`. The include path is `.claude/skills/project-setup/project.mk`, or `.claude/skills/github-pipeline/sdlc.mk` when that file provides `help`.
+Read `templates/contract-report.md` in this skill, this skill's `project.mk`, and the Check section. Read the project's `Makefile` and `CLAUDE.md`. `make -qp` shows `.DEFAULT_GOAL`. The include path is `.claude/skills/project-setup/project.mk`, or `.claude/skills/github-pipeline/sdlc.mk` when that file provides `help`.
 
 Fill the skeleton in the reply. `State` is `matches` or `missing`. The verdict lists both. Leave the skill's template blank. Write no project file, do not copy `project.mk`, and do not run `make setup`, `make build`, `make test`, `make docs`, `make login`, or `brew install`.
 
@@ -129,7 +134,7 @@ Set these before the include. `RENDER_DOCS` and `PUBLISH_IMAGE` are read while `
 | `INTEGRATION_CMD` | The one integration entry. Empty fails `integration` |
 | `COVERAGE_CMD` | Writes `build/coverage/diff.md` and the coverage map `test-changed` reads. Empty fails `coverage` |
 | `TEST_CHANGED_CMD` | Runs the tests that cover the diff. Empty fails `test-changed`. The selection is coverage, not a hand-kept list |
-| `PROJECT_REPORT_CMD` | Writes `build/project-report.md`. Empty fails `project-report` |
+| `PROJECT_REPORT_CMD` | Writes `build/project-report.md`. `report.mk` in `project-report` sets it when that skill is installed and the project did not set it. Empty fails `project-report` |
 | `RENDER_DOCS` | `1` when this repository renders docs. Otherwise there is no `docs` target |
 | `DOCS_CMD` | The renderer. Empty fails `docs` |
 | `PUBLISH_IMAGE` | `1` when an image is published. Otherwise there is no `login` target |
@@ -143,9 +148,9 @@ A shell `$` in a command is `$$`.
 
 Defining `setup`, `build`, or `test` again replaces the recipe from `project.mk`.
 
-`project.mk` marks `help`, `setup`, `build`, `test`, `test-changed`, and `project-report` `.PHONY`, and `docs` and `login` when they exist. A `build/` directory would otherwise satisfy `build`. `project.mk` sets `.DEFAULT_GOAL` to `help` after the fragments it includes. `podman-python.mk`, `tools.mk`, and `record`'s `index.mk` set the same goal and do not set another. A project Makefile does not set `.DEFAULT_GOAL` to another target.
+`project.mk` marks `help`, `setup`, `build`, `test`, `test-changed`, `project-report`, `editorconfig`, `format`, `lint`, `integration`, and `coverage` `.PHONY`, and `docs` and `login` when they exist. A `build/` directory would otherwise satisfy `build`. `project.mk` sets `.DEFAULT_GOAL` to `help` after the fragments it includes. `podman-python.mk`, `tools.mk`, `test-changed.mk`, `record`'s `index.mk`, and `project-report`'s `report.mk` set the same goal and do not set another. A project Makefile does not set `.DEFAULT_GOAL` to another target.
 
-A repository that includes `.claude/skills/github-pipeline/sdlc.mk` already has `help` and does not also include `project.mk`. That repository defines its own project targets.
+A repository that includes `.claude/skills/github-pipeline/sdlc.mk` already has `help` and does not also include `project.mk`. That repository defines its own project targets. `test-changed.mk` beside `project.mk` holds the `test-changed` target. Both includes read it, so that repository has `test-changed` too. This collection ships the selection for Python. A Node or JVM project sets `TEST_CHANGED_CMD` to a command that selects tests from coverage. Empty, the target fails and names the variable.
 
 ## Podman and local paths
 
@@ -184,6 +189,7 @@ Setup mode adds these when they are missing. Stop at the first step that cannot 
 The repository fails this contract when:
 
 - `make` with no goal runs anything other than `help`
+- `CLAUDE.md` is missing, or it does not name the stages, the installed language skills and subskills, and the communication contract
 - `setup`, `build`, or `test` is missing, `docs` is missing while the repository renders docs, `login` is missing while an image is published, or one of those targets is not `.PHONY`
 - `SETUP_CMD`, `BUILD_CMD`, or `TEST_CMD` is empty, or `DOCS_CMD` is empty while the repository renders docs
 - a person, an agent, or a workflow step runs Gradle, npm, Podman, python, or tar directly instead of `make setup`, `make build`, `make test`, `make docs`, or `make login`

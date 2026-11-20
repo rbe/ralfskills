@@ -38,6 +38,7 @@ SDLC_MK := 1
 SDLC_MK_DIR := $(dir $(lastword $(MAKEFILE_LIST)))
 include $(SDLC_MK_DIR)../project-setup/podman-python.mk
 include $(SDLC_MK_DIR)../project-setup/tools.mk
+include $(SDLC_MK_DIR)../project-setup/test-changed.mk
 
 # Recipes call ${MAKE} from the shell. Make does not export this variable
 # unless asked, and a recipe that writes $(MAKE) is executed even by make -n.
@@ -328,6 +329,7 @@ cleanup-actions-artifacts: ## Match CI: delete artifacts at least one hour old, 
 	echo "cleanup-actions-artifacts: $$reason"
 
 -include .claude/skills/record/index.mk
+-include .claude/skills/project-report/report.mk
 
 # After the fragments this file includes. A fragment must not replace it.
 .DEFAULT_GOAL := help

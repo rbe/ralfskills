@@ -1,6 +1,6 @@
 ---
 name: record
-description: Assign document ids and write the board. Use before creating or editing a roadmap line, a known issue, a decision, an ADR, a proposal, or a history file. Reject a duplicate id, including a retired one. Write the ADR index. Other skills invoke this skill by name.
+description: Assign document ids and write the board. Use before creating or editing a roadmap line, a known issue, a decision, an ADR, a proposal, or a history file, and to close a task. Reject a duplicate id, including a retired one. Write the ADR index and the decision log. Other skills invoke this skill by name.
 ---
 
 # Record
@@ -25,7 +25,7 @@ This skill is the only writer of ids and of the board. A stage that writes a doc
 | Implement later | `docs/proposals/<id>.md` | `P-` plus a number. This is the backlog |
 | Implement now | `docs/history/<id>.md` | `H-` plus the date and a slug |
 
-A product repository keeps in-progress work in `docs/ROADMAP.md` and a rule in `docs/adr/`. This collection is not a product repository. Each requirement is one statement in `docs/REQUIREMENTS.md`. An Open row in `docs/DECISIONS.md` is work that is not finished. A Decided row is a choice in force. This collection does not keep `docs/ROADMAP.md` or `docs/adr/`.
+A product repository keeps in-progress work in `docs/ROADMAP.md` and a rule in `docs/adr/`. This collection is not a product repository. Each requirement is one row in `docs/REQUIREMENTS.md`. An Open row in `docs/DECISIONS.md` is work that is not finished. A Decided row is a choice in force. This collection does not keep `docs/ROADMAP.md` or `docs/adr/`.
 
 `plan` reads these before it asks. It does not ask a question an accepted ADR, a Decided entry, or an open proposal already answered.
 
@@ -51,6 +51,8 @@ A decision, a proposal, and a history file use the same keys.
 
 In a product repository, when the owner answers a choice that is expensive to reverse, `plan` asks this skill for an ADR id. This skill writes `docs/adr/<id>.md` with the status `Accepted`. The Plan section cites that id. A choice that is cheap to reverse stays a Decided entry.
 
+An ADR body has the section `## Rule` and the section `## Why`. Rule is what an agent must do or must not do, in sentences `review` can check. Why is the reason, and the options that were not chosen. An ADR that replaces a skill rule also has the section `## Divergence`. An ADR is short. It does not copy the grill.
+
 This skill owns the ADR status. The values are `Accepted` and `Superseded`. A new ADR names the ADR it replaces in `supersedes`. This skill then sets the status of the replaced ADR to `Superseded`. `plan`, `develop`, and `review` follow only an accepted ADR. The project report does not list a superseded ADR as an id with no test.
 
 `skills` names each skill whose work the ADR governs. `develop` and `review` open an accepted ADR when `skills` names a skill the slice uses. An ADR with an empty `skills` list has no reader.
@@ -71,7 +73,7 @@ Deleting a document runs `make ids-retire ID=<id>`. A retired id is never issued
 
 ## History
 
-One file per task. `plan` creates it when implementation starts. Later skills extend that file. A deferred slice is a proposal and has no history file yet.
+One file per task. `plan` creates it when implementation starts. `develop` asks for it when the request named a file or a failing test and `plan` did not run. Later skills extend that file. A deferred slice is a proposal and has no history file yet.
 
 When a proposal is picked up, create the history file, set `proposals:` to that id, and set the proposal status to `started`. Add one roadmap line with both ids. Do not copy the grill into the roadmap.
 
@@ -85,6 +87,18 @@ Every history file has these sections. A missing heading is a failed step.
 | Release | What shipped | `Not invoked: this slice does not ship.` or `Not invoked yet.` |
 
 An agent on another task opens a history file only when an id names it.
+
+## Closing a task
+
+`release` asks this skill to close the task, when the slice shipped and when it does not ship. A task that waits stays open.
+
+1. Stop when a section of the history file is still `Not invoked yet.` Do not take a later step.
+2. Set the history status to `closed`. The status of a history file is `started` or `closed`.
+3. Delete the roadmap line that cites this history id.
+4. When the slice started from a proposal, set the proposal status to `done`. The status of a proposal is `open`, `started`, or `done`.
+5. When the slice fixed a known issue, delete that entry and retire its id.
+6. An ADR and a Decided entry stay. They are in force after the task closes.
+7. In a repository that keeps `docs/REQUIREMENTS.md` and does not keep `docs/ROADMAP.md`, delete the Open row for this task and retire its id.
 
 ## Tests
 
@@ -101,9 +115,13 @@ Run `make toon` after a skill is installed or removed, after ADR frontmatter cha
 | File | Columns | What it lists |
 | --- | --- | --- |
 | `docs/adr/index.toon` | `id`, `status`, `title`, `adrs`, `skills`, `decisions` | ADR frontmatter. `plan` opens one ADR when the id matches |
-| `docs/requirements-index.toon` | `id`, `statement` | The requirements list, when that list is the board and `docs/adr/` has no ADR file |
+| `docs/requirements-index.toon` | `id`, `title` | The requirements list, when that list is the board and `docs/adr/` has no ADR file. The list has the columns Id, Title, and Statement. An agent opens the list for the statement |
 | `docs/skill-index.toon` | `name`, `kind`, `order`, `files`, `names` | Installed skills whose frontmatter `kind` is `language` or `check` |
 
-The skill index is the installed set under `.claude/skills/`. In this collection, before install, it is `skills/`. It does not copy skill prose. The `name` in a skill's frontmatter matches its directory. A language skill sets `files` to extensions and `names` to exact filenames such as `Makefile`. A check skill sets `order`. `plan` and `review` follow that order. `develop` invokes the language row whose `files` or `names` match the files in hand.
+The skill index is the installed set under `.claude/skills/`. In this collection, before install, it is `skills/`. It does not copy skill prose. The `name` in a skill's frontmatter matches its directory. `make toon` fails when a name differs. A language skill sets `files` to extensions and `names` to exact filenames such as `Makefile`. A check skill sets `order`. `plan` and `review` follow that order. `develop` invokes the language row whose `files` or `names` match the files in hand.
+
+## Decision log
+
+`make decision-log` writes `build/decision-log.md`. It is the document a person reads. It lists each accepted ADR with its rule and its reason, each Decided entry, each Open entry, and each superseded ADR with the ADR that replaced it. A repository that keeps `docs/REQUIREMENTS.md` and has no ADR file gets that list in the log. Hand-editing the log is a defect. A repository that renders docs uses this file as a source. The log does not replace the ADR an agent opens.
 
 `make ids` is separate. It checks ids. It does not write a TOON file. It uses `$(PYTHON)`, the same Podman command as `make toon`.

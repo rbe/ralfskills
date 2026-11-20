@@ -99,6 +99,42 @@ class RequirementIdTest(unittest.TestCase):
         self.assertIn("`id:`", record)
         self.assertIn("does not build a path", record)
 
+    def test_a_test_in_another_language_names_its_id_in_a_comment(self):
+        """id: R-63"""
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write(
+                root,
+                "docs/adr/ADR-0001.md",
+                "---\nid: ADR-0001\ntitle: One\nstatus: Accepted\n---\n",
+            )
+            write(root, "src/a.test.ts", "// id: ADR-0001\ntest('a', () => {})\n")
+            write(
+                root,
+                "src/test/java/PortTest.java",
+                "/**\n * id: ADR-0001\n */\nclass PortTest {}\n",
+            )
+            write(root, "src/b.spec.js", "test('b', () => {})\n")
+            found = requirements.proofs(root)
+            named = {proof.path: proof.requirement_id for proof in found}
+            self.assertEqual(named["src/a.test.ts"], "ADR-0001")
+            self.assertEqual(named["src/test/java/PortTest.java"], "ADR-0001")
+            self.assertIsNone(named["src/b.spec.js"])
+            errors = requirements.problems(requirements.collect(root), found)
+            self.assertEqual(errors, ["src/b.spec.js has no id"])
+
+    def test_a_test_inside_an_installed_skill_is_not_a_project_test(self):
+        """id: R-63"""
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write(
+                root,
+                ".claude/skills/record/scripts/test_record.py",
+                'def test_runs():\n    """id: R-13"""\n    assert True\n',
+            )
+            write(root, "node_modules/x/x.test.js", "test('x', () => {})\n")
+            self.assertEqual(requirements.proofs(root), [])
+
     def test_every_test_in_this_repository_names_a_requirement(self):
         """id: R-1"""
         errors = requirements.problems(
@@ -160,14 +196,18 @@ class ChangedTestsTest(unittest.TestCase):
         self.assertIn("TEST_CHANGED_CMD", makefile)
         self.assertIn("cover_tests.py", makefile)
         self.assertIn("$(PYTHON) -m unittest $(UNIT_TESTS)", makefile)
-        project = (ROOT / "skills" / "project-setup" / "project.mk").read_text(
-            encoding="utf-8"
-        )
-        self.assertIn("test-changed:", project)
+        setup = ROOT / "skills" / "project-setup"
+        fragment = (setup / "test-changed.mk").read_text(encoding="utf-8")
+        self.assertIn("test-changed:", fragment)
+        project = (setup / "project.mk").read_text(encoding="utf-8")
+        self.assertIn("include $(PROJECT_MK_DIR)test-changed.mk", project)
         sdlc = (ROOT / "skills" / "github-pipeline" / "sdlc.mk").read_text(
             encoding="utf-8"
         )
-        self.assertNotIn("test-changed", sdlc)
+        self.assertIn("project-setup/test-changed.mk", sdlc)
+        ci_targets = [line for line in sdlc.splitlines() if line.startswith("SDLC_CI")]
+        self.assertEqual(len(ci_targets), 1)
+        self.assertNotIn("test-changed", ci_targets[0])
         for name in ("develop", "review", "project-setup"):
             text = (ROOT / "skills" / name / "SKILL.md").read_text(encoding="utf-8")
             self.assertIn("A green `test-changed` does not replace `make test`.", text)

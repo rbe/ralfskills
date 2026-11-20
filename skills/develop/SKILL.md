@@ -14,7 +14,7 @@ description: Implement a slice plan already closed, or a request that names a fi
 
 ## Work
 
-1. Read the history file for this task. When the slice starts from a proposal, the Plan section cites that proposal id. Do not copy the proposal into Develop.
+1. Read the history file for this task. When there is none, because the request named a file or a failing test, ask `record` for a history id. The Plan section is then one sentence that says why `plan` was not invoked. When the slice starts from a proposal, the Plan section cites that proposal id. Do not copy the proposal into Develop.
 2. Run `make toon`. Read `docs/skill-index.toon`. Invoke each `language` row whose `files` or `names` match the files in hand. A file set with no matching row stops this step.
 3. Read `docs/adr/index.toon`. Open each ADR whose status is `Accepted` and whose `skills` names a skill this slice uses. Stop when the change would break an accepted ADR. Do not take a later step. Skip this step when the repository does not keep `docs/adr/`.
 4. Two languages means two disjoint file sets. Finish one set before editing the other.

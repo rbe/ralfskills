@@ -5,7 +5,7 @@ import re
 import sys
 from pathlib import Path
 
-COLUMNS = ("id", "statement")
+COLUMNS = ("id", "title")
 ID_CELL = re.compile(r"^[A-Z]+-\d+$")
 
 
@@ -40,8 +40,8 @@ def cell(value: str) -> str:
 
 def render(found: list[tuple[str, str]]) -> str:
     lines = [f"requirements[{len(found)}]{{{','.join(COLUMNS)}}}:"]
-    for ident, statement in found:
-        lines.append("  " + ",".join((cell(ident), cell(statement))))
+    for ident, title in found:
+        lines.append("  " + ",".join((cell(ident), cell(title))))
     return "\n".join(lines) + "\n"
 
 

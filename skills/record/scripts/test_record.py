@@ -2,6 +2,7 @@
 """Tests for the id check and the ADR index."""
 
 import importlib.util
+import os
 import tempfile
 import unittest
 from pathlib import Path
@@ -137,13 +138,15 @@ class IndexTargetTest(unittest.TestCase):
             docs = root / "docs"
             docs.mkdir()
             (docs / "REQUIREMENTS.md").write_text(
-                "| Id | Statement |\n| --- | --- |\n| R-1 | One, two. |\n",
+                "| Id | Title | Statement |\n| --- | --- | --- |\n"
+                "| R-1 | One, two | The long statement. |\n",
                 encoding="utf-8",
             )
             toon.write_indexes(root)
             text = (docs / "requirements-index.toon").read_text(encoding="utf-8")
-            self.assertIn("requirements[1]{id,statement}:", text)
-            self.assertIn('R-1,"One, two."', text)
+            self.assertIn("requirements[1]{id,title}:", text)
+            self.assertIn('R-1,"One, two"', text)
+            self.assertNotIn("The long statement.", text)
             self.assertFalse((docs / "adr").exists())
             self.assertTrue((docs / "skill-index.toon").is_file())
 
@@ -178,6 +181,108 @@ class IndexTargetTest(unittest.TestCase):
             text = (adr / "index.toon").read_text(encoding="utf-8")
             self.assertIn("ADR-0004,Accepted,Listen,,,", text)
             self.assertFalse((root / "docs" / "requirements-index.toon").exists())
+
+
+skill_index = load("skill_index", HERE / "skill_index.py")
+decision_log = load("decision_log", HERE / "decision_log.py")
+
+
+def write_file(root, relative, text):
+    path = root / relative
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(text, encoding="utf-8")
+
+
+class SkillNameTest(unittest.TestCase):
+    def test_a_skill_name_that_differs_from_its_directory_is_an_error(self):
+        """id: R-4"""
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_file(root, "skills/plan/SKILL.md", "---\nname: plan\n---\n")
+            self.assertEqual(skill_index.name_errors(root), [])
+            write_file(root, "skills/review/SKILL.md", "---\nname: check\n---\n")
+            errors = skill_index.name_errors(root)
+            self.assertEqual(len(errors), 1)
+            self.assertIn("review", errors[0])
+
+    def test_make_toon_fails_when_a_skill_name_differs(self):
+        """id: R-4"""
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "docs").mkdir()
+            write_file(root, "skills/review/SKILL.md", "---\nname: check\n---\n")
+            previous = Path.cwd()
+            try:
+                os.chdir(root)
+                self.assertEqual(toon.main(), 1)
+                write_file(root, "skills/review/SKILL.md", "---\nname: review\n---\n")
+                self.assertEqual(toon.main(), 0)
+            finally:
+                os.chdir(previous)
+            self.assertTrue((root / "docs" / "skill-index.toon").is_file())
+
+    def test_every_skill_in_this_collection_has_its_directory_name(self):
+        """id: R-4"""
+        self.assertEqual(skill_index.name_errors(HERE.parents[2]), [])
+
+
+class DecisionLogTest(unittest.TestCase):
+    def test_the_log_lists_rules_choices_and_replaced_rules(self):
+        """id: R-62"""
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_file(
+                root,
+                "docs/adr/ADR-0002.md",
+                "---\nid: ADR-0002\ntitle: Listen on a socket\nstatus: Superseded\n---\n",
+            )
+            write_file(
+                root,
+                "docs/adr/ADR-0003.md",
+                "---\nid: ADR-0003\ntitle: Listen on localhost\nstatus: Accepted\n"
+                "skills: [security, review]\nsupersedes: [ADR-0002]\n---\n\n"
+                "# Listen on localhost\n\n## Rule\n\nThe server binds 127.0.0.1.\n\n"
+                "## Why\n\nNo other host needs it.\n",
+            )
+            write_file(
+                root,
+                "docs/DECISIONS.md",
+                "---\nid: D-1\nstatus: decided\n---\n\nKeep the host make.\n\n"
+                "---\nid: D-2\nstatus: open\n---\n\nWhich port.\n",
+            )
+            text = decision_log.render(root)
+            rules = text.split("## Rules in force", 1)[1].split("## Choices", 1)[0]
+            self.assertIn("### ADR-0003 Listen on localhost", rules)
+            self.assertIn("Rule: The server binds 127.0.0.1.", rules)
+            self.assertIn("Why: No other host needs it.", rules)
+            self.assertIn("Skills: security, review", rules)
+            self.assertNotIn("ADR-0002", rules)
+            self.assertIn("- D-1. Keep the host make.", text)
+            open_choices = text.split("## Open choices", 1)[1]
+            self.assertIn("- D-2. Which port.", open_choices)
+            self.assertIn("- ADR-0002 Listen on a socket. Replaced by ADR-0003.", text)
+            self.assertIn("Hand-editing this file is a defect.", text)
+
+    def test_a_requirements_list_is_in_the_log_when_there_is_no_adr_file(self):
+        """id: R-62"""
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_file(
+                root,
+                "docs/REQUIREMENTS.md",
+                "| Id | Title | Statement |\n| --- | --- | --- |\n"
+                "| R-1 | Tests name a requirement | A test names its id. |\n",
+            )
+            write_file(
+                root,
+                "docs/DECISIONS.md",
+                "| Id | Status | Choice |\n| --- | --- | --- |\n"
+                "| D-3 | Decided | One list. |\n",
+            )
+            text = decision_log.render(root)
+            self.assertIn("### R-1 Tests name a requirement", text)
+            self.assertIn("A test names its id.", text)
+            self.assertIn("- D-3. One list.", text)
 
 
 class TableIdTest(unittest.TestCase):
