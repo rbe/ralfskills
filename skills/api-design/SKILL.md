@@ -1,6 +1,6 @@
 ---
 name: api-design
-description: Ask before a slice is closed, and check after implementation, when the change adds or alters an HTTP route, a body, a status code, or what a module or a library exports. plan asks the questions. review runs the checks. The project's route catalogue stays in a project skill. Skip with the line "api-design: not installed" only when this skill is not installed.
+description: Ask before a slice is closed, and check after implementation, when the change adds or alters an HTTP route, a body, a status code, or what a module or a library exports. plan asks the questions. review runs the checks. The project's route catalogue stays in a project skill. Write the not-installed line only when this skill is not installed.
 kind: check
 order: 40
 ---

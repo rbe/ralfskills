@@ -125,6 +125,33 @@ def name_errors(root):
     return errors
 
 
+def yaml_errors(root):
+    """A plain frontmatter value that YAML would not read as one string."""
+    errors = []
+    directory = skill_root(root)
+    if not directory.is_dir():
+        return errors
+    for path in sorted(directory.glob("*/SKILL.md")):
+        text = path.read_text(encoding="utf-8")
+        end = text.find("\n---", 3)
+        if not text.startswith("---") or end < 0:
+            errors.append(f"{path.parent.name}: the frontmatter is missing")
+            continue
+        for line in text[3:end].splitlines():
+            if ":" not in line or line.startswith((" ", "\t", "#", "-")):
+                continue
+            key, value = line.split(":", 1)
+            value = value.strip()
+            if not value or value[0] in "'\"[{|>":
+                continue
+            if ": " in value or " #" in value or value.endswith(":"):
+                errors.append(
+                    f"{path.parent.name}: the value of {key.strip()} is not one "
+                    "YAML string. Remove the colon or the # from it"
+                )
+    return errors
+
+
 def render(found):
     lines = [f"skill_index[{len(found)}]{{{','.join(COLUMNS)}}}:"]
     for row in found:
@@ -143,7 +170,7 @@ def write(root):
 def main():
     root = repo_root(Path.cwd())
     write(root)
-    errors = name_errors(root)
+    errors = name_errors(root) + yaml_errors(root)
     for error in errors:
         print(error, file=sys.stderr)
     return 1 if errors else 0

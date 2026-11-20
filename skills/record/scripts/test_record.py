@@ -221,6 +221,30 @@ class SkillNameTest(unittest.TestCase):
                 os.chdir(previous)
             self.assertTrue((root / "docs" / "skill-index.toon").is_file())
 
+    def test_a_description_with_a_colon_and_a_space_is_an_error(self):
+        """id: R-65"""
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_file(
+                root,
+                "skills/plan/SKILL.md",
+                "---\nname: plan\ndescription: Grill a change. Ask one question.\n---\n",
+            )
+            self.assertEqual(skill_index.yaml_errors(root), [])
+            write_file(
+                root,
+                "skills/security/SKILL.md",
+                '---\nname: security\ndescription: Write "security: not installed".\n---\n',
+            )
+            errors = skill_index.yaml_errors(root)
+            self.assertEqual(len(errors), 1)
+            self.assertIn("security", errors[0])
+            self.assertIn("description", errors[0])
+
+    def test_every_skill_in_this_collection_has_yaml_frontmatter(self):
+        """id: R-65"""
+        self.assertEqual(skill_index.yaml_errors(HERE.parents[2]), [])
+
     def test_every_skill_in_this_collection_has_its_directory_name(self):
         """id: R-4"""
         self.assertEqual(skill_index.name_errors(HERE.parents[2]), [])
