@@ -4,6 +4,8 @@
 #
 #   make toon
 #   make ids
+#   make links
+#   make links-check
 #   make ids-retire ID=H-2026-11-15-old
 #   make decision-log
 #
@@ -22,7 +24,7 @@ ifndef PYTHON
 include $(RECORD_DIR)../project-setup/podman-python.mk
 endif
 
-.PHONY: toon ids ids-retire decision-log
+.PHONY: toon ids ids-retire links links-check decision-log
 
 toon: ## Write the ADR or requirements index, and the skill index
 	$(PYTHON) "$(RECORD_DIR)scripts/toon.py"
@@ -34,6 +36,12 @@ ids-retire: ## Retire an id. Set ID= on the command line
 	@set -eu; \
 	if [ -z "$(ID)" ]; then printf '%s\n' "ids-retire: set ID=<id>" >&2; exit 1; fi
 	$(PYTHON) "$(RECORD_DIR)scripts/ids.py" retire "$(ID)"
+
+links: ## Write a link for each id in the documents under docs/
+	$(PYTHON) "$(RECORD_DIR)scripts/links.py"
+
+links-check: ## Fail when an id in a document is not a link
+	$(PYTHON) "$(RECORD_DIR)scripts/links.py" check
 
 # Generated. Hand-editing build/decision-log.md is a defect.
 decision-log: ## Write build/decision-log.md from the ADRs and the decisions

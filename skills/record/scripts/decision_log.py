@@ -11,6 +11,16 @@ from pathlib import Path
 
 ID_CELL = re.compile(r"^[A-Z]+-\d+$")
 SECTIONS = ("Rule", "Why", "Divergence")
+LOG = "build/decision-log.md"
+
+
+def links_module():
+    here = str(Path(__file__).resolve().parent)
+    if here not in sys.path:
+        sys.path.insert(0, here)
+    import links
+
+    return links
 
 
 def repo_root(start: Path) -> Path:
@@ -81,6 +91,8 @@ def table_rows(path: Path) -> list[list[str]]:
         if not stripped.startswith("|"):
             continue
         cells = [part.strip() for part in stripped.strip("|").split("|")]
+        if cells:
+            cells[0] = links_module().strip_anchor(cells[0])
         if cells and ID_CELL.match(cells[0]):
             found.append(cells)
     return found
@@ -119,18 +131,27 @@ def is_status(value: str, word: str) -> bool:
     return value.strip().lower() == word
 
 
-def append_adr(lines: list[str], front: dict, body: str) -> None:
-    lines.append(f"### {front['id']} {front.get('title', '')}".rstrip())
+def anchored(ident: str) -> str:
+    return f'<a id="{ident.lower()}"></a>{ident}'
+
+
+def heading(ident: str, title: str) -> str:
+    unlink = links_module().unlink
+    return f"### {anchored(ident)} {unlink(title)}".rstrip()
+
+
+def append_adr(lines: list[str], front: dict, body: str, link) -> None:
+    lines.append(heading(front["id"], front.get("title", "")))
     lines.append("")
     parts = sections(body)
     if "Rule" not in parts:
         text = without_title(body)
         if text:
-            lines.append(text)
+            lines.append(link(text))
             lines.append("")
     for name in SECTIONS:
         if parts.get(name):
-            lines.append(f"{name}: {parts[name]}")
+            lines.append(f"{name}: {link(parts[name])}")
             lines.append("")
     skills = listed(front.get("skills", ""))
     if skills:
@@ -146,9 +167,35 @@ def append_entries(lines: list[str], entries: list[str]) -> None:
     lines.append("")
 
 
+def linker(root: Path, found: list, choices: list):
+    """A function that links the ids in a text. An item of the log links to its anchor."""
+    module = links_module()
+    scope = dict(module.targets(root))
+    local = [
+        item[0]["id"]
+        for item in found
+        if item[0].get("status", "").lower() in ("accepted", "superseded")
+    ]
+    local += [
+        ident
+        for ident, status, _text in choices
+        if status.lower() in ("decided", "open")
+    ]
+    if not found:
+        local += [
+            cells[0]
+            for cells in table_rows(root / "docs" / "REQUIREMENTS.md")
+            if len(cells) >= 2
+        ]
+    for ident in local:
+        scope[ident] = (LOG, ident.lower())
+    return lambda text: module.link_text(text, scope, "build", LOG)
+
+
 def render(root: Path) -> str:
     found = adrs(root)
     choices = decisions(root)
+    link = linker(root, found, choices)
     lines = [
         "# Decision log",
         "",
@@ -164,11 +211,9 @@ def render(root: Path) -> str:
         lines.append("## Requirements")
         lines.append("")
         for cells in requirements:
-            lines.append(
-                f"### {cells[0]} {cells[1] if len(cells) > 2 else ''}".rstrip()
-            )
+            lines.append(heading(cells[0], cells[1] if len(cells) > 2 else ""))
             lines.append("")
-            lines.append(cells[-1])
+            lines.append(link(cells[-1]))
             lines.append("")
     lines.append("## Rules in force")
     lines.append("")
@@ -179,13 +224,13 @@ def render(root: Path) -> str:
         lines.append("None.")
         lines.append("")
     for front, body in accepted:
-        append_adr(lines, front, body)
+        append_adr(lines, front, body, link)
     lines.append("## Choices in force")
     lines.append("")
     append_entries(
         lines,
         [
-            f"{ident}. {text}"
+            f"{anchored(ident)}. {link(text)}"
             for ident, status, text in choices
             if is_status(status, "decided")
         ],
@@ -195,7 +240,7 @@ def render(root: Path) -> str:
     append_entries(
         lines,
         [
-            f"{ident}. {text}"
+            f"{anchored(ident)}. {link(text)}"
             for ident, status, text in choices
             if is_status(status, "open")
         ],
@@ -210,9 +255,10 @@ def render(root: Path) -> str:
     for front, _body in found:
         if not is_status(front.get("status", ""), "superseded"):
             continue
-        entry = f"{front['id']} {front.get('title', '')}".rstrip() + "."
+        title = links_module().unlink(front.get("title", ""))
+        entry = f"{anchored(front['id'])} {title}".rstrip() + "."
         if front["id"] in replaced_by:
-            entry += f" Replaced by {replaced_by[front['id']]}."
+            entry += f" Replaced by {link(replaced_by[front['id']])}."
         replaced.append(entry)
     append_entries(lines, replaced)
     return "\n".join(lines).rstrip() + "\n"

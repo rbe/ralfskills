@@ -8,6 +8,7 @@ from pathlib import Path
 
 ID_LINE = re.compile(r"^id:\s*[\"']?([^\"'#\s]+)")
 ID_CELL = re.compile(r"^[A-Z]+-\d+$")
+ANCHOR = re.compile(r'^<a id="[^"]*"></a>')
 ROADMAP_ID = re.compile(
     r"(?<![A-Za-z0-9-])(?:ADR-\d+|D-\d+|P-\d+|H-[A-Za-z0-9-]+)(?![A-Za-z0-9-])"
 )
@@ -67,6 +68,11 @@ def uses_requirements_list(root: Path) -> bool:
     return listed.is_file() and not adr_markdown(root)
 
 
+def strip_anchor(cell: str) -> str:
+    """Remove a leading anchor from a table cell."""
+    return ANCHOR.sub("", cell.strip()).strip()
+
+
 def table_rows(path: Path) -> list[list[str]]:
     if not path.is_file():
         return []
@@ -76,9 +82,9 @@ def table_rows(path: Path) -> list[list[str]]:
         if not stripped.startswith("|"):
             continue
         cells = [part.strip() for part in stripped.strip("|").split("|")]
-        if not cells or ID_CELL.match(cells[0]) is None:
+        if not cells or ID_CELL.match(strip_anchor(cells[0])) is None:
             continue
-        found.append(cells)
+        found.append([strip_anchor(cells[0]), *cells[1:]])
     return found
 
 

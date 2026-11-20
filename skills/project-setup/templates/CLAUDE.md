@@ -12,7 +12,7 @@ Language skills: [the installed ones of `node`, `python`, `shell`, `jvm`, `go`].
 
 This project ships [as a container image, with the merge into the default branch / as a binary, with `make <target>` / as a library package, with `make build` / as a library, with the merge into the default branch].
 
-In-progress work is a line in `docs/ROADMAP.md`. A defect is a row in `docs/KNOWN_ISSUES.md`. A small choice is a row in `docs/DECISIONS.md`. An architecture or development rule is an ADR in `docs/adr/`. Work for later is a file in `docs/proposals/`. A started slice is a file in `docs/history/`. An accepted ADR is a rule for every change. A test names the ADR or the decision it proves with `id:`. Run `make toon` before reading an index. `make decision-log` writes the decisions as one document.
+In-progress work is a line in `docs/ROADMAP.md`. A defect is a row in `docs/KNOWN_ISSUES.md`. A small choice is a row in `docs/DECISIONS.md`. An architecture or development rule is an ADR in `docs/adr/`. Work for later is a file in `docs/proposals/`. A started slice is a file in `docs/history/`. An accepted ADR is a rule for every change. A test names the ADR or the decision it proves with `id:`. Run `make toon` before reading an index. `make decision-log` writes the decisions as one document. An id in a document is a link. `make links` writes the links.
 
 If `docs/BUGS.md`, `docs/WAVES.md`, `docs/FEATURES.md`, `docs/bugs/`, `docs/waves/`, or `docs/features/` exists, the only skill is `migrate-docs`.
 

@@ -17,6 +17,15 @@ def repo_root(start: Path) -> Path:
     return current
 
 
+def strip_anchor(cell: str) -> str:
+    here = str(Path(__file__).resolve().parent)
+    if here not in sys.path:
+        sys.path.insert(0, here)
+    import links
+
+    return links.strip_anchor(cell)
+
+
 def rows(path: Path) -> list[tuple[str, str]]:
     found = []
     if not path.is_file():
@@ -26,9 +35,10 @@ def rows(path: Path) -> list[tuple[str, str]]:
         if not stripped.startswith("|"):
             continue
         cells = [part.strip() for part in stripped.strip("|").split("|")]
-        if len(cells) < 2 or ID_CELL.match(cells[0]) is None:
+        ident = strip_anchor(cells[0]) if cells else ""
+        if len(cells) < 2 or ID_CELL.match(ident) is None:
             continue
-        found.append((cells[0], cells[1]))
+        found.append((ident, cells[1]))
     return found
 
 
