@@ -133,6 +133,7 @@ Set these before the include. `RENDER_DOCS` and `PUBLISH_IMAGE` are read while `
 | `LINT_CMD` | The one linter. Empty fails `lint`. The language skill names the tool |
 | `INTEGRATION_CMD` | The one integration entry. Empty fails `integration` |
 | `COVERAGE_CMD` | Writes `build/coverage/diff.md` and the coverage map `test-changed` reads. Empty fails `coverage` |
+| `DIFF_COVER_IMAGE` | The image that runs diff-cover. It has git and Python. Default `docker.io/library/python:3.13` |
 | `TEST_CHANGED_CMD` | Runs the tests that cover the diff. Empty fails `test-changed`. The selection is coverage, not a hand-kept list |
 | `PROJECT_REPORT_CMD` | Writes `build/project-report.md`. `report.mk` in `project-report` sets it when that skill is installed and the project did not set it. Empty fails `project-report` |
 | `RENDER_DOCS` | `1` when this repository renders docs. Otherwise there is no `docs` target |

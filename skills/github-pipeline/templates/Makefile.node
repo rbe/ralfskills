@@ -26,6 +26,10 @@ DATA_DIR ?= data
 DATA_ENV ?= APP_DATA
 
 # The tests that cover the diff. make coverage writes the coverage map.
+# The map works with node --test and with Jest. The workers of Vitest
+# write no V8 coverage. For Vitest, delete the node_cover_map.py line in
+# coverage and use this line instead:
+#   TEST_CHANGED_CMD = $(NODE_RUN) npx vitest related --run $$(cat build/coverage/changed.txt)
 TEST_CHANGED_CMD = chosen=$$($(PYTHON) .claude/skills/project-report/scripts/changed_tests.py --print); \
 	if [ -z "$$chosen" ]; then printf '%s\n' "test-changed: no test covers the changed files. make test runs the full suite."; \
 	else $(NODE_RUN) npm test -- $$chosen; fi
