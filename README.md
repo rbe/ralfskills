@@ -41,7 +41,7 @@ A request goes through `plan`, `develop`, `review`, and `release`. A new or vagu
 ## A new project
 
 1. Add the `apm.yml` below and run `apm install`.
-2. Ask the agent to run `project-setup` in setup mode. It runs `make toon`, copies the Makefile template of the language skill, and writes `CLAUDE.md` from the template, `.editorconfig`, and `.gitignore`. It creates the manifest of the project through Make.
+2. Ask the agent to run `project-setup` in setup mode. It copies the Makefile template of the language skill, creates the manifest of the project through Make, runs `make toon`, and writes `CLAUDE.md` from the template, `.editorconfig`, and `.gitignore`.
 3. Setup mode commits what it wrote, with `.claude/skills/`, `apm.yml`, and `apm.lock.yaml`, on the default branch. The Makefile includes files from `.claude/skills/`, so a clone needs them.
 4. When the project publishes through GitHub, ask for `github-pipeline` in setup mode.
 5. Start the first slice with `plan`.
@@ -81,6 +81,6 @@ dependencies:
 
 A Make-only repository leaves `github-pipeline` out. A repository that still has `docs/BUGS.md`, `docs/WAVES.md`, `docs/FEATURES.md`, `docs/bugs/`, `docs/waves/`, or `docs/features/` adds `migrate-docs` and runs it first.
 
-`apm install` does not write `CLAUDE.md`. `apm compile` for the target `claude` keeps a `CLAUDE.md` that a person wrote and prints a warning. That was tested with APM 0.36.1. `project-setup` owns the entry file. APM adds `apm_modules/` to `.gitignore`.
+`apm install` does not write `CLAUDE.md`. `apm compile` for the target `claude` keeps a `CLAUDE.md` that a person wrote and prints a warning. That was tested with APM 0.36.1. `project-setup` owns the entry file. APM adds `apm_modules/` to `.gitignore`. It also creates `.apm-local/`, which has its own `.gitignore`.
 
 Install one skill with `--skill`. Repeat the flag to add another. `apm install rbe/ralfskills --skill '*'` installs every skill again.

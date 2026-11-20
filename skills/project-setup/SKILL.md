@@ -38,7 +38,7 @@ A target is filled in when its command variable has a non-empty value, or the pr
 The order of setup mode:
 
 1. Copy the Makefile template of the language skill and the other files that template names, or add the lines an existing Makefile lacks.
-2. Create the manifest of a new project through the Make target the template names.
+2. Create the manifest of a new project through the Make target the template names: `make npm` for Node, `make wrapper` for Gradle. A Python project with no dependency has no manifest.
 3. Add the missing lines to `.gitignore`.
 4. Run `make toon`.
 5. Write `CLAUDE.md` from the template, or add the paragraphs an existing file lacks. Ask the owner how the project ships, for the ship sentence.

@@ -44,7 +44,7 @@ COVERAGE_CMD = set -eu; \
 	REPORT=build/coverage/lcov.info $(DIFF_COVER)
 TEST_CHANGED_CMD = chosen=$$($(PYTHON) .claude/skills/project-report/scripts/changed_tests.py --print); \
 	if [ -z "$$chosen" ]; then printf '%s\n' "test-changed: no test covers the changed files. make test runs the full suite."; \
-	else $(NODE) node --test $$chosen; fi
+	else printf 'test-changed: %s\n' "$$chosen"; $(NODE) node --test $$chosen; fi
 
 include .claude/skills/project-setup/project.mk
 

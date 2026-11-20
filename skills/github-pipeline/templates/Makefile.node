@@ -32,7 +32,7 @@ DATA_ENV ?= APP_DATA
 #   TEST_CHANGED_CMD = $(NODE_RUN) npx vitest related --run $$(cat build/coverage/changed.txt)
 TEST_CHANGED_CMD = chosen=$$($(PYTHON) .claude/skills/project-report/scripts/changed_tests.py --print); \
 	if [ -z "$$chosen" ]; then printf '%s\n' "test-changed: no test covers the changed files. make test runs the full suite."; \
-	else $(NODE_RUN) npm test -- $$chosen; fi
+	else printf 'test-changed: %s\n' "$$chosen"; $(NODE_RUN) npm test -- $$chosen; fi
 
 include .claude/skills/github-pipeline/sdlc.mk
 

@@ -11,6 +11,10 @@ plugins {
     id 'com.diffplug.spotless' version '8.11.0'
 }
 
+// Change the group to the package root of this project.
+group = 'com.example'
+version = '0.1.0'
+
 repositories {
     mavenCentral()
 }

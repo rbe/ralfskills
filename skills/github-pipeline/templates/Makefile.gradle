@@ -29,7 +29,7 @@ GRADLE ?= podman run --rm -e CI -e GRADLE_USER_HOME=/gradle -v "$$HOME/.gradle":
 # The map has one entry for each test JVM. Set forkEvery = 1 on the test task.
 TEST_CHANGED_CMD = chosen=$$($(PYTHON) .claude/skills/project-report/scripts/changed_tests.py --print); \
 	if [ -z "$$chosen" ]; then printf '%s\n' "test-changed: no test covers the changed files. make test runs the full suite."; \
-	else args=""; for name in $$chosen; do args="$$args --tests $$name"; done; $(GRADLE) test $$args; fi
+	else printf 'test-changed: %s\n' "$$chosen"; args=""; for name in $$chosen; do args="$$args --tests $$name"; done; $(GRADLE) test $$args; fi
 
 include .claude/skills/github-pipeline/sdlc.mk
 

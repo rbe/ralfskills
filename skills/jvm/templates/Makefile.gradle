@@ -1,6 +1,10 @@
 # The Makefile of a Gradle project on project.mk, from the template of
-# the jvm skill. build.gradle and config/checkstyle/checkstyle.xml come
-# from the same skill when the project had none.
+# the jvm skill. build.gradle, settings.gradle, and
+# config/checkstyle/checkstyle.xml come from the same skill when the
+# project had none. Set the project name in settings.gradle, and the
+# group and the version in build.gradle. make build writes
+# build/libs/<name>-<version>.jar. Source is in src/main/java, and
+# tests are in src/test/java.
 #
 # Gradle runs through $(GRADLE), which is the Gradle wrapper in Podman
 # on this machine. google-java-format through Spotless is the formatter.
@@ -39,7 +43,7 @@ COVERAGE_CMD = set -eu; \
 	REPORT="$$report" $(DIFF_COVER)
 TEST_CHANGED_CMD = chosen=$$($(PYTHON) .claude/skills/project-report/scripts/changed_tests.py --print); \
 	if [ -z "$$chosen" ]; then printf '%s\n' "test-changed: no test covers the changed files. make test runs the full suite."; \
-	else args=""; for name in $$chosen; do args="$$args --tests $$name"; done; $(GRADLE) test $$args; fi
+	else printf 'test-changed: %s\n' "$$chosen"; args=""; for name in $$chosen; do args="$$args --tests $$name"; done; $(GRADLE) test $$args; fi
 
 include .claude/skills/project-setup/project.mk
 

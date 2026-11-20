@@ -86,9 +86,11 @@ def cell(text: str) -> str:
 
 def tests_for(requirement_id: str, proofs_found) -> list[str]:
     return sorted(
-        proof.qualified_name
-        for proof in proofs_found
-        if proof.requirement_id == requirement_id
+        {
+            proof.qualified_name
+            for proof in proofs_found
+            if proof.requirement_id == requirement_id
+        }
     )
 
 

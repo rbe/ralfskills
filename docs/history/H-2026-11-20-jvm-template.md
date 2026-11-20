@@ -31,7 +31,9 @@ Every gate passed through Make in Podman with the pinned default images and no o
 
 The JVM template created a Gradle project through `make wrapper` and passed every target in Podman, in the images `gradle:9.1.0-jdk25` and `eclipse-temurin:25-jdk`. The diff report named the changed line that no test ran.
 
-The third trial round is in the pull request of this slice.
+Three more agents ran a third trial round with the skills installed from this branch and the pinned default images: a new Gradle project, a new Node project, and an existing Python project with an old board. They did not read a script. All three report no blocker and say an agent can do the work with the installed skills alone. Each delivered its change, and every Make target passed in each project, on the branch of the slice and on the default branch after the merge. The Node and the Gradle project used their Makefile template with no change.
+
+Their findings are fixed in this slice. Ruff does not read the installed skills. `record` says which names an ADR lists in `skills` and how the next id is chosen. `release` runs the gates before it closes the task. The default branch is the variable `DEFAULT_BRANCH`. The report lists only the lines of a roadmap, and lists a test file once for an id. `jvm` has a settings template, so the JAR has the name of the project. After these fixes, the three Makefile templates each ran a new sample project through every target in Podman again.
 
 security: no listener, no secret, no personal data in a fixture. A template contains no credential.
 

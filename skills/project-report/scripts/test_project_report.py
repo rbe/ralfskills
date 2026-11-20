@@ -112,7 +112,11 @@ class RequirementIdTest(unittest.TestCase):
                 "docs/adr/ADR-0001.md",
                 "---\nid: ADR-0001\ntitle: One\nstatus: Accepted\n---\n",
             )
-            write(root, "src/a.test.ts", "// id: ADR-0001\ntest('a', () => {})\n")
+            write(
+                root,
+                "src/a.test.ts",
+                "// id: ADR-0001\n// id: ADR-0001\ntest('a', () => {})\n",
+            )
             write(
                 root,
                 "src/test/java/PortTest.java",
@@ -126,6 +130,8 @@ class RequirementIdTest(unittest.TestCase):
             self.assertIsNone(named["src/b.spec.js"])
             errors = requirements.problems(requirements.collect(root), found)
             self.assertEqual(errors, ["src/b.spec.js has no id"])
+            text, _errors = project_report.build(root)
+            self.assertEqual(text.count("src/a.test.ts; src/a.test.ts"), 0)
 
     def test_a_test_inside_an_installed_skill_is_not_a_project_test(self):
         """id: R-63"""
