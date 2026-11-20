@@ -18,7 +18,7 @@ Podman, XDG paths, and what a shipment may contain are `project-setup`. This ski
 
 ## Questions for plan
 
-Ask these before the slice is closed, after privacy when both are installed.
+Ask these before the slice is closed. `plan` follows `order` on the skill index, so these come first.
 
 1. What crosses a trust boundary: a listener, a file, a secret, or a command?
 2. Who can call it?

@@ -52,6 +52,7 @@ PROJECT_MK := 1
 PROJECT_MK_DIR := $(dir $(lastword $(MAKEFILE_LIST)))
 include $(PROJECT_MK_DIR)podman-python.mk
 include $(PROJECT_MK_DIR)tools.mk
+-include .claude/skills/project-report/report.mk
 
 HELP_LEAD ?= Make is the only interface. A target does the same thing locally and in CI.
 REGISTRY ?= ghcr.io
@@ -61,7 +62,7 @@ REGISTRY ?= ghcr.io
 help: ## Show the targets
 	@printf '%s\n' "$(HELP_LEAD)"
 	@printf '%s\n' ""
-	@awk -v docs="$(RENDER_DOCS)" -v login="$(PUBLISH_IMAGE)" 'BEGIN {FS = ":.*## "}; /^# help-docs$$/ { skip = (docs != "1"); next } /^# help-login$$/ { skip = (login != "1"); next } /^endif$$/ { skip = 0; next } skip { next } /^[a-zA-Z][a-zA-Z0-9_-]*:.*## / {printf "  %-32s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+	@awk -v docs="$(RENDER_DOCS)" -v login="$(PUBLISH_IMAGE)" 'BEGIN {FS = ":.*## "}; /^# help-docs$$/ { skip = (docs != "1"); next } /^# help-login$$/ { skip = (login != "1"); next } /^endif$$/ { skip = 0; next } skip { next } /^[a-zA-Z][a-zA-Z0-9_-]*:.*## / && !seen[$$1]++ {printf "  %-32s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 
 # Real recipe for the tools every project shares, then the project stub.
 setup: ## Resolve dependencies
@@ -168,6 +169,9 @@ else
 endif
 
 # Generated. Hand-editing build/project-report.md is a defect.
+# report.mk in the project-report skill owns this target when that skill
+# is installed. This recipe is for a project without that include.
+ifndef PROJECT_REPORT_MK
 project-report: ## Write the requirements map and the reviews
 ifeq ($(strip $(PROJECT_REPORT_CMD)),)
 	@printf '%s\n' "project-report: stub. Set PROJECT_REPORT_CMD before the include. Write build/project-report.md." >&2
@@ -175,6 +179,7 @@ ifeq ($(strip $(PROJECT_REPORT_CMD)),)
 else
 	mkdir -p build
 	$(PROJECT_REPORT_CMD) > build/project-report.md
+endif
 endif
 
 # Stub. Set RENDER_DOCS=1 only when this repository renders docs.

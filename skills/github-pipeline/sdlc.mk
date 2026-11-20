@@ -328,6 +328,7 @@ cleanup-actions-artifacts: ## Match CI: delete artifacts at least one hour old, 
 	echo "cleanup-actions-artifacts: $$reason"
 
 -include .claude/skills/record/index.mk
+-include .claude/skills/project-report/report.mk
 
 # After the fragments this file includes. A fragment must not replace it.
 .DEFAULT_GOAL := help

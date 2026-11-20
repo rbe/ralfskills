@@ -16,7 +16,7 @@ order: 20
 
 ## Questions for plan
 
-Ask these with the security questions, before design or API questions.
+Ask these after the security questions, before design or API questions.
 
 1. What personal data is stored, shown, logged, or exported?
 2. What remains if a log or a fixture is copied out of the machine?

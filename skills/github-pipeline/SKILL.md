@@ -7,7 +7,7 @@ description: Apply or check the GitHub delivery contract in setup mode or report
 
 This skill owns the GitHub contract and the Make that implements it. `sdlc.mk` is that makefile: version, publish tags, cleanup, and report. A project includes the installed file. It does not keep a second copy.
 
-It depends on `project-setup` only because a workflow calls `make`. The job names `setup`, `build`, `test`, and `docs` (when the repository renders docs) are real targets from that contract. `login` is the target the publish job runs, not its own job. A Make-only repository does not install this skill. Podman, XDG paths, and what a shipment may contain are `project-setup`.
+It depends on `project-setup` only because a workflow calls `make`. The job names `setup`, `build`, `test`, and `docs` (when the repository renders docs) are real targets from that contract. `login` is the target the publish job runs, not its own job. A Make-only repository does not install this skill. Podman and XDG paths are `project-setup`. What a shipment may contain is the Report and packaging section of this skill.
 
 ## Steps
 
@@ -109,7 +109,7 @@ Set these before the include:
 | `PACKAGE` | GitHub `owner/name`. Defaults to `GITHUB_REPOSITORY` |
 | `KEEP_VERSIONS` | How many versions to keep, including the one just published. Default 2 |
 | `SDLC_JOBS` | Jobs the report lists. Add `publish-github` here when that job exists |
-| `SDLC_CI` | What `ci` runs, in order. Default `setup build test docs report`. Drop `docs` when there is no docs target |
+| `SDLC_CI` | What `ci` runs, in order. Default `setup build editorconfig format lint test integration coverage docs report`. Drop `docs` when there is no docs target |
 | `SDLC_KEEP_ARTIFACTS` | Artifact names the hourly cleanup never deletes. Default `report,docs` |
 | `HELP_LEAD` | First line of `make help` |
 

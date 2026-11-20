@@ -110,6 +110,21 @@ def rows(root):
     return sorted(found, key=sort_key)
 
 
+def name_errors(root):
+    errors = []
+    directory = skill_root(root)
+    if not directory.is_dir():
+        return errors
+    for path in sorted(directory.glob("*/SKILL.md")):
+        data = frontmatter(path.read_text(encoding="utf-8"))
+        name = data.get("name", "")
+        if name != path.parent.name:
+            errors.append(
+                f"{path.parent.name}: the frontmatter name is {name or 'missing'}"
+            )
+    return errors
+
+
 def render(found):
     lines = [f"skill_index[{len(found)}]{{{','.join(COLUMNS)}}}:"]
     for row in found:
@@ -126,8 +141,12 @@ def write(root):
 
 
 def main():
-    write(repo_root(Path.cwd()))
-    return 0
+    root = repo_root(Path.cwd())
+    write(root)
+    errors = name_errors(root)
+    for error in errors:
+        print(error, file=sys.stderr)
+    return 1 if errors else 0
 
 
 if __name__ == "__main__":

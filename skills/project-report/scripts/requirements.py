@@ -11,7 +11,21 @@ ID_CELL = re.compile(r"^[A-Z]+-\d+$")
 ROADMAP_ID = re.compile(
     r"(?<![A-Za-z0-9-])(?:ADR-\d+|D-\d+|P-\d+|H-[A-Za-z0-9-]+)(?![A-Za-z0-9-])"
 )
-SKIP = {".git", "build", "__pycache__", ".venv"}
+SKIP = {
+    ".git",
+    ".claude",
+    ".gradle",
+    ".venv",
+    "__pycache__",
+    "build",
+    "dist",
+    "node_modules",
+}
+OTHER_TEST_FILE = re.compile(
+    r"(?:\.(?:test|spec)\.(?:js|jsx|ts|tsx|mjs|cjs)"
+    r"|(?:Test|Tests|Spec|IT)\.(?:java|groovy|kt))$"
+)
+COMMENT_ID = re.compile(r"^(?://+|/\*+|\*|#)\s*id:\s*[\"']?([^\"'#\s*]+)")
 
 
 @dataclass(frozen=True)
@@ -266,10 +280,34 @@ def test_files(root: Path) -> list[Path]:
     return found
 
 
+def other_test_files(root: Path) -> list[Path]:
+    found = []
+    for path in sorted(root.rglob("*")):
+        if any(part in SKIP for part in path.parts):
+            continue
+        if path.is_file() and OTHER_TEST_FILE.search(path.name):
+            found.append(path)
+    return found
+
+
+def proofs_in_comments(path: Path, root: Path) -> list[TestProof]:
+    relative = path.relative_to(root).as_posix()
+    found = []
+    for line in path.read_text(encoding="utf-8").splitlines():
+        match = COMMENT_ID.match(line.strip())
+        if match:
+            found.append(TestProof(match.group(1), relative, relative))
+    if not found:
+        found.append(TestProof(None, relative, relative))
+    return found
+
+
 def proofs(root: Path) -> list[TestProof]:
     found = []
     for path in test_files(root):
         found.extend(proofs_in(path, root))
+    for path in other_test_files(root):
+        found.extend(proofs_in_comments(path, root))
     return found
 
 

@@ -46,8 +46,12 @@ def write_indexes(root: Path) -> None:
 
 def main():
     _adr_index, _requirements_index, skill_index = load()
-    write_indexes(skill_index.repo_root(Path.cwd()))
-    return 0
+    root = skill_index.repo_root(Path.cwd())
+    write_indexes(root)
+    errors = skill_index.name_errors(root)
+    for error in errors:
+        print(error, file=sys.stderr)
+    return 1 if errors else 0
 
 
 if __name__ == "__main__":
