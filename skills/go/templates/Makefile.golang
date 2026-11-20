@@ -17,16 +17,27 @@ GO_IMAGE ?= docker.io/library/golang:1.25-bookworm
 # The Go caches are volumes of this project. Two projects on one machine
 # do not share a volume, so their containers do not wait for each other.
 GO_CACHE ?= $(notdir $(CURDIR))
-GO_RUN = podman run --rm -e HOME=/tmp -e CI -e GOFLAGS=-buildvcs=false \
+GO_OPTS = -e HOME=/tmp -e CI -e GOFLAGS=-buildvcs=false \
 	-v $(GO_CACHE)-gocache:/tmp/.cache/go-build -v $(GO_CACHE)-gomod:/go/pkg/mod \
-	-v "$(CURDIR)":/work:Z -w /work $(GO_IMAGE)
+	-v "$(CURDIR)":/work:Z -w /work
+GO_RUN = podman run --rm $(GO_OPTS) $(GO_IMAGE)
 GO = $(GO_RUN) go
 
 SETUP_CMD = $(GO) mod download
-# This compiles every package and writes no file, which is right for a
-# library. A project that ships a binary writes it, for example:
-#   BUILD_CMD = mkdir -p build && $(GO) build -o build/ ./cmd/...
-BUILD_CMD = $(GO) build ./...
+# A project that ships a binary sets BIN to the name of the binary.
+# `make build` then writes build/$(BIN) from the package BIN_PKG, and
+# `make run ARGS='...'` runs that package. With BIN empty, `make build`
+# compiles every package and writes no file, which is right for a
+# library.
+#
+# Go runs in a Linux container, so build/$(BIN) is a Linux binary. For a
+# binary of another machine, set GOOS and GOARCH:
+#   make build GOOS=darwin GOARCH=arm64
+# `make run` does not read build/. It compiles and runs in the container.
+BIN ?=
+BIN_PKG ?= ./cmd/$(BIN)
+ARGS ?=
+BUILD_CMD = $(if $(BIN),mkdir -p build && $(GO_RUN) env $(if $(GOOS),GOOS=$(GOOS)) $(if $(GOARCH),GOARCH=$(GOARCH)) go build -o build/$(BIN) $(BIN_PKG),$(GO) build ./...)
 TEST_CMD = $(GO) test ./...
 INTEGRATION_CMD = true
 # gofmt reads the Go files of the packages of the project and no other
@@ -57,3 +68,10 @@ go: ## Run go in Podman on this machine. Set ARGS.
 	@set -eu; \
 	if [ -z "$(ARGS)" ]; then printf '%s\n' "go: set ARGS to the go arguments." >&2; exit 1; fi
 	$(GO) $(ARGS)
+
+.PHONY: run
+run: ## Run the program in Podman on this machine. Set BIN. ARGS are its arguments.
+	@set -eu; \
+	if [ -z "$(BIN)" ]; then printf '%s\n' "run: set BIN to the name of the binary. A library has no program to run." >&2; exit 1; fi; \
+	tty=""; if [ -t 0 ] && [ -t 1 ]; then tty="-it"; fi; \
+	podman run --rm $$tty $(GO_OPTS) $(GO_IMAGE) go run $(BIN_PKG) $(ARGS)
