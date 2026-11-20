@@ -27,7 +27,8 @@ SKIP = {
 }
 OTHER_TEST_FILE = re.compile(
     r"(?:\.(?:test|spec)\.(?:js|jsx|ts|tsx|mjs|cjs)"
-    r"|(?:Test|Tests|Spec|IT)\.(?:java|groovy|kt))$"
+    r"|(?:Test|Tests|Spec|IT)\.(?:java|groovy|kt)"
+    r"|_test\.go)$"
 )
 COMMENT_ID = re.compile(r"^(?://+|/\*+|\*|#)\s*id:\s*[\"']?([^\"'#\s*]+)")
 
