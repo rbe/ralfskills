@@ -47,4 +47,4 @@ No finding. Left alone: `make run` with a program that draws a screen was not ru
 
 ## Release
 
-The branch is pushed. The owner decides on the merge.
+The branch is pushed and merged into the default branch with a pull request, after the owner confirmed. This collection publishes no image.
