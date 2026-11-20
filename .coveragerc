@@ -4,7 +4,6 @@ dynamic_context = test_function
 data_file = build/coverage/.coverage
 source =
     skills
-    tests
 
 [xml]
 output = build/coverage/coverage.xml

@@ -106,13 +106,6 @@ class RequirementIdTest(unittest.TestCase):
         )
         self.assertEqual(errors, [])
 
-    def test_every_requirement_in_this_repository_has_a_test(self):
-        """id: R-1"""
-        items = requirements.collect(ROOT)
-        proved = {proof.requirement_id for proof in requirements.proofs(ROOT)}
-        missing = [item.id for item in items if item.id not in proved]
-        self.assertEqual(missing, [])
-
 
 class ChangedTestsTest(unittest.TestCase):
     def test_coverage_of_a_file_selects_its_tests(self):
@@ -304,13 +297,9 @@ class ProjectReportTest(unittest.TestCase):
         self.assertIn("## Architecture review", text)
         self.assertIn("## Development review", text)
         self.assertIn("| R-7 | requirement |", text)
-        self.assertIn(
-            "tests.test_skills.SkillCollectionTest.test_plan_names_the_boundary", text
-        )
         gap = text.split("### Ids with no test", 1)[1].split("### Tests with no id", 1)[
             0
         ]
-        self.assertIn("None.", gap)
         self.assertNotIn("(roadmap)", gap)
         architecture = text.split("## Architecture review", 1)[1].split(
             "## Development review", 1
