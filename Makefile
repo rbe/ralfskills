@@ -18,7 +18,7 @@ LINT_CMD = podman run --rm -v "$(CURDIR)":/io:Z -w /io $(RUFF_IMAGE) check
 # No integration entry. The unit tests cover the scripts.
 INTEGRATION_CMD = true
 COVERAGE_CMD = set -eu; \
-	base=$$(git merge-base HEAD origin/main 2>/dev/null || git rev-parse -q --verify HEAD 2>/dev/null || git hash-object -t tree /dev/null); \
+	base=$$(git merge-base HEAD origin/$(DEFAULT_BRANCH) 2>/dev/null || git rev-parse -q --verify HEAD 2>/dev/null || git hash-object -t tree /dev/null); \
 	git add -N .; \
 	git diff "$$base" > build/coverage/change.diff; \
 	podman run --rm -e HOME=/tmp -e PYTHONDONTWRITEBYTECODE=1 -v "$(CURDIR)":/work:Z -w /work $(PYTHON_IMAGE) sh -c 'set -eu; pip install --disable-pip-version-check --root-user-action=ignore -q --target /tmp/py "coverage==$(COVERAGE_VERSION)"; PYTHONPATH=/tmp/py python3 skills/project-report/scripts/cover_tests.py $(UNIT_TESTS)'; \

@@ -27,7 +27,7 @@ This skill is the only writer of ids and of the board. A stage that writes a doc
 
 A product repository keeps in-progress work in `docs/ROADMAP.md` and a rule in `docs/adr/`. This collection is not a product repository. Each requirement is one row in `docs/REQUIREMENTS.md`. An Open row in `docs/DECISIONS.md` is work that is not finished. A Decided row is a choice in force. This collection does not keep `docs/ROADMAP.md` or `docs/adr/`.
 
-`templates/` beside this skill has one template for each document: `ROADMAP.md`, `KNOWN_ISSUES.md`, `DECISIONS.md`, `adr.md`, `proposal.md`, and `history.md`. Copy the template at the first write, and keep its layout. The scripts read these layouts: a table row for a decision and a known issue, and a frontmatter block for an ADR, a proposal, and a history file. Write a list in the frontmatter on one line, as `skills: [a, b]`. `make ids-retire` creates `docs/ids.yaml`. Before the first retire, write the file with the content shown under Ids.
+`templates/` beside this skill has one template for each document: `ROADMAP.md`, `KNOWN_ISSUES.md`, `DECISIONS.md`, `adr.md`, `proposal.md`, and `history.md`. Copy the template at the first write, and keep its layout. The scripts read these layouts: a table row for a decision and a known issue, and a frontmatter block for an ADR, a proposal, and a history file. Write a list in the frontmatter on one line, as `skills: [a, b]`. `make ids-retire` creates `docs/ids.yaml` at the first retire. Do not write it by hand. The next number of a kind is one above the highest number of that kind in the documents and in `docs/ids.yaml`. The date in a history id is the day the file is created.
 
 `plan` reads these before it asks. It does not ask a question an accepted ADR, a Decided entry, or an open proposal already answered.
 
@@ -49,7 +49,7 @@ supersedes: []
 
 A decision, a proposal, and a history file use the same keys. In a history file, `skills` lists the skills the slice used. A history file may still cite an id that was retired later.
 
-The open history section is the section of the stage that runs: Plan, Develop, Review, or Release. A skill that adds one line adds it there.
+The open history section is the section of the stage that runs: Plan, Develop, Review, or Release. A skill that adds one line adds it there, as `python: the language skill for the Python files.` or `security: no listener, no secret.` The same step adds the skill name to `skills` in the frontmatter. `decisions`, `adrs`, `issues`, and `proposals` list the ids the slice wrote or fixed.
 
 ## ADRs
 
@@ -59,7 +59,7 @@ An ADR body has the section `## Rule` and the section `## Why`. Rule is what an 
 
 This skill owns the ADR status. The values are `Accepted` and `Superseded`. A new ADR names the ADR it replaces in `supersedes`. This skill then sets the status of the replaced ADR to `Superseded`. `plan`, `develop`, and `review` follow only an accepted ADR. The project report does not list a superseded ADR as an id with no test.
 
-`skills` names each skill whose work the ADR governs. `develop` and `review` open an accepted ADR when `skills` names a skill the slice uses. An ADR with an empty `skills` list has no reader.
+`skills` names each skill whose work the ADR governs. Each name is an installed skill: a stage, a language skill, or a subskill. A rule for every change names `develop` and `review`, the two stages every slice uses, as `skills: [develop, review]`. A rule for one language names that language skill too, as `skills: [python, develop, review]`. `develop` and `review` open an accepted ADR when `skills` names a skill the slice uses. An ADR with an empty `skills` list has no reader.
 
 An accepted ADR replaces a skill rule only when the ADR is a divergence. A divergence names the rule, what differs, and why. An ADR that differs from a skill rule and does not name these three is a finding in `review`. What `github-pipeline` says is not a divergence stays not allowed.
 

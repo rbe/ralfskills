@@ -69,16 +69,14 @@ def numbered_steps(text: str, heading: str) -> list[str]:
 
 
 def content_lines(path: Path) -> list[str]:
+    """The list lines of a document. The text above the list is not a line."""
     if not path.is_file():
         return []
     lines = []
     for line in path.read_text(encoding="utf-8").splitlines():
         stripped = line.strip()
-        if not stripped or stripped.startswith("#"):
-            continue
         if stripped.startswith("- "):
-            stripped = stripped[2:].strip()
-        lines.append(stripped)
+            lines.append(stripped[2:].strip())
     return lines
 
 

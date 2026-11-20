@@ -42,7 +42,7 @@ A request goes through `plan`, `develop`, `review`, and `release`. A new or vagu
 
 1. Add the `apm.yml` below and run `apm install`.
 2. Ask the agent to run `project-setup` in setup mode. It runs `make toon`, copies the Makefile template of the language skill, and writes `CLAUDE.md` from the template, `.editorconfig`, and `.gitignore`. It creates the manifest of the project through Make.
-3. Commit `.claude/skills/`, `apm.yml`, and `apm.lock.yaml` on the default branch and push. The Makefile includes files from `.claude/skills/`.
+3. Setup mode commits what it wrote, with `.claude/skills/`, `apm.yml`, and `apm.lock.yaml`, on the default branch. The Makefile includes files from `.claude/skills/`, so a clone needs them.
 4. When the project publishes through GitHub, ask for `github-pipeline` in setup mode.
 5. Start the first slice with `plan`.
 
@@ -52,7 +52,7 @@ A request goes through `plan`, `develop`, `review`, and `release`. A new or vagu
 2. When `docs/BUGS.md`, `docs/WAVES.md`, `docs/FEATURES.md`, `docs/bugs/`, `docs/waves/`, or `docs/features/` exists, run `migrate-docs` first.
 3. Ask for `project-setup` in report mode, then in setup mode. Setup mode writes only what is missing. It keeps a `CLAUDE.md` and a target the project already has. It rewrites a recipe that runs a toolchain on the host. Each existing test gets a Decided row that states the behaviour it proves, and names that row.
 4. Record each rule the project already follows through `record`: an ADR for an architecture or development rule, a Decided row for a small choice. Name the skills an ADR governs in `skills`. A rule the code already breaks is also a row in `docs/KNOWN_ISSUES.md`.
-5. Commit `.claude/skills/`, `apm.yml`, `apm.lock.yaml`, and the board on the default branch and push.
+5. Each of the steps 2 to 4 ends with its own commit on the default branch: the new board, then the setup with `.claude/skills/`, `apm.yml`, and `apm.lock.yaml`, then the rules.
 
 ## How APM loads them
 

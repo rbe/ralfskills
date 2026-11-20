@@ -1,7 +1,6 @@
-# The Makefile of a Gradle project on project.mk. Copy this file to
-# Makefile, or copy the lines the project lacks above its include.
-# Copy build.gradle and checkstyle.xml beside this file to build.gradle
-# and config/checkstyle/checkstyle.xml when the project has none.
+# The Makefile of a Gradle project on project.mk, from the template of
+# the jvm skill. build.gradle and config/checkstyle/checkstyle.xml come
+# from the same skill when the project had none.
 #
 # Gradle runs through $(GRADLE), which is the Gradle wrapper in Podman
 # on this machine. google-java-format through Spotless is the formatter.
@@ -30,7 +29,7 @@ FORMAT_CMD = $(GRADLE) spotlessCheck
 FORMAT_FIX_CMD = $(GRADLE) spotlessApply
 LINT_CMD = $(GRADLE) checkstyleMain checkstyleTest
 COVERAGE_CMD = set -eu; \
-	base=$$(git merge-base HEAD origin/main 2>/dev/null || git rev-parse -q --verify HEAD 2>/dev/null || git hash-object -t tree /dev/null); \
+	base=$$(git merge-base HEAD origin/$(DEFAULT_BRANCH) 2>/dev/null || git rev-parse -q --verify HEAD 2>/dev/null || git hash-object -t tree /dev/null); \
 	git add -N .; \
 	git diff "$$base" > build/coverage/change.diff; \
 	$(GRADLE) test jacocoTestReport; \

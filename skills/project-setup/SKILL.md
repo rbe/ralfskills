@@ -41,10 +41,10 @@ The order of setup mode:
 2. Create the manifest of a new project through the Make target the template names.
 3. Add the missing lines to `.gitignore`.
 4. Run `make toon`.
-5. Write `CLAUDE.md` from the template, or add the paragraphs an existing file lacks.
+5. Write `CLAUDE.md` from the template, or add the paragraphs an existing file lacks. Ask the owner how the project ships, for the ship sentence.
 6. Do the Quality targets steps.
 7. Run `make setup`.
-8. Commit on the default branch and push. The setup of a project is not a slice.
+8. Commit every file this mode wrote, the manifest and its lockfile, `.claude/skills/`, `apm.yml`, and `apm.lock.yaml` on the default branch, and push. The setup of a project is not a slice.
 
 The paragraphs below say what each step writes.
 
@@ -205,7 +205,7 @@ Setup mode adds these when they are missing. Stop at the first step that cannot 
 3. `lint` is one linter for each language, the tool the language skill names. Set `LINT_CMD` the same way. Stop when a second linter is present, or when this step cannot name the tool. Do not write a linter. Do not take a later step.
 4. `test` runs the unit tests. Leave an integration test out of `TEST_CMD`. Stop when the unit tests have no command and no recipe. Do not take a later step.
 5. `integration` is the one integration entry. Set `INTEGRATION_CMD` when it is empty. Stop when a second integration target exists. Do not take a later step.
-6. `coverage` writes `build/coverage/diff.md` through diff-cover, for the lines this change touched. The diff is the branch against the default branch. On the default branch the diff is empty, so the report has no line and `test-changed` runs no test. `coverage` and `test-changed` fail until the first unit test exists. It does not apply a repository-wide percentage. `COVERAGE_CMD` produces that report and the coverage map. The language skill names the coverage tool that feeds diff-cover.
+6. `coverage` writes `build/coverage/diff.md` through diff-cover, for the lines this change touched. The diff is the branch against the default branch. On the default branch the diff is empty, so the report has no line and `test-changed` runs no test. `coverage` and `test-changed` fail until the first unit test exists. `coverage` runs `git add -N .`, so each new file is marked in the index. `DEFAULT_BRANCH` names the default branch when it is not `main`. It does not apply a repository-wide percentage. `COVERAGE_CMD` produces that report and the coverage map. The language skill names the coverage tool that feeds diff-cover.
 7. `test-changed` runs the tests that cover the files in the diff. The selection is the coverage of those files. Stop when the selection is a hand-kept list. Do not take a later step. `make test` stays the full suite. A green `test-changed` does not replace `make test`. CI runs `make test`.
 8. A test names the requirement it proves with `id:` in its header or metadata. The id is an ADR id or a decision id. When an existing test has no id, ask `record` for a Decided row that states the behaviour the test proves, and name that row in the test. One row can serve several tests. Stop when a test has no id. Do not take a later step. The id is not a path.
 9. When `project-report` is installed, `make project-report` writes `build/project-report.md`. Stop when that file is missing or hand-edited. Do not take a later step. Hand-editing it is a defect. The file holds the requirements-to-tests map, the architecture review, and the development review.

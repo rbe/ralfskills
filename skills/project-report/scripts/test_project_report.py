@@ -429,7 +429,11 @@ class ProjectReportTest(unittest.TestCase):
                 "docs/KNOWN_ISSUES.md",
                 "| Id | Defect |\n| --- | --- |\n| K-1 | divide returns 0 on zero. |\n",
             )
-            write(root, "docs/ROADMAP.md", "# Roadmap\n\n- H-2026-11-20-divide\n")
+            write(
+                root,
+                "docs/ROADMAP.md",
+                "# Roadmap\n\nOne line for each slice in progress.\n\n- H-2026-11-20-divide\n",
+            )
             write(
                 root,
                 "tests/test_core.py",
@@ -446,6 +450,7 @@ class ProjectReportTest(unittest.TestCase):
             self.assertNotIn("zero.. Proved", text)
             self.assertNotIn("K-1, open, issue. divide returns 0 on zero. Proved", text)
             self.assertIn("H-2026-11-20-divide", text)
+            self.assertNotIn("One line for each slice in progress", text)
 
     def test_a_superseded_adr_is_not_an_id_with_no_test(self):
         """id: R-56"""

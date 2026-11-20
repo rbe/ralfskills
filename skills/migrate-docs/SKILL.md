@@ -13,7 +13,7 @@ This is the only skill that reads the old board. Every other skill stops while a
 2. Invoke `record` for every new id. `record`'s own stop does not apply to this caller.
 3. Move each still-true fact once, using the table below. Then delete the old paths in the same change.
 4. Where `AGENTS.md` exists, fold a constraint that is still true into `CLAUDE.md` and remove `AGENTS.md`. `CLAUDE.md` is the only entry file.
-5. Ask `record` to retire every old label that was used as an id. A retired id is never issued again. The new row or file names the old label in its text, so a person can still find it.
+5. Ask `record` to retire every old label that was used as an id. A retired id is never issued again. The new row or file names the old label in its text, so a person can still find it. A label whose text was not copied is retired too.
 6. `record` needs `make ids` and `make ids-retire`. In a project whose Makefile has no include yet, run `make -f .claude/skills/record/index.mk ids` and `make -f .claude/skills/record/index.mk ids-retire ID=<id>`. `project-setup` writes the include after this skill has deleted the old paths.
 7. Commit the new board on the default branch and push. The onboarding of a project is not a slice.
 
