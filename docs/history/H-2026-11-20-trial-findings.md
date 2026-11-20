@@ -41,6 +41,8 @@ Every gate passed through Make in Podman: `make format`, `make lint`, `make test
 
 The Node template created a project through `make npm` and passed every target in Podman, in a repository with no commit. The Python template passed every target in Podman. Jest and Vitest passed with the pipeline template in Podman.
 
+Two more agents repeated both trials on new projects, with the skills installed from this branch. They did not read a script and did not see the Makefile of this collection. Both report no blocker. Both delivered the change, and all twelve Make targets passed in each project, on the branch of the slice and on the default branch after the merge. Their remaining findings are fixed in this slice too: the commands that create the manifest of a Node project, what a Node library packs, the discovery of Python unit tests, an example of the `id:` line and of each id, and the order of setup mode.
+
 security: no listener, no secret, no personal data in a fixture. A template contains no credential.
 
 privacy: no personal data.

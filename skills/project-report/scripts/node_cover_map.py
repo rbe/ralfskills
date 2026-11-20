@@ -86,7 +86,8 @@ def main(argv: list[str]) -> int:
     if not found:
         print(
             "coverage map: no test file ran under V8 coverage. "
-            "The workers of Vitest write none. The node skill names the command.",
+            "No test file exists yet, or the runner is Vitest, whose workers "
+            "write none. The node skill names the command for Vitest.",
             file=sys.stderr,
         )
         return 1

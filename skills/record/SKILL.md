@@ -18,16 +18,16 @@ This skill is the only writer of ids and of the board. A stage that writes a doc
 
 | Kind | Home | Id |
 | --- | --- | --- |
-| In progress | `docs/ROADMAP.md` | One line: `- <history id>`, and the proposal id when there is one. No grill |
-| Defect | `docs/KNOWN_ISSUES.md` | One table row. The id is `K-` plus a number. Delete the row when the fix lands, then retire the id |
-| Small choice | `docs/DECISIONS.md` | One table row. The id is `D-` plus a number. The status is Open or Decided. A Decided row is one sentence |
-| Architecture or development rule | `docs/adr/<id>.md` | `ADR-` plus four digits |
-| Implement later | `docs/proposals/<id>.md` | `P-` plus a number. This is the backlog |
-| Implement now | `docs/history/<id>.md` | `H-` plus the date and a slug |
+| In progress | `docs/ROADMAP.md` | One line: `- H-2026-11-20-slugify`, and the proposal id when there is one. No grill |
+| Defect | `docs/KNOWN_ISSUES.md` | One table row. The id is `K-` plus a number, from `K-1`. Delete the row when the fix lands, then retire the id |
+| Small choice | `docs/DECISIONS.md` | One table row. The id is `D-` plus a number, from `D-1`. The status is Open or Decided. A Decided row is one sentence |
+| Architecture or development rule | `docs/adr/<id>.md` | `ADR-` plus four digits, from `ADR-0001` |
+| Implement later | `docs/proposals/<id>.md` | `P-` plus a number, from `P-1`. This is the backlog |
+| Implement now | `docs/history/<id>.md` | `H-` plus the date and a slug, as `H-2026-11-20-slugify`. The branch of the slice has the slug as its name |
 
 A product repository keeps in-progress work in `docs/ROADMAP.md` and a rule in `docs/adr/`. This collection is not a product repository. Each requirement is one row in `docs/REQUIREMENTS.md`. An Open row in `docs/DECISIONS.md` is work that is not finished. A Decided row is a choice in force. This collection does not keep `docs/ROADMAP.md` or `docs/adr/`.
 
-`templates/` beside this skill has one template for each document: `ROADMAP.md`, `KNOWN_ISSUES.md`, `DECISIONS.md`, `adr.md`, `proposal.md`, and `history.md`. Copy the template at the first write, and keep its layout. The scripts read these layouts: a table row for a decision and a known issue, and a frontmatter block for an ADR, a proposal, and a history file. Write a list in the frontmatter on one line, as `skills: [a, b]`. `docs/ids.yaml` is created at the first write.
+`templates/` beside this skill has one template for each document: `ROADMAP.md`, `KNOWN_ISSUES.md`, `DECISIONS.md`, `adr.md`, `proposal.md`, and `history.md`. Copy the template at the first write, and keep its layout. The scripts read these layouts: a table row for a decision and a known issue, and a frontmatter block for an ADR, a proposal, and a history file. Write a list in the frontmatter on one line, as `skills: [a, b]`. `make ids-retire` creates `docs/ids.yaml`. Before the first retire, write the file with the content shown under Ids.
 
 `plan` reads these before it asks. It does not ask a question an accepted ADR, a Decided entry, or an open proposal already answered.
 
@@ -47,7 +47,9 @@ issues: []
 supersedes: []
 ```
 
-A decision, a proposal, and a history file use the same keys.
+A decision, a proposal, and a history file use the same keys. In a history file, `skills` lists the skills the slice used. A history file may still cite an id that was retired later.
+
+The open history section is the section of the stage that runs: Plan, Develop, Review, or Release. A skill that adds one line adds it there.
 
 ## ADRs
 
@@ -63,7 +65,7 @@ An accepted ADR replaces a skill rule only when the ADR is a divergence. A diver
 
 ## Ids
 
-Before writing an id, run `make ids`. It reads every `id:` and every table id under `docs/`, and the retired list in `docs/ids.yaml`. A match exits non-zero. Do not write the document. When the Makefile does not include `project.mk` or `sdlc.mk` yet, run `make -f .claude/skills/record/index.mk ids`. `migrate-docs` needs that form in an existing project.
+Before writing an id, run `make ids`. It reads every `id:` and every table id under `docs/`, and the retired list in `docs/ids.yaml`. A match exits non-zero. Do not write the document. When the Makefile does not include `project.mk` or `sdlc.mk` yet, run `make -f .claude/skills/record/index.mk ids`. The retire command has the same form: `make -f .claude/skills/record/index.mk ids-retire ID=<id>`. Set `PYTHON_IMAGE=<image>` on that command line when the default image is not the one to use. `migrate-docs` needs these forms in an existing project.
 
 `docs/ids.yaml` is:
 
@@ -104,7 +106,7 @@ An agent on another task opens a history file only when an id names it.
 
 ## Tests
 
-A test names the requirement it proves with `id:` in its header or metadata. That is the same line this skill matches. The id is an ADR id or a decision id. A roadmap line and a known issue are work, not rules. Their ids are retired when the work ends, so a test does not name them. A test for a fixed known issue names the ADR or the Decided entry that states the fixed behaviour. `record` writes that Decided entry when there is none. When the repository keeps `docs/REQUIREMENTS.md` and does not keep `docs/adr/`, the id is a row in that list. The test name states what the system does when that requirement holds. The test does not build a path to the document.
+A test names the requirement it proves with `id:` in its header or metadata. That is the same line this skill matches. The id is an ADR id or a decision id. A roadmap line and a known issue are work, not rules. Their ids are retired when the work ends, so a test does not name them. A test for a fixed known issue names the ADR or the Decided entry that states the fixed behaviour. `record` writes that Decided entry when there is none. When the repository keeps `docs/REQUIREMENTS.md` and does not keep `docs/adr/`, the id is a row in that list. The test name states what the system does when that requirement holds. The test does not build a path to the document. In a Python test the line is the docstring of the test: `"""id: D-1"""`. In a JavaScript, TypeScript, Java, Groovy, or Kotlin test file the line is a comment: `// id: D-1`. One file may have several such lines, one for each id it proves.
 
 ## Indexes
 

@@ -10,7 +10,7 @@ Language skills: [the installed ones of `node`, `python`, `shell`, `jvm`]. Subsk
 
 `plan` names who owns state and what may call what. `develop` is not done until `make lint` and `make test` pass. The linter is the one the language skill names. `make test` is the full suite. `make test-changed` runs the tests that cover the diff. `make coverage` lists the lines the change touched. `make project-report` writes the generated report. `make format-fix` rewrites the files with the formatter.
 
-This project ships [as a container image / as a binary / as a library package] with [`make <target>` / the merge into the default branch].
+This project ships [as a container image / as a binary / as a library package / as a library] with [`make <target>` / the merge into the default branch].
 
 In-progress work is a line in `docs/ROADMAP.md`. A defect is a row in `docs/KNOWN_ISSUES.md`. A small choice is a row in `docs/DECISIONS.md`. An architecture or development rule is an ADR in `docs/adr/`. Work for later is a file in `docs/proposals/`. A started slice is a file in `docs/history/`. An accepted ADR is a rule for every change. A test names the ADR or the decision it proves with `id:`. Run `make toon` before reading an index. `make decision-log` writes the decisions as one document.
 
