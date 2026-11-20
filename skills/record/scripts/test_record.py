@@ -287,6 +287,22 @@ class DecisionLogTest(unittest.TestCase):
             self.assertIn("- ADR-0002 Listen on a socket. Replaced by ADR-0003.", text)
             self.assertIn("Hand-editing this file is a defect.", text)
 
+    def test_the_log_has_the_title_and_the_sentence_of_a_decision_block(self):
+        """id: R-62"""
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_file(
+                root,
+                "docs/DECISIONS.md",
+                "---\nid: D-1\ntitle: Slug format\nstatus: decided\n---\n\n"
+                "A slug has lowercase letters,\ndigits, and hyphens.\n",
+            )
+            text = decision_log.render(root)
+            self.assertIn(
+                "- D-1. Slug format A slug has lowercase letters, digits, and hyphens.",
+                text,
+            )
+
     def test_a_requirements_list_is_in_the_log_when_there_is_no_adr_file(self):
         """id: R-62"""
         with tempfile.TemporaryDirectory() as tmp:
@@ -323,6 +339,24 @@ class TableIdTest(unittest.TestCase):
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(text, encoding="utf-8")
         return path
+
+    def test_a_known_issue_row_is_a_live_id(self):
+        """id: R-13"""
+        self.write(
+            "docs/KNOWN_ISSUES.md",
+            "| Id | Defect |\n| --- | --- |\n| K-1 | One. |\n",
+        )
+        self.assertEqual(ids.check(self.root), [])
+        self.assertEqual(
+            ids.retire(self.root, "K-1"),
+            [
+                "K-1 is still in use: "
+                + str(self.root / "docs" / "KNOWN_ISSUES.md")
+                + ":3"
+            ],
+        )
+        self.write("docs/history/extra.md", "---\nid: K-1\n---\n")
+        self.assertTrue(any("K-1" in error for error in ids.check(self.root)))
 
     def test_a_table_id_is_live_and_a_repeat_fails(self):
         """id: R-13"""

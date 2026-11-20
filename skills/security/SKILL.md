@@ -23,6 +23,7 @@ Ask these before the slice is closed. `plan` follows `order` on the skill index,
 1. What crosses a trust boundary: a listener, a file, a secret, or a command?
 2. Who can call it?
 3. What happens when the check says no?
+4. What is the bound on the size and on the type of each input?
 
 ## Checks for review
 

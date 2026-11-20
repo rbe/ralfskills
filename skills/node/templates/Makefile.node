@@ -1,0 +1,51 @@
+# The Makefile of a Node project on project.mk. Copy this file to
+# Makefile, or copy the lines the project lacks above its include.
+# Copy prettierignore beside this file to .prettierignore and
+# eslint.config.js to the project root.
+#
+# Node and npm run through $(NODE), which is Podman on this machine.
+# Prettier is the formatter. ESLint is the linter. The test runner is
+# node --test. A project with no artifact to build or no integration
+# entry sets that command to `true`.
+#
+# A new project has no package.json yet. Create it through Make:
+#   make npm ARGS='init -y'
+#   make npm ARGS='install --save-dev --save-exact prettier eslint @eslint/js globals'
+
+NODE_VERSION ?= 24
+NODE_IMAGE ?= docker.io/library/node:$(NODE_VERSION)-bookworm-slim
+NODE = podman run --rm --user $(PYTHON_UID):$(PYTHON_GID) -e HOME=/tmp -e CI \
+	-e NODE_V8_COVERAGE -e npm_config_cache=/tmp/npm-cache \
+	-e npm_config_update_notifier=false -v "$(CURDIR)":/work:Z -w /work $(NODE_IMAGE)
+
+UNIT_TESTS = "test/unit/*.test.js"
+INTEGRATION_TESTS = "test/integration/*.test.js"
+
+SETUP_CMD = $(NODE) npm ci
+BUILD_CMD = mkdir -p build && $(NODE) npm pack --pack-destination build
+TEST_CMD = $(NODE) node --test $(UNIT_TESTS)
+INTEGRATION_CMD = $(NODE) node --test $(INTEGRATION_TESTS)
+FORMAT_CMD = $(NODE) npm exec -- prettier --check .
+FORMAT_FIX_CMD = $(NODE) npm exec -- prettier --write .
+LINT_CMD = $(NODE) npm exec -- eslint .
+COVERAGE_CMD = set -eu; \
+	base=$$(git merge-base HEAD origin/main 2>/dev/null || git rev-parse -q --verify HEAD 2>/dev/null || git hash-object -t tree /dev/null); \
+	git add -N .; \
+	git diff "$$base" > build/coverage/change.diff; \
+	NODE_V8_COVERAGE=/work/build/coverage/v8 $(NODE) node --test --experimental-test-coverage \
+	  --test-reporter=lcov --test-reporter-destination=build/coverage/lcov.info $(UNIT_TESTS); \
+	$(PYTHON) .claude/skills/project-report/scripts/node_cover_map.py; \
+	REPORT=build/coverage/lcov.info $(DIFF_COVER)
+TEST_CHANGED_CMD = chosen=$$($(PYTHON) .claude/skills/project-report/scripts/changed_tests.py --print); \
+	if [ -z "$$chosen" ]; then printf '%s\n' "test-changed: no test covers the changed files. make test runs the full suite."; \
+	else $(NODE) node --test $$chosen; fi
+
+include .claude/skills/project-setup/project.mk
+
+# Project targets and overrides.
+
+.PHONY: npm
+npm: ## Run npm in Podman on this machine. Set ARGS.
+	@set -eu; \
+	if [ -z "$(ARGS)" ]; then printf '%s\n' "npm: set ARGS to the npm arguments." >&2; exit 1; fi
+	$(NODE) npm $(ARGS)

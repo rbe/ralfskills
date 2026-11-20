@@ -54,6 +54,16 @@ Write:
 
 `CLAUDE.md` is the only entry file. It names the stages, the installed language skills and subskills, each project skill, where each record is kept, and the communication contract. The template is the one source of that text for a project. An existing project keeps what its `CLAUDE.md` already says.
 
+A new project has no toolchain yet. Ask which installed language skill the project uses. Copy the Makefile template of that skill: `templates/Makefile.python` in `python`, or `templates/Makefile.node` in `node`. The template names each command variable. Create the manifest of the project through a Make target, not on the host. An existing project gets only the lines of the template it lacks.
+
+Run `make toon` before the entry file is written. The brackets of the template are filled from `docs/skill-index.toon`.
+
+A recipe the project already has stays, unless it runs a toolchain on the host. A recipe that runs Gradle, npm, node, or python on the host is off the contract. Rewrite it to the command variable, and keep what it does.
+
+A project with no dependency to resolve, no artifact to build, or no integration entry sets that command to `true`. `true` is a filled-in value.
+
+`.gitignore` has the lines `build/`, `apm_modules/`, `docs/adr/index.toon`, and `docs/skill-index.toon`. Add a line that is missing. Commit `.claude/skills/`, `apm.yml`, and `apm.lock.yaml`. The Makefile includes files from `.claude/skills/`, so a clone needs them.
+
 Do not write `project.mk` at the repository root. A root `project.mk` is off the contract. Leave its bytes and name it in the report.
 
 `project.mk` provides `help`, `setup`, `build`, `test`, and, when the variables say so, `docs` and `login`. The Makefile sets variables and includes `.claude/skills/project-setup/project.mk` before any target. Setup mode does not define `setup`, `build`, or `test` again. A target repeated after the include, with a recipe, replaces the recipe from `project.mk`.
@@ -88,7 +98,8 @@ A project that uses this standard uses these names.
 | `build` | Always. Produce the artifact |
 | `test` | Always. Run the unit tests |
 | `editorconfig` | Always. Check the tree with editorconfig-checker |
-| `format` | Always. Run the one formatter |
+| `format` | Always. Check the files with the one formatter |
+| `format-fix` | Always. Rewrite the files with that formatter |
 | `lint` | Always. Run the one linter |
 | `integration` | Always. The one integration entry |
 | `coverage` | Always. diff-cover report of the lines this change touched |
@@ -129,7 +140,8 @@ Set these before the include. `RENDER_DOCS` and `PUBLISH_IMAGE` are read while `
 | `SETUP_CMD` | How this project resolves dependencies. Empty fails `setup` |
 | `BUILD_CMD` | How this project produces the artifact. Empty fails `build` |
 | `TEST_CMD` | How this project runs the unit tests. Empty fails `test` |
-| `FORMAT_CMD` | The one formatter. Empty fails `format`. The language skill names the tool |
+| `FORMAT_CMD` | The one formatter, in check mode. It changes no file. Empty fails `format`. The language skill names the tool |
+| `FORMAT_FIX_CMD` | The same formatter in write mode. `make format-fix` rewrites the files. Empty fails `format-fix` |
 | `LINT_CMD` | The one linter. Empty fails `lint`. The language skill names the tool |
 | `INTEGRATION_CMD` | The one integration entry. Empty fails `integration` |
 | `COVERAGE_CMD` | Writes `build/coverage/diff.md` and the coverage map `test-changed` reads. Empty fails `coverage` |
@@ -176,13 +188,13 @@ GNU Make 3.81, including the macOS system make.
 Setup mode adds these when they are missing. Stop at the first step that cannot be finished.
 
 1. Write `.editorconfig` from `templates/editorconfig` when the file is missing. `editorconfig` runs editorconfig-checker. Stop when the file cannot be written. Do not take a later step.
-2. `format` is one formatter, the tool the language skill names. Set `FORMAT_CMD` when it is empty and that tool is already the project's. Stop when a second formatter is present, or when this step cannot name the tool. Do not write a formatter. Do not take a later step.
-3. `lint` is one linter, the tool the language skill names. Set `LINT_CMD` the same way. Stop when a second linter is present, or when this step cannot name the tool. Do not write a linter. Do not take a later step.
+2. `format` is one formatter for each language, the tool the language skill names. The formatter does not format `.claude/`, `apm_modules/`, `build/`, or `docs/`. The scripts of `record` read the board line by line. `format` checks, and `format-fix` rewrites. Set `FORMAT_CMD` when it is empty and that tool is already the project's. Stop when a second formatter is present, or when this step cannot name the tool. Do not write a formatter. Do not take a later step.
+3. `lint` is one linter for each language, the tool the language skill names. Set `LINT_CMD` the same way. Stop when a second linter is present, or when this step cannot name the tool. Do not write a linter. Do not take a later step.
 4. `test` runs the unit tests. Leave an integration test out of `TEST_CMD`. Stop when the unit tests have no command and no recipe. Do not take a later step.
 5. `integration` is the one integration entry. Set `INTEGRATION_CMD` when it is empty. Stop when a second integration target exists. Do not take a later step.
 6. `coverage` writes `build/coverage/diff.md` through diff-cover, for the lines this change touched. It does not apply a repository-wide percentage. `COVERAGE_CMD` produces that report and the coverage map. The language skill names the coverage tool that feeds diff-cover.
 7. `test-changed` runs the tests that cover the files in the diff. The selection is the coverage of those files. Stop when the selection is a hand-kept list. Do not take a later step. `make test` stays the full suite. A green `test-changed` does not replace `make test`. CI runs `make test`.
-8. A test names the requirement it proves with `id:` in its header or metadata. Stop when a test has no id. Do not take a later step. The id is not a path.
+8. A test names the requirement it proves with `id:` in its header or metadata. The id is an ADR id or a decision id. When an existing test has no id, ask `record` for a Decided row that states the behaviour the test proves, and name that row in the test. One row can serve several tests. Stop when a test has no id. Do not take a later step. The id is not a path.
 9. When `project-report` is installed, `make project-report` writes `build/project-report.md`. Stop when that file is missing or hand-edited. Do not take a later step. Hand-editing it is a defect. The file holds the requirements-to-tests map, the architecture review, and the development review.
 
 ## Check

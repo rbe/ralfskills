@@ -1,6 +1,6 @@
 ---
 name: release
-description: Ship a reviewed slice and close the task. Use after review, for a fix or a feature. Commit on one branch, push, merge into the default branch when CI passed, then ask record to close the task. A shipment is a binary or a container image. Invoke github-pipeline when the workflow, version, publish, image, cleanup, or retention changes. Invoke project-setup only when that same change adds or overrides a Make target. Do not invoke project-setup on every ship. Invoke record for the Release section.
+description: Ship a reviewed slice and close the task. Use after review, for a fix or a feature. Commit on one branch, push, merge into the default branch when CI passed, then ask record to close the task. A shipment is a binary, a container image, or a library package. Invoke github-pipeline when the workflow, version, publish, image, cleanup, or retention changes. Invoke project-setup only when that same change adds or overrides a Make target. Do not invoke project-setup on every ship. Invoke record for the Release section.
 ---
 
 # Release
@@ -18,10 +18,10 @@ description: Ship a reviewed slice and close the task. Use after review, for a f
 2. When the change touches the workflow, the version, publish, the image, cleanup, or retention, invoke `github-pipeline`.
 3. When that same change adds or overrides a Make target, invoke `project-setup`. Otherwise do not invoke `project-setup`.
 4. A divergence is the rule, what differs, and why. `record` stores it where `github-pipeline` says to write divergences, or as an ADR with the section `## Divergence` when it is not a pipeline divergence.
-5. When this task does not ship, the Release section is `Not invoked: this slice does not ship.` Ask `record` to close the task. Do not take a later step.
+5. When this task does not ship, the Release section is `Not invoked: this slice does not ship.` Ask `record` to close the task, commit the board documents with the change, and push the branch. Do not take a later step.
 6. Read the Review section. Stop when `make lint` or `make test` failed or did not run, or when a finding is neither fixed nor a known-issue id. Do not take a later step.
-7. The slice is one branch. Commit the change and the board documents together. The first line of the commit message is one sentence that says what the system now does. Push the branch.
-8. CI runs the same Make targets on that push. Stop when CI fails. Do not take a later step. A repository with no workflow runs `make lint`, `make test`, and `make integration` on this machine instead.
-9. Ask the owner before the merge when the request did not ask for a ship. Then merge the branch into the default branch. Do not create a `v*` tag. The owner tags a version.
-10. A push to the default branch publishes when `github-pipeline` is installed. Write the published version in the Release section. A Make-only repository ships with the target its `CLAUDE.md` names.
-11. Ask `record` to close the task.
+7. Ask the owner before the ship when the request did not ask for one. Stop when the owner says no. Do not take a later step.
+8. Write the Release section: what ships, and the Make target or the merge that ships it. Then ask `record` to close the task. The close is part of the slice, so the board is correct on the default branch after the merge.
+9. The slice is one branch. Commit the change and the board documents together, in one commit or more. The first line of a commit message is one sentence that says what the system now does. Push the branch.
+10. CI runs the same Make targets on that push. Stop when CI fails. Do not take a later step. A repository with no workflow runs `make editorconfig`, `make format`, `make lint`, `make test`, `make integration`, and `make coverage` on this machine instead. When a gate fails after the close, fix the change on the same branch and commit again.
+11. Merge the branch into the default branch. Do not create a `v*` tag. The owner tags a version. A push to the default branch publishes when `github-pipeline` is installed. A Make-only repository ships with the target its `CLAUDE.md` names. A library with no artifact ships with the merge.

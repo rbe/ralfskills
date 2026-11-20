@@ -11,6 +11,9 @@ ID_CELL = re.compile(r"^[A-Z]+-\d+$")
 ROADMAP_ID = re.compile(
     r"(?<![A-Za-z0-9-])(?:ADR-\d+|D-\d+|P-\d+|H-[A-Za-z0-9-]+)(?![A-Za-z0-9-])"
 )
+# A test proves a rule in force. A roadmap line and a known issue are
+# work. They end, and their ids are retired.
+PROVABLE = {"adr", "decision", "requirement"}
 SKIP = {
     ".git",
     ".claude",
@@ -209,6 +212,11 @@ def collect_board(root: Path) -> list[Requirement]:
         path = docs / name
         if path.is_file():
             found.extend(requirements_in_markdown(path, kind))
+    for row in decision_rows(root):
+        found.append(Requirement(row.id, "decision", row.choice, row.status))
+    for cells in table_rows(docs / "KNOWN_ISSUES.md"):
+        if len(cells) >= 2:
+            found.append(Requirement(cells[0], "issue", cells[1], "open"))
     found.extend(roadmap_requirements(docs / "ROADMAP.md", {item.id for item in found}))
     unique = []
     seen = set()
@@ -315,7 +323,7 @@ def proofs(root: Path) -> list[TestProof]:
 def problems(
     requirements: list[Requirement], proofs_found: list[TestProof]
 ) -> list[str]:
-    known = {item.id for item in requirements}
+    known = {item.id for item in requirements if item.kind in PROVABLE}
     errors = []
     for proof in proofs_found:
         if proof.requirement_id is None:

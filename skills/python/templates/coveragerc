@@ -1,0 +1,15 @@
+# coverage.py settings that make coverage and make test-changed need.
+# dynamic_context names the test that ran each line.
+[run]
+relative_files = true
+dynamic_context = test_function
+data_file = build/coverage/.coverage
+source =
+    .
+omit =
+    .claude/*
+    apm_modules/*
+    build/*
+
+[xml]
+output = build/coverage/coverage.xml

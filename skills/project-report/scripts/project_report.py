@@ -102,7 +102,9 @@ def format_requirement(item, proofs_found) -> str:
     proved = tests_for(item.id, proofs_found)
     names = "; ".join(proved) if proved else "no test"
     status = item.status or "unspecified"
-    title = item.title or item.id
+    title = (item.title or item.id).rstrip(".")
+    if item.kind not in sibling("requirements").PROVABLE:
+        return f"- {item.id}, {status}, {item.kind}. {title}."
     return f"- {item.id}, {status}, {item.kind}. {title}. Proved by: {names}."
 
 
@@ -145,6 +147,8 @@ def append_checks(lines: list[str], root: Path, checks) -> None:
 
 
 def append_proof_map(lines: list[str], requirements, proofs_found) -> None:
+    provable = sibling("requirements").PROVABLE
+    requirements = [item for item in requirements if item.kind in provable]
     lines.append("| Id | Kind | Status | Tests |")
     lines.append("| --- | --- | --- | --- |")
     for item in requirements:
@@ -192,7 +196,7 @@ def render_product(root: Path, requirements, proofs_found) -> str:
         "",
         "## Requirements",
         "",
-        "The id is a roadmap id, a known-issue id, an ADR id, or a decision id.",
+        "The id is an ADR id or a decision id. A roadmap line and a known issue are work, not rules.",
         "The test names that id with `id:` in its header or metadata.",
         "",
     ]

@@ -109,7 +109,8 @@ def decisions(root: Path) -> list[tuple[str, str, str]]:
         for front, body in blocks(path.read_text(encoding="utf-8")):
             if not front.get("id"):
                 continue
-            sentence = front.get("title") or without_title(body)
+            parts = [front.get("title", ""), without_title(body)]
+            sentence = " ".join(" ".join(part.split()) for part in parts if part)
             found.append((front["id"], front.get("status", ""), sentence))
     return found
 
