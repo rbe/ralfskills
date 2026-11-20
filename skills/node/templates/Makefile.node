@@ -42,7 +42,8 @@ COVERAGE_CMD = set -eu; \
 	  --test-reporter=lcov --test-reporter-destination=build/coverage/lcov.info $(UNIT_TESTS); \
 	$(PYTHON) .claude/skills/project-report/scripts/node_cover_map.py; \
 	REPORT=build/coverage/lcov.info $(DIFF_COVER)
-TEST_CHANGED_CMD = chosen=$$($(PYTHON) .claude/skills/project-report/scripts/changed_tests.py --print | tr '\n' ' '); \
+TEST_CHANGED_CMD = chosen=$$($(PYTHON) .claude/skills/project-report/scripts/changed_tests.py --print) || exit 1; \
+	chosen=$$(printf '%s' "$$chosen" | tr '\n' ' '); \
 	if [ -z "$$chosen" ]; then printf '%s\n' "test-changed: no test covers the changed files. make test runs the full suite."; \
 	else printf 'test-changed: %s\n' "$$chosen"; $(NODE) node --test $$chosen; fi
 

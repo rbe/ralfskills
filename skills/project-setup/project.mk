@@ -158,6 +158,7 @@ ifeq ($(strip $(COVERAGE_CMD)),)
 	@exit 1
 else
 	mkdir -p build/coverage
+	rm -f build/coverage/diff.md
 	$(COVERAGE_CMD)
 endif
 

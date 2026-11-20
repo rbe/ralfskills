@@ -23,7 +23,7 @@ This is the only skill that reads the old board. Every other skill stops while a
 | --- | --- |
 | Open bug or open audit finding | `docs/KNOWN_ISSUES.md` |
 | Work that is already in progress | `docs/ROADMAP.md`, ids only |
-| A feature or wave that is a plan for later | `docs/proposals/` |
+| A feature or wave that is a plan for later | `docs/proposals/`. The old text is the slice sentence. `Out of scope` and the questions say that `plan` asks them when the proposal is picked up |
 | Open choice | `docs/DECISIONS.md`, Open |
 | Small choice still in force | `docs/DECISIONS.md`, Decided, one sentence |
 | Architecture or development rule | `docs/adr/`, with `adrs:` and `skills:` |

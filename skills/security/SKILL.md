@@ -29,5 +29,5 @@ Ask these before the slice is closed. `plan` follows `order` on the skill index,
 
 1. A secret is not in the tree, a log, an error, or a fixture.
 2. A listener is the one the accepted ADR names.
-3. Input has a bound on size and on type.
+3. Input has a bound on size and on type. For a function that other code calls, a type in the signature is the bound on type.
 4. A command the program runs is the one the slice named.

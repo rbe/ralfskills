@@ -71,7 +71,7 @@ A new project has no toolchain yet. Ask which installed language skill the proje
 
 Run `make toon` before the entry file is written. The brackets of the template are filled from `docs/skill-index.toon`.
 
-A recipe the project already has stays, unless it runs a toolchain on the host. A recipe that runs Gradle, npm, node, or python on the host is off the contract. Rewrite it to the command variable, and keep what it does. A target with no command variable, such as `run`, keeps its name and its place after the include, and its recipe uses `$(PYTHON)`, `$(NODE)`, `$(GRADLE)`, or `$(GO)`.
+A recipe the project already has stays, unless it runs a toolchain on the host. A recipe that runs Gradle, npm, node, or python on the host is off the contract. Rewrite it to the command variable, and keep what it does. The command of the template replaces a host recipe that runs the same tests or the same build. A target with no command variable, such as `run`, keeps its name and its place after the include, and its recipe uses `$(PYTHON)`, `$(NODE)`, `$(GRADLE)`, or `$(GO)`.
 
 A project with no dependency to resolve, no artifact to build, or no integration entry sets that command to `true`. `true` is a filled-in value.
 
