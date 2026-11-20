@@ -10,7 +10,8 @@
 #   make go ARGS='mod init example.com/<project>'
 # Add build/ and bin/ to .gitignore.
 #
-# coverage and test-changed fail until the first unit test exists.
+# lint, test, and build fail until the first Go file exists. coverage
+# and test-changed fail until the first unit test exists.
 
 GO_IMAGE ?= docker.io/library/golang:1.25-bookworm
 GO_RUN = podman run --rm -e HOME=/tmp -e CI -e GOFLAGS=-buildvcs=false \
@@ -19,7 +20,10 @@ GO_RUN = podman run --rm -e HOME=/tmp -e CI -e GOFLAGS=-buildvcs=false \
 GO = $(GO_RUN) go
 
 SETUP_CMD = $(GO) mod download
-BUILD_CMD = mkdir -p build && $(GO) build -o build/ ./...
+# This compiles every package and writes no file, which is right for a
+# library. A project that ships a binary writes it, for example:
+#   BUILD_CMD = mkdir -p build && $(GO) build -o build/ ./cmd/...
+BUILD_CMD = $(GO) build ./...
 TEST_CMD = $(GO) test ./...
 INTEGRATION_CMD = true
 # gofmt reads the package directories of the project and no other directory.
@@ -33,7 +37,8 @@ COVERAGE_CMD = set -eu; \
 	$(GO_RUN) sh -c 'set -eu; mkdir -p build/coverage/go; for pkg in $$(go list ./...); do go test -coverpkg=./... -coverprofile="build/coverage/go/$$(printf "%s" "$$pkg" | tr "/" "_").out" "$$pkg"; done'; \
 	$(PYTHON) .claude/skills/project-report/scripts/go_cover_map.py; \
 	REPORT=build/coverage/coverage.xml $(DIFF_COVER)
-TEST_CHANGED_CMD = chosen=$$($(PYTHON) .claude/skills/project-report/scripts/changed_tests.py --print | tr '\n' ' '); \
+TEST_CHANGED_CMD = chosen=$$($(PYTHON) .claude/skills/project-report/scripts/changed_tests.py --print) || exit 1; \
+	chosen=$$(printf '%s' "$$chosen" | tr '\n' ' '); \
 	if [ -z "$$chosen" ]; then printf '%s\n' "test-changed: no test covers the changed files. make test runs the full suite."; \
 	else printf 'test-changed: %s\n' "$$chosen"; $(GO) test $$chosen; fi
 

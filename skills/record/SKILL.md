@@ -18,7 +18,7 @@ This skill is the only writer of ids and of the board. A stage that writes a doc
 
 | Kind | Home | Id |
 | --- | --- | --- |
-| In progress | `docs/ROADMAP.md` | One line: `- H-2026-11-20-slugify`, and the proposal id when there is one. No grill |
+| In progress | `docs/ROADMAP.md` | One line: `- H-2026-11-20-slugify`, or `- H-2026-11-20-slugify P-1` when the slice started from a proposal. No grill |
 | Defect | `docs/KNOWN_ISSUES.md` | One table row. The id is `K-` plus a number, from `K-1`. Delete the row when the fix lands, then retire the id |
 | Small choice | `docs/DECISIONS.md` | One table row. The id is `D-` plus a number, from `D-1`. The status is Open or Decided. A Decided row is one sentence |
 | Architecture or development rule | `docs/adr/<id>.md` | `ADR-` plus four digits, from `ADR-0001` |
