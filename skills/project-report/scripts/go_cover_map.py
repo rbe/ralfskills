@@ -90,9 +90,11 @@ def covered(
                 hits[number] = max(hits.get(number, 0), count)
             if package is not None and count > 0:
                 by_test.setdefault(package, set()).add(relative)
-        if package is not None and package in by_test:
-            for path in sorted((root / package).glob("*_test.go")):
-                by_test[package].add(path.relative_to(root).as_posix())
+    # A package with tests covers its own test files, also when its tests
+    # ran no statement of the project. A change to a test file selects it.
+    for package in tests.values():
+        for path in sorted((root / package).glob("*_test.go")):
+            by_test.setdefault(package, set()).add(path.relative_to(root).as_posix())
     return by_test, lines
 
 

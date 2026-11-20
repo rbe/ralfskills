@@ -33,7 +33,7 @@ COVERAGE_CMD = set -eu; \
 	$(GO_RUN) sh -c 'set -eu; mkdir -p build/coverage/go; for pkg in $$(go list ./...); do go test -coverpkg=./... -coverprofile="build/coverage/go/$$(printf "%s" "$$pkg" | tr "/" "_").out" "$$pkg"; done'; \
 	$(PYTHON) .claude/skills/project-report/scripts/go_cover_map.py; \
 	REPORT=build/coverage/coverage.xml $(DIFF_COVER)
-TEST_CHANGED_CMD = chosen=$$($(PYTHON) .claude/skills/project-report/scripts/changed_tests.py --print); \
+TEST_CHANGED_CMD = chosen=$$($(PYTHON) .claude/skills/project-report/scripts/changed_tests.py --print | tr '\n' ' '); \
 	if [ -z "$$chosen" ]; then printf '%s\n' "test-changed: no test covers the changed files. make test runs the full suite."; \
 	else printf 'test-changed: %s\n' "$$chosen"; $(GO) test $$chosen; fi
 
