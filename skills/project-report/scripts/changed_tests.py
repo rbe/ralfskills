@@ -4,6 +4,9 @@
 The coverage map is build/coverage/covered.json, written by make coverage.
 The diff list is build/coverage/changed.txt, written by make test-changed.
 A green run does not replace make test.
+
+With --print, the chosen tests are printed, one on each line, and no
+test runs. A Node or JVM project gives that list to its own runner.
 """
 
 import importlib.util
@@ -27,7 +30,7 @@ def sibling(name: str):
     return module
 
 
-def run(root: Path) -> int:
+def run(root: Path, only_print: bool = False) -> int:
     coverage = root / "build" / "coverage"
     covered_path = coverage / "covered.json"
     changed_path = coverage / "changed.txt"
@@ -51,6 +54,10 @@ def run(root: Path) -> int:
     ]
     covered = json.loads(covered_path.read_text(encoding="utf-8"))
     chosen = sibling("select_tests").select(changed, covered)
+    if only_print:
+        for test_id in chosen:
+            print(test_id)
+        return 0
     if not chosen:
         print(
             "test-changed: no test covers the changed files. make test runs the full suite."
@@ -61,10 +68,12 @@ def run(root: Path) -> int:
     return result.returncode
 
 
-def main() -> int:
+def main(argv: list[str]) -> int:
+    if "--print" in argv[1:]:
+        return run(Path.cwd(), only_print=True)
     root = sibling("requirements").repo_root(Path.cwd())
     return run(root)
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    sys.exit(main(sys.argv))

@@ -25,9 +25,14 @@ SMOKE_NEEDLE ?= ok
 DATA_DIR ?= data
 DATA_ENV ?= APP_DATA
 
+# The tests that cover the diff. make coverage writes the coverage map.
+TEST_CHANGED_CMD = chosen=$$($(PYTHON) .claude/skills/project-report/scripts/changed_tests.py --print); \
+	if [ -z "$$chosen" ]; then printf '%s\n' "test-changed: no test covers the changed files. make test runs the full suite."; \
+	else $(NODE_RUN) npm test -- $$chosen; fi
+
 include .claude/skills/github-pipeline/sdlc.mk
 
-NODE_RUN = podman run --rm -e HOME=/tmp -e CI -e npm_config_cache=/tmp/npm-cache \
+NODE_RUN = podman run --rm -e HOME=/tmp -e CI -e NODE_V8_COVERAGE -e npm_config_cache=/tmp/npm-cache \
 	-e npm_config_update_notifier=false -v "$(CURDIR)":/work:Z -w /work $(NODE_IMAGE)
 
 setup: ## Match CI: npm ci, npm audit (a warning), pack node_modules
@@ -57,7 +62,8 @@ coverage: ## diff-cover report of the lines this change touched
 	@set -eu; \
 	mkdir -p build/coverage; \
 	if [ ! -d node_modules ]; then tar -xf build/deps/node_modules.tar; fi; \
-	$(NODE_RUN) npm test -- --coverage; \
+	NODE_V8_COVERAGE=/work/build/coverage/v8 $(NODE_RUN) npm test -- --coverage; \
+	$(PYTHON) .claude/skills/project-report/scripts/node_cover_map.py; \
 	base=$$(git merge-base HEAD origin/main 2>/dev/null || printf '%s' HEAD); \
 	git diff "$$base" > build/coverage/change.diff; \
 	report=$$(find . -name lcov.info -o -name coverage.xml | head -n 1); \

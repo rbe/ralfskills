@@ -3,6 +3,7 @@
 
 import importlib.util
 import io
+import json
 import tempfile
 import unittest
 from contextlib import redirect_stderr, redirect_stdout
@@ -23,6 +24,8 @@ requirements = load("requirements", HERE / "requirements.py")
 select_tests = load("select_tests", HERE / "select_tests.py")
 project_report = load("project_report", HERE / "project_report.py")
 changed_tests = load("changed_tests", HERE / "changed_tests.py")
+node_cover_map = load("node_cover_map", HERE / "node_cover_map.py")
+jacoco_cover_map = load("jacoco_cover_map", HERE / "jacoco_cover_map.py")
 
 
 def write(root, relative, text):
@@ -133,6 +136,11 @@ class RequirementIdTest(unittest.TestCase):
                 'def test_runs():\n    """id: R-13"""\n    assert True\n',
             )
             write(root, "node_modules/x/x.test.js", "test('x', () => {})\n")
+            write(
+                root,
+                "apm_modules/rbe/ralfskills/skills/record/scripts/test_record.py",
+                'def test_runs():\n    """id: R-13"""\n    assert True\n',
+            )
             self.assertEqual(requirements.proofs(root), [])
 
     def test_every_test_in_this_repository_names_a_requirement(self):
@@ -189,6 +197,103 @@ class ChangedTestsTest(unittest.TestCase):
                 code = changed_tests.run(root)
             self.assertEqual(code, 0)
             self.assertIn("make test runs the full suite", output.getvalue())
+
+    def test_a_node_test_file_covers_the_files_that_ran_in_its_process(self):
+        """id: R-2"""
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp).resolve()
+            v8 = root / "build" / "coverage" / "v8"
+
+            def script(relative, count):
+                ranges = [{"startOffset": 0, "endOffset": 9, "count": count}]
+                return {
+                    "url": f"file://{root.as_posix()}/{relative}",
+                    "functions": [{"functionName": "", "ranges": ranges}],
+                }
+
+            first = [
+                script("test/a.test.js", 1),
+                script("src/a.js", 1),
+                script("src/unused.js", 0),
+                script("node_modules/x/index.js", 1),
+                {"url": "node:internal/main", "functions": []},
+            ]
+            second = [script("test/b.test.js", 1), script("src/b.js", 1)]
+            runner = [script("src/a.js", 1)]
+            for name, result in (("1", first), ("2", second), ("3", runner)):
+                write(
+                    root,
+                    f"build/coverage/v8/coverage-{name}.json",
+                    json.dumps({"result": result}),
+                )
+            found = node_cover_map.covered(v8, root)
+            self.assertEqual(
+                found,
+                {
+                    "test/a.test.js": {"test/a.test.js", "src/a.js"},
+                    "test/b.test.js": {"test/b.test.js", "src/b.js"},
+                },
+            )
+
+    def test_a_jvm_test_class_covers_the_classes_that_ran_in_its_jvm(self):
+        """id: R-2"""
+
+        def text(value):
+            data = value.encode("utf-8")
+            return len(data).to_bytes(2, "big") + data
+
+        def session(name, classes):
+            block = b"\x01\xc0\xc0\x10\x07"
+            block += b"\x10" + text(name) + bytes(16)
+            for class_name, hit in classes:
+                probes = b"\x05" if hit else b"\x00"
+                block += b"\x11" + bytes(8) + text(class_name) + b"\x03" + probes
+            return block
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            for name in ("A", "B"):
+                write(root, f"src/main/java/com/x/{name}.java", "class X {}\n")
+                write(root, f"src/test/java/com/x/{name}Test.java", "class X {}\n")
+            data = session(
+                "one",
+                [("com/x/ATest", True), ("com/x/A$Inner", True), ("com/x/B", False)],
+            )
+            data += session("two", [("com/x/BTest", True), ("com/x/B", True)])
+            write(root, "build/jacoco/test.exec", "")
+            (root / "build" / "jacoco" / "test.exec").write_bytes(data)
+            found = jacoco_cover_map.covered([root / "build/jacoco/test.exec"], root)
+            self.assertEqual(
+                found,
+                {
+                    "com.x.ATest": {
+                        "src/main/java/com/x/A.java",
+                        "src/test/java/com/x/ATest.java",
+                    },
+                    "com.x.BTest": {
+                        "src/main/java/com/x/B.java",
+                        "src/test/java/com/x/BTest.java",
+                    },
+                },
+            )
+
+    def test_the_print_mode_names_the_chosen_tests_and_runs_none(self):
+        """id: R-2"""
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write(
+                root,
+                "build/coverage/covered.json",
+                json.dumps(
+                    {"test/a.test.js": ["src/a.js"], "test/b.test.js": ["src/b.js"]}
+                ),
+            )
+            write(root, "build/coverage/changed.txt", "src/b.js\n")
+            output = io.StringIO()
+            with redirect_stdout(output):
+                code = changed_tests.run(root, only_print=True)
+            self.assertEqual(code, 0)
+            self.assertEqual(output.getvalue(), "test/b.test.js\n")
 
     def test_ci_runs_the_full_suite(self):
         """id: R-2"""

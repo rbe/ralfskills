@@ -41,6 +41,8 @@ Read:
 | `templates/Makefile.node`, `templates/ci.node.yml` | Node toolchain |
 | `templates/Makefile.gradle`, `templates/ci.gradle.yml` | Gradle toolchain |
 | `templates/pipeline-rules.md` | The source for `docs/pipeline-rules.md` |
+| `templates/Containerfile.node`, `templates/Containerfile.gradle` | The source for `Containerfile`, by toolchain |
+| `templates/containerignore`, `templates/gitignore` | The source for `.containerignore` and `.gitignore` |
 | `Makefile` | The project, when present |
 | `.github/workflows/` | The project |
 | `docs/pipeline-rules.md`, `Containerfile`, `.containerignore`, `.gitignore` | The project, when present |
@@ -52,7 +54,7 @@ Write:
 | `Makefile` | `include .claude/skills/github-pipeline/sdlc.mk` is missing or sits after a target, or a required target has no recipe and no command variable. A recipe already in the file stays. Do not write `sdlc.mk` at the repository root |
 | `.github/workflows/ci.yml` | No workflow yet: start from the matching template. A `ci.yml` already there: fix a trigger, a permission, a missing `retention-days`, or a `run:` step that is not `make <target>`. A step that is already `make <target>` stays |
 | `docs/pipeline-rules.md` | It is missing. Copy the template and fill "This repository". When the file exists, leave "This repository" and "Divergences" as written |
-| `Containerfile`, `.containerignore`, `.gitignore` | The file is missing. The ignore list follows the ship rule in Report and packaging |
+| `Containerfile`, `.containerignore`, `.gitignore` | The file is missing. Copy the template for the toolchain. In `Containerfile`, change the paths and the start command to the ones the project uses. When `.containerignore` or `.gitignore` exists, add only a line of the template that is missing |
 
 The workflow is one file, `.github/workflows/ci.yml`, named `CI`. It calls `make`. `publish-*` runs on a push to the default branch or when `workflow_dispatch` selects that job, and it needs `build` and `test`. The version is the nearest `vMAJOR.MINOR.PATCH` tag, read by `make version`. This mode creates no `v*` tag and adds no tag trigger.
 
@@ -180,7 +182,7 @@ The artifact quota is shared by every repository on the account. One repo that k
 
 Each job uploads `report-<job>` with `build/logs` and `build/summaries`, and `test` also uploads results and `build/coverage`. That coverage file is the diff-cover report of the lines this change touched, not a repository-wide percentage. The test job runs `make editorconfig`, `make format`, `make lint`, `make test`, `make integration`, and `make coverage`. `report` downloads `report-*` into `build/inputs` and runs `make report`. `build/report/index.md` is the entry point.
 
-A shipment is a binary or a container image. The image copies named files, not the work tree. `.containerignore` keeps out `.git`, `.github`, `.claude/`, `CLAUDE.md`, `docs/`, `build/`, `node_modules`, `data/`, `.env`, `.env.*`, and `*.tar`. Example data ships only from `examples/` when the path and the name say it is an example. `.claude/skills/` is committed so Make can include it, and the image still excludes `.claude/`. `.gitignore` keeps build output, image tars, `data/`, and `.env` out of git.
+A shipment is a binary or a container image. The image copies named files, not the work tree. `.containerignore` keeps out `.git`, `.github`, `.claude/`, `apm_modules/`, `CLAUDE.md`, `docs/`, `build/`, `node_modules`, `data/`, `.env`, `.env.*`, and `*.tar`. `templates/containerignore` is that list. Example data ships only from `examples/` when the path and the name say it is an example. `.claude/skills/` is committed so Make can include it, and the image still excludes `.claude/`. `.gitignore` keeps build output, image tars, `data/`, and `.env` out of git.
 
 ## Divergence
 
