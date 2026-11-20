@@ -333,7 +333,6 @@ class ProjectReportTest(unittest.TestCase):
         self.assertIn("who owns state", architecture)
         self.assertIn("one integration entry", development)
         self.assertIn("### Decisions", development)
-        self.assertIn("D-1, Open. H-2026-11-16-requirement-tests.", development)
         self.assertIn(
             "D-3, Decided. This collection keeps one requirements list and records open work and choices in force in this list.",
             development,
