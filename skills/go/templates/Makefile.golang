@@ -14,8 +14,11 @@
 # and test-changed fail until the first unit test exists.
 
 GO_IMAGE ?= docker.io/library/golang:1.25-bookworm
+# The Go caches are volumes of this project. Two projects on one machine
+# do not share a volume, so their containers do not wait for each other.
+GO_CACHE ?= $(notdir $(CURDIR))
 GO_RUN = podman run --rm -e HOME=/tmp -e CI -e GOFLAGS=-buildvcs=false \
-	-v go-build-cache:/tmp/.cache/go-build -v go-mod-cache:/go/pkg/mod \
+	-v $(GO_CACHE)-gocache:/tmp/.cache/go-build -v $(GO_CACHE)-gomod:/go/pkg/mod \
 	-v "$(CURDIR)":/work:Z -w /work $(GO_IMAGE)
 GO = $(GO_RUN) go
 
