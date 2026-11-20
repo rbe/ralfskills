@@ -27,7 +27,7 @@ R-53 is step 6 in `skills/plan/SKILL.md`, after the step that waits. R-54 is ste
 
 ## Review
 
-`make lint`, `make test`, and `make ids` were not run. This machine has no Podman. The two script test files and the id check were run with the host `python3`, and they passed. Ruff was not run. It is a container image.
+`make lint`, `make test`, and `make ids` were not run. This machine has no Podman. The two script test files and the id check were run with the host `python3`, and they passed. The pinned Ruff image was not run. A host Ruff 0.16.9 reports the format check as clean. It reports 15 lint errors that the pinned 0.15.2 rules may not have. Thirteen are a shebang on a file that is not executable. None is on a line this change wrote.
 
 security: no listener, no secret, no personal data in a fixture.
 
