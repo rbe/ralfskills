@@ -4,6 +4,7 @@
 import importlib.util
 import io
 import json
+import os
 import tempfile
 import unittest
 from contextlib import redirect_stderr, redirect_stdout
@@ -234,6 +235,23 @@ class ChangedTestsTest(unittest.TestCase):
                     "test/b.test.js": {"test/b.test.js", "src/b.js"},
                 },
             )
+
+    def test_an_empty_node_map_fails_and_names_the_reason(self):
+        """id: R-2"""
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write(root, "build/coverage/v8/coverage-1.json", json.dumps({"result": []}))
+            previous = Path.cwd()
+            errors = io.StringIO()
+            try:
+                os.chdir(root)
+                with redirect_stderr(errors):
+                    code = node_cover_map.main(["node_cover_map.py"])
+            finally:
+                os.chdir(previous)
+            self.assertEqual(code, 1)
+            self.assertIn("no test file ran under V8 coverage", errors.getvalue())
+            self.assertFalse((root / "build/coverage/covered.json").exists())
 
     def test_a_jvm_test_class_covers_the_classes_that_ran_in_its_jvm(self):
         """id: R-2"""

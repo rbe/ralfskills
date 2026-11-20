@@ -84,7 +84,11 @@ def main(argv: list[str]) -> int:
         return 1
     found = sibling("select_tests").merge_covered(covered(directory, root), {})
     if not found:
-        print("coverage map: no test file ran under V8 coverage", file=sys.stderr)
+        print(
+            "coverage map: no test file ran under V8 coverage. "
+            "The workers of Vitest write none. The node skill names the command.",
+            file=sys.stderr,
+        )
         return 1
     destination = root / "build" / "coverage"
     destination.mkdir(parents=True, exist_ok=True)

@@ -1,6 +1,7 @@
 # Build output, image tars, local data, and secrets stay out of git.
 build/
 dist/
+.gradle/
 node_modules/
 *.tar
 data/
