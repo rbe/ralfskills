@@ -2,7 +2,7 @@
 
 Skills for [Microsoft APM](https://github.com/microsoft/apm). This repository is a [skill collection](https://microsoft.github.io/apm/reference/package-types/#skill-collection-skillsnameskillmd): each skill is `skills/<name>/SKILL.md`. There is no `SKILL.md` at the repository root, so APM does not treat the repository as one skill.
 
-Install so the files land in `.claude/skills/`. That is the APM target `claude`. Make includes `project.mk` and `sdlc.mk` from that path. `CLAUDE.md` is the only entry file in a project that uses these skills.
+Install so the files land in `.claude/skills/`. That is the APM target `claude`. Make includes `project.mk` from that path, or `sdlc.mk` when `github-pipeline` is installed. `CLAUDE.md` is the only entry file in a project that uses these skills.
 
 ## Skills
 
@@ -30,38 +30,43 @@ The `name` in each skill's frontmatter matches its directory. A project installs
 
 `project-setup` and `github-pipeline` each have setup mode and report mode, written in the skill. Setup mode changes only what is missing or off the contract. Report mode names what matches and what is missing, and it changes nothing.
 
-`make toon` writes the ADR index and the skill index for a product repository. In this collection it writes `docs/requirements-index.toon` and the skill index, and it does not create `docs/adr/`. `make decision-log` writes `build/decision-log.md` from the ADRs and the decisions. `project.mk` and `sdlc.mk` include that target from `record` when the skill is installed, and `make setup` runs it first. Every Python command, including a one-off `make py ARGS='...'`, runs in Podman on the machine where Make runs. Set `PYTHON_IMAGE` before the include to pick the version. The host does not need Python.
+`make toon` writes the ADR index and the skill index for a product repository. In this collection it writes `docs/requirements-index.toon` and the skill index, and it does not create `docs/adr/`. `make decision-log` writes `build/decision-log.md` from the ADRs and the decisions. `project.mk` and `sdlc.mk` include these targets from `record` when the skill is installed, and `make setup` runs `make toon` first. Every Python command, including a one-off `make py ARGS='...'`, runs in Podman on the machine where Make runs. Set `PYTHON_IMAGE` before the include to pick the version. The host does not need Python.
 
 ## The cycle
 
-A request goes through `plan`, `develop`, `review`, and `release`. A new or vague request starts at `plan`. A fix that names a file or a failing test starts at `develop`. `release` commits the slice on one branch, pushes it, merges it into the default branch when CI passed, and asks `record` to close the task. With `github-pipeline` installed, that merge publishes.
+A request goes through `plan`, `develop`, `review`, and `release`. A new or vague request starts at `plan`. A fix that names a source file, a failing test, or a known issue starts at `develop`. `release` commits the slice on one branch, pushes it, merges it into the default branch when CI passed, and asks `record` to close the task. With `github-pipeline` installed, that merge publishes.
 
 `record` keeps the decisions. A choice that is expensive to reverse becomes an ADR in `docs/adr/`. A small choice is an entry in `docs/DECISIONS.md`. `develop` and `review` open each accepted ADR that names a skill the slice uses, so an agent follows the rules of this one project. `make decision-log` writes `build/decision-log.md`, the same decisions as one document for a person.
 
 ## A new project
 
 1. Add the `apm.yml` below and run `apm install`.
-2. Ask the agent to run `project-setup` in setup mode. It writes `CLAUDE.md` from the template, the `Makefile`, and `.editorconfig`.
-3. When the project publishes through GitHub, ask for `github-pipeline` in setup mode.
-4. Start the first slice with `plan`.
+2. Ask the agent to run `project-setup` in setup mode. It runs `make toon`, copies the Makefile template of the language skill, and writes `CLAUDE.md` from the template, `.editorconfig`, and `.gitignore`. It creates the manifest of the project through Make.
+3. Commit `.claude/skills/`, `apm.yml`, and `apm.lock.yaml` on the default branch and push. The Makefile includes files from `.claude/skills/`.
+4. When the project publishes through GitHub, ask for `github-pipeline` in setup mode.
+5. Start the first slice with `plan`.
 
 ## An existing project
 
 1. Add the `apm.yml` below and run `apm install`.
 2. When `docs/BUGS.md`, `docs/WAVES.md`, `docs/FEATURES.md`, `docs/bugs/`, `docs/waves/`, or `docs/features/` exists, run `migrate-docs` first.
-3. Ask for `project-setup` in report mode, then in setup mode. Setup mode writes only what is missing. It keeps a `CLAUDE.md` and a target the project already has.
-4. Record each rule the project already follows as an ADR through `record`. Name the skills it governs in `skills`.
+3. Ask for `project-setup` in report mode, then in setup mode. Setup mode writes only what is missing. It keeps a `CLAUDE.md` and a target the project already has. It rewrites a recipe that runs a toolchain on the host. Each existing test gets a Decided row that states the behaviour it proves, and names that row.
+4. Record each rule the project already follows through `record`: an ADR for an architecture or development rule, a Decided row for a small choice. Name the skills an ADR governs in `skills`. A rule the code already breaks is also a row in `docs/KNOWN_ISSUES.md`.
+5. Commit `.claude/skills/`, `apm.yml`, `apm.lock.yaml`, and the board on the default branch and push.
 
 ## How APM loads them
 
-`apm install` reads every `skills/<name>/` directory and copies it to `.claude/skills/<name>/`, including makefiles, `references/`, `scripts/`, and `templates/` inside the skills. That was tested with APM 0.36.1: nine skills installed into a sample project, and `make toon`, `make ids`, `make project-report`, and `make decision-log` ran there. A root `apm.yml` is optional. APM fills in metadata when the file is absent.
+The `apm.yml` of a project needs `name` and `version`. APM refuses the file without them. `apm install` reads every `skills/<name>/` directory and copies it to `.claude/skills/<name>/`, including makefiles, `references/`, `scripts/`, and `templates/` inside the skills. That was tested with APM 0.36.1: nine skills installed into a sample project, and `make toon`, `make ids`, `make project-report`, and `make decision-log` ran there. This collection itself has no root `apm.yml`. APM does not need one in a skill collection.
 
 ```yaml
+name: my-project
+version: 0.1.0
 targets:
   - claude
 dependencies:
   apm:
     - git: rbe/ralfskills
+      # ref: <tag or commit>   pins the version
       skills:
         - plan
         - develop

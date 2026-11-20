@@ -18,6 +18,6 @@ names: [Makefile]
 ## Work
 
 1. The shell is POSIX `sh`. A bash feature needs `CLAUDE.md` to name bash, and that choice is a Decided line through `record`.
-2. The formatter is shfmt. The linter is shellcheck. Do not write a linter. Do not add a second formatter or a second linter.
+2. The formatter is shfmt. The linter is shellcheck. They read `.sh` files. A project whose only shell is in Make recipes adds no shell formatter and no shell linter. Do not write a linter. Do not add a second formatter or a second linter for shell.
 3. Recipe rules are `project-setup`: no `.ONESHELL`, no Make 4 function, no shell-script wrapper. Do not restate the rest of that contract.
 4. `set -eu` starts a recipe that can fail. A shell `$` in a makefile is `$$`.

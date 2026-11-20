@@ -388,6 +388,65 @@ class ProjectReportTest(unittest.TestCase):
             self.assertNotIn("ADR-0001 (adr)", gap)
             self.assertIn("Hand-editing this file is a defect.", text)
 
+    def test_a_decision_table_row_is_a_requirement_a_test_can_name(self):
+        """id: R-67"""
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write(
+                root,
+                "docs/adr/ADR-0001.md",
+                "---\nid: ADR-0001\ntitle: One\nstatus: Accepted\n---\n",
+            )
+            write(
+                root,
+                "docs/DECISIONS.md",
+                "| Id | Status | Choice |\n| --- | --- | --- |\n"
+                "| D-2 | Decided | divide raises on zero. |\n",
+            )
+            write(
+                root,
+                "tests/test_core.py",
+                'def test_divide_raises_on_zero():\n    """id: D-2"""\n    assert True\n',
+            )
+            text, errors = project_report.build(root)
+            self.assertEqual(errors, [])
+            self.assertIn(
+                "| D-2 | decision | Decided | tests.test_core.test_divide_raises_on_zero |",
+                text,
+            )
+
+    def test_a_test_does_not_name_a_known_issue_or_a_roadmap_line(self):
+        """id: R-1"""
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write(
+                root,
+                "docs/adr/ADR-0001.md",
+                "---\nid: ADR-0001\ntitle: One\nstatus: Accepted\n---\n",
+            )
+            write(
+                root,
+                "docs/KNOWN_ISSUES.md",
+                "| Id | Defect |\n| --- | --- |\n| K-1 | divide returns 0 on zero. |\n",
+            )
+            write(root, "docs/ROADMAP.md", "# Roadmap\n\n- H-2026-11-20-divide\n")
+            write(
+                root,
+                "tests/test_core.py",
+                'def test_one():\n    """id: K-1"""\n    assert True\n\n\n'
+                'def test_two():\n    """id: H-2026-11-20-divide"""\n    assert True\n',
+            )
+            text, errors = project_report.build(root)
+            self.assertEqual(len(errors), 2)
+            self.assertIn("names K-1, which is not a requirement", errors[0])
+            proof_map = text.split("## Architecture review", 1)[0]
+            self.assertNotIn("| K-1 |", proof_map)
+            self.assertNotIn("| H-2026-11-20-divide |", proof_map)
+            self.assertIn("K-1, open, issue. divide returns 0 on zero.", text)
+            self.assertNotIn("zero.. Proved", text)
+            self.assertNotIn("K-1, open, issue. divide returns 0 on zero. Proved", text)
+            self.assertIn("H-2026-11-20-divide", text)
+
     def test_a_superseded_adr_is_not_an_id_with_no_test(self):
         """id: R-56"""
         with tempfile.TemporaryDirectory() as tmp:

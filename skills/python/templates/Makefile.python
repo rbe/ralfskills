@@ -1,0 +1,31 @@
+# The Makefile of a Python project on project.mk. Copy this file to
+# Makefile, or copy the lines the project lacks above its include.
+# Copy coveragerc beside this file to .coveragerc.
+#
+# Python runs through $(PYTHON), which is Podman on this machine.
+# Ruff is the formatter and the linter. UNIT_TESTS is every file
+# tests/test_*.py, so a new test file runs with no change here. Change
+# the pattern when the unit tests are in another place. A project with
+# no dependency to resolve, no artifact to build, or no integration
+# entry keeps that command as `true`.
+
+UNIT_TESTS = $(wildcard tests/test_*.py tests/*/test_*.py)
+
+SETUP_CMD = true
+BUILD_CMD = true
+TEST_CMD = $(PYTHON) -m unittest $(UNIT_TESTS)
+INTEGRATION_CMD = true
+FORMAT_CMD = podman run --rm -v "$(CURDIR)":/io:Z -w /io $(RUFF_IMAGE) format --check
+FORMAT_FIX_CMD = podman run --rm -v "$(CURDIR)":/io:Z -w /io $(RUFF_IMAGE) format
+LINT_CMD = podman run --rm -v "$(CURDIR)":/io:Z -w /io $(RUFF_IMAGE) check
+TEST_CHANGED_CMD = $(PYTHON) .claude/skills/project-report/scripts/changed_tests.py
+COVERAGE_CMD = set -eu; \
+	base=$$(git merge-base HEAD origin/main 2>/dev/null || git rev-parse -q --verify HEAD 2>/dev/null || git hash-object -t tree /dev/null); \
+	git add -N .; \
+	git diff "$$base" > build/coverage/change.diff; \
+	podman run --rm -e HOME=/tmp -e PYTHONDONTWRITEBYTECODE=1 -v "$(CURDIR)":/work:Z -w /work $(PYTHON_IMAGE) sh -c 'set -eu; pip install --disable-pip-version-check --root-user-action=ignore -q --target /tmp/py "coverage==$(COVERAGE_VERSION)"; PYTHONPATH=/tmp/py python3 .claude/skills/project-report/scripts/cover_tests.py $(UNIT_TESTS)'; \
+	REPORT=build/coverage/coverage.xml $(DIFF_COVER)
+
+include .claude/skills/project-setup/project.mk
+
+# Project targets and overrides.

@@ -18,14 +18,16 @@ This skill is the only writer of ids and of the board. A stage that writes a doc
 
 | Kind | Home | Id |
 | --- | --- | --- |
-| In progress | `docs/ROADMAP.md` | Cites a history id and, when there is one, a proposal id. One line. No grill |
-| Defect | `docs/KNOWN_ISSUES.md` | `id:` in the entry. Delete the entry when the fix lands, then retire the id |
-| Small choice | `docs/DECISIONS.md` | Open, or Decided as one sentence |
-| Architecture or development rule | `docs/adr/<id>.md` | `ADR-` plus four digits |
-| Implement later | `docs/proposals/<id>.md` | `P-` plus a number. This is the backlog |
-| Implement now | `docs/history/<id>.md` | `H-` plus the date and a slug |
+| In progress | `docs/ROADMAP.md` | One line: `- H-2026-11-20-slugify`, and the proposal id when there is one. No grill |
+| Defect | `docs/KNOWN_ISSUES.md` | One table row. The id is `K-` plus a number, from `K-1`. Delete the row when the fix lands, then retire the id |
+| Small choice | `docs/DECISIONS.md` | One table row. The id is `D-` plus a number, from `D-1`. The status is Open or Decided. A Decided row is one sentence |
+| Architecture or development rule | `docs/adr/<id>.md` | `ADR-` plus four digits, from `ADR-0001` |
+| Implement later | `docs/proposals/<id>.md` | `P-` plus a number, from `P-1`. This is the backlog |
+| Implement now | `docs/history/<id>.md` | `H-` plus the date and a slug, as `H-2026-11-20-slugify`. The branch of the slice has the slug as its name |
 
 A product repository keeps in-progress work in `docs/ROADMAP.md` and a rule in `docs/adr/`. This collection is not a product repository. Each requirement is one row in `docs/REQUIREMENTS.md`. An Open row in `docs/DECISIONS.md` is work that is not finished. A Decided row is a choice in force. This collection does not keep `docs/ROADMAP.md` or `docs/adr/`.
+
+`templates/` beside this skill has one template for each document: `ROADMAP.md`, `KNOWN_ISSUES.md`, `DECISIONS.md`, `adr.md`, `proposal.md`, and `history.md`. Copy the template at the first write, and keep its layout. The scripts read these layouts: a table row for a decision and a known issue, and a frontmatter block for an ADR, a proposal, and a history file. Write a list in the frontmatter on one line, as `skills: [a, b]`. `make ids-retire` creates `docs/ids.yaml`. Before the first retire, write the file with the content shown under Ids.
 
 `plan` reads these before it asks. It does not ask a question an accepted ADR, a Decided entry, or an open proposal already answered.
 
@@ -45,7 +47,9 @@ issues: []
 supersedes: []
 ```
 
-A decision, a proposal, and a history file use the same keys.
+A decision, a proposal, and a history file use the same keys. In a history file, `skills` lists the skills the slice used. A history file may still cite an id that was retired later.
+
+The open history section is the section of the stage that runs: Plan, Develop, Review, or Release. A skill that adds one line adds it there.
 
 ## ADRs
 
@@ -61,7 +65,7 @@ An accepted ADR replaces a skill rule only when the ADR is a divergence. A diver
 
 ## Ids
 
-Before writing an id, run `make ids`. It reads every `id:` under `docs/` and the retired list in `docs/ids.yaml`. A match exits non-zero. Do not write the document.
+Before writing an id, run `make ids`. It reads every `id:` and every table id under `docs/`, and the retired list in `docs/ids.yaml`. A match exits non-zero. Do not write the document. When the Makefile does not include `project.mk` or `sdlc.mk` yet, run `make -f .claude/skills/record/index.mk ids`. The retire command has the same form: `make -f .claude/skills/record/index.mk ids-retire ID=<id>`. Set `PYTHON_IMAGE=<image>` on that command line when the default image is not the one to use. `migrate-docs` needs these forms in an existing project.
 
 `docs/ids.yaml` is:
 
@@ -73,7 +77,7 @@ Deleting a document runs `make ids-retire ID=<id>`. A retired id is never issued
 
 ## History
 
-One file per task. `plan` creates it when implementation starts. `develop` asks for it when the request named a file or a failing test and `plan` did not run. Later skills extend that file. A deferred slice is a proposal and has no history file yet.
+One file per task. `plan` creates it when implementation starts. `develop` asks for it when the request named a source file, a failing test, or a known issue and `plan` did not run. The stage that asks creates the branch of the slice first. This skill writes the file from `templates/history.md` and adds one roadmap line with the history id. Later skills extend that file. A deferred slice is a proposal and has no history file yet.
 
 When a proposal is picked up, create the history file, set `proposals:` to that id, and set the proposal status to `started`. Add one roadmap line with both ids. Do not copy the grill into the roadmap.
 
@@ -92,17 +96,17 @@ An agent on another task opens a history file only when an id names it.
 
 `release` asks this skill to close the task, when the slice shipped and when it does not ship. A task that waits stays open.
 
-1. Stop when a section of the history file is still `Not invoked yet.` Do not take a later step.
+1. Stop when the Plan, the Develop, or the Review section of the history file is still `Not invoked yet.` Do not take a later step. `release` writes the Release section before it asks for the close.
 2. Set the history status to `closed`. The status of a history file is `started` or `closed`.
 3. Delete the roadmap line that cites this history id.
 4. When the slice started from a proposal, set the proposal status to `done`. The status of a proposal is `open`, `started`, or `done`.
-5. When the slice fixed a known issue, delete that entry and retire its id.
+5. When the slice fixed a known issue, delete that row and retire its id. Stop when a test still names that id. The test names the ADR or the Decided row that states the fixed behaviour. Write that Decided row when there is none.
 6. An ADR and a Decided entry stay. They are in force after the task closes.
 7. In a repository that keeps `docs/REQUIREMENTS.md` and does not keep `docs/ROADMAP.md`, delete the Open row for this task and retire its id.
 
 ## Tests
 
-A test names the requirement it proves with `id:` in its header or metadata. That is the same line this skill matches. The id is a roadmap id, a known-issue id, an ADR id, or a decision id. When the repository keeps `docs/REQUIREMENTS.md` and does not keep `docs/adr/`, the id is a row in that list. The test name states what the system does when that requirement holds. The test does not build a path to the document.
+A test names the requirement it proves with `id:` in its header or metadata. That is the same line this skill matches. The id is an ADR id or a decision id. A roadmap line and a known issue are work, not rules. Their ids are retired when the work ends, so a test does not name them. A test for a fixed known issue names the ADR or the Decided entry that states the fixed behaviour. `record` writes that Decided entry when there is none. When the repository keeps `docs/REQUIREMENTS.md` and does not keep `docs/adr/`, the id is a row in that list. The test name states what the system does when that requirement holds. The test does not build a path to the document. In a Python test the line is the docstring of the test: `"""id: D-1"""`. In a JavaScript, TypeScript, Java, Groovy, or Kotlin test file the line is a comment: `// id: D-1`. One file may have several such lines, one for each id it proves.
 
 ## Indexes
 

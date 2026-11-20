@@ -8,7 +8,7 @@ from pathlib import Path
 ID_LINE = re.compile(r"^id:\s*[\"']?([^\"'#\s]+)")
 ROW_ID = re.compile(r"^\|\s*([A-Z]+-\d+)\s*\|")
 RETIRED_ITEM = re.compile(r"^-\s*[\"']?([^\"'#\s]+)")
-TABLE_FILES = ("REQUIREMENTS.md", "DECISIONS.md")
+TABLE_FILES = ("REQUIREMENTS.md", "DECISIONS.md", "KNOWN_ISSUES.md")
 
 
 def repo_root(start):

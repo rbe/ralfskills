@@ -36,6 +36,7 @@
 #   BUILD_CMD        how this project produces the artifact
 #   TEST_CMD         how this project runs the unit tests
 #   FORMAT_CMD       the one formatter. The language skill names the tool
+#   FORMAT_FIX_CMD   the same formatter in write mode, for make format-fix
 #   LINT_CMD         the one linter. The language skill names the tool
 #   INTEGRATION_CMD  the one integration entry
 #   COVERAGE_CMD     writes build/coverage/diff.md and the map test-changed reads
@@ -58,7 +59,7 @@ include $(PROJECT_MK_DIR)test-changed.mk
 HELP_LEAD ?= Make is the only interface. A target does the same thing locally and in CI.
 REGISTRY ?= ghcr.io
 
-.PHONY: help setup build test test-changed project-report editorconfig format lint integration coverage
+.PHONY: help setup build test test-changed project-report editorconfig format format-fix lint integration coverage
 
 help: ## Show the targets
 	@printf '%s\n' "$(HELP_LEAD)"
@@ -82,10 +83,9 @@ setup: ## Resolve dependencies
 	    if ! command -v "$$tool" >/dev/null 2>&1; then brew install "$$tool"; fi; \
 	  done; \
 	else \
-	  printf '%s\n' "Homebrew is not on PATH. Install standard tools with: brew install $$list" >&2; \
 	  for tool in $$list; do \
 	    if ! command -v "$$tool" >/dev/null 2>&1; then \
-	      printf '%s\n' "Missing $$tool." >&2; \
+	      printf '%s\n' "Missing $$tool. Homebrew is not on PATH. Install it with: brew install $$tool" >&2; \
 	      exit 1; \
 	    fi; \
 	  done; \
@@ -118,12 +118,21 @@ endif
 editorconfig: ## Check files against .editorconfig
 	$(EDITORCONFIG)
 
-format: ## Run the one formatter
+format: ## Check the files with the one formatter
 ifeq ($(strip $(FORMAT_CMD)),)
 	@printf '%s\n' "format: stub. Set FORMAT_CMD before the include. One existing formatter." >&2
 	@exit 1
 else
 	$(FORMAT_CMD)
+endif
+
+# format checks and changes nothing. format-fix rewrites the files.
+format-fix: ## Rewrite the files with the one formatter
+ifeq ($(strip $(FORMAT_FIX_CMD)),)
+	@printf '%s\n' "format-fix: stub. Set FORMAT_FIX_CMD before the include. The formatter of format, in write mode." >&2
+	@exit 1
+else
+	$(FORMAT_FIX_CMD)
 endif
 
 lint: ## Run the one linter
