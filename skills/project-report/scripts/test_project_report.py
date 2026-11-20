@@ -225,6 +225,31 @@ class ProjectReportTest(unittest.TestCase):
             self.assertNotIn("ADR-0001 (adr)", gap)
             self.assertIn("Hand-editing this file is a defect.", text)
 
+    def test_a_superseded_adr_is_not_an_id_with_no_test(self):
+        """id: R-56"""
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            self.sample(root)
+            write(
+                root,
+                "docs/adr/ADR-0002.md",
+                "---\nid: ADR-0002\ntitle: Listen on a socket\nstatus: Superseded\n---\n",
+            )
+            write(
+                root,
+                "docs/adr/ADR-0003.md",
+                "---\nid: ADR-0003\ntitle: Listen on a port\nstatus: Accepted\n"
+                "supersedes: [ADR-0002]\n---\n",
+            )
+            text, errors = project_report.build(root)
+            self.assertEqual(errors, [])
+            gap = text.split("### Ids with no test", 1)[1].split(
+                "### Tests with no id", 1
+            )[0]
+            self.assertNotIn("ADR-0002 (adr)", gap)
+            self.assertIn("ADR-0003 (adr)", gap)
+            self.assertIn("| ADR-0002 | adr | Superseded | no test |", text)
+
     def test_a_requirements_list_is_the_map_when_there_is_no_adr_file(self):
         """id: R-3"""
         with tempfile.TemporaryDirectory() as tmp:
