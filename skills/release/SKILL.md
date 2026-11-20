@@ -20,7 +20,7 @@ description: Ship a reviewed slice and close the task. Use after review, for a f
 4. A divergence is the rule, what differs, and why. `record` stores it where `github-pipeline` says to write divergences, or as an ADR with the section `## Divergence` when it is not a pipeline divergence.
 5. When this task does not ship, the Release section is `Not invoked: this slice does not ship.` Ask `record` to close the task, commit the board documents with the change, and push the branch. Do not take a later step.
 6. Read the Review section. Stop when `make lint` or `make test` failed or did not run, or when a finding is neither fixed nor a known-issue id. Do not take a later step.
-7. Ask the owner before the ship when the request did not ask for one. Stop when the owner says no. Do not take a later step.
+7. Ask the owner before the ship when the request did not ask for one. Stop when the owner says no. Do not take a later step. When the owner says that the owner merges, do steps 8 to 10 and stop before step 11. The pushed branch is then closed on the board and ready for the merge.
 8. The slice is one branch. Commit the change. The first line of a commit message is one sentence that says what the system now does. Push the branch.
 9. CI runs the same Make targets on that push. Stop when CI fails. Do not take a later step. A repository with no workflow runs `make editorconfig`, `make format`, `make lint`, `make test`, `make integration`, and `make coverage` on this machine instead.
 10. Write the Release section: what ships, and the Make target or the merge that ships it. Then ask `record` to close the task. Commit the board documents on the same branch and push. The close is part of the slice, so the board is correct on the default branch after the merge.

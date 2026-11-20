@@ -311,6 +311,8 @@ class ChangedTestsTest(unittest.TestCase):
             write(root, "internal/fmt/fmt_test.go", "// id: D-1\npackage fmt\n")
             write(root, "internal/ui/ui.go", "package ui\n")
             write(root, "internal/ui/ui_test.go", "// id: D-1\npackage ui\n")
+            write(root, "main_test.go", "// id: D-1\npackage main\n")
+            write(root, "build/coverage/go/example.com_app.out", "mode: set\n")
             write(
                 root,
                 "build/coverage/go/example.com_app_internal_fmt.out",
@@ -331,6 +333,7 @@ class ChangedTestsTest(unittest.TestCase):
             self.assertEqual(
                 by_test,
                 {
+                    ".": {"main_test.go"},
                     "./internal/fmt": {
                         "internal/fmt/fmt.go",
                         "internal/fmt/fmt_test.go",
