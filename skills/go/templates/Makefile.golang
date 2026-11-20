@@ -29,9 +29,12 @@ SETUP_CMD = $(GO) mod download
 BUILD_CMD = $(GO) build ./...
 TEST_CMD = $(GO) test ./...
 INTEGRATION_CMD = true
-# gofmt reads the package directories of the project and no other directory.
-FORMAT_CMD = $(GO_RUN) sh -c 'files=$$(gofmt -l $$(go list -f "{{.Dir}}" ./...)); if [ -n "$$files" ]; then printf "%s\n" "gofmt would change:" "$$files"; exit 1; fi'
-FORMAT_FIX_CMD = $(GO_RUN) sh -c 'gofmt -w $$(go list -f "{{.Dir}}" ./...)'
+# gofmt reads the Go files of the packages of the project and no other
+# file. It does not walk a directory, so it does not read .claude/ when
+# the root of the repository is a package.
+GO_FILES = go list -f "{{\$$d := .Dir}}{{range .GoFiles}}{{\$$d}}/{{.}} {{end}}{{range .TestGoFiles}}{{\$$d}}/{{.}} {{end}}{{range .XTestGoFiles}}{{\$$d}}/{{.}} {{end}}" ./...
+FORMAT_CMD = $(GO_RUN) sh -c 'files=$$(gofmt -l $$($(GO_FILES))); if [ -n "$$files" ]; then printf "%s\n" "gofmt would change:" "$$files"; exit 1; fi'
+FORMAT_FIX_CMD = $(GO_RUN) sh -c 'gofmt -w $$($(GO_FILES))'
 LINT_CMD = $(GO) vet ./...
 COVERAGE_CMD = set -eu; \
 	base=$$(git merge-base HEAD origin/$(DEFAULT_BRANCH) 2>/dev/null || git rev-parse -q --verify HEAD 2>/dev/null || git hash-object -t tree /dev/null); \
