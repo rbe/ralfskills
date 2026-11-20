@@ -118,7 +118,7 @@ Run `make toon` after a skill is installed or removed, after ADR frontmatter cha
 | `docs/requirements-index.toon` | `id`, `title` | The requirements list, when that list is the board and `docs/adr/` has no ADR file. The list has the columns Id, Title, and Statement. An agent opens the list for the statement |
 | `docs/skill-index.toon` | `name`, `kind`, `order`, `files`, `names` | Installed skills whose frontmatter `kind` is `language` or `check` |
 
-The skill index is the installed set under `.claude/skills/`. In this collection, before install, it is `skills/`. It does not copy skill prose. The `name` in a skill's frontmatter matches its directory. `make toon` fails when a name differs. A language skill sets `files` to extensions and `names` to exact filenames such as `Makefile`. A check skill sets `order`. `plan` and `review` follow that order. `develop` invokes the language row whose `files` or `names` match the files in hand.
+The skill index is the installed set under `.claude/skills/`. In this collection, before install, it is `skills/`. It does not copy skill prose. The `name` in a skill's frontmatter matches its directory. `make toon` fails when a name differs. It also fails when a frontmatter value has a colon followed by a space, or a ` #`. APM reads the frontmatter as YAML and refuses to install such a skill. A language skill sets `files` to extensions and `names` to exact filenames such as `Makefile`. A check skill sets `order`. `plan` and `review` follow that order. `develop` invokes the language row whose `files` or `names` match the files in hand.
 
 ## Decision log
 

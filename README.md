@@ -54,7 +54,7 @@ A request goes through `plan`, `develop`, `review`, and `release`. A new or vagu
 
 ## How APM loads them
 
-`apm install` reads every `skills/<name>/` directory and copies it to `.claude/skills/<name>/`, including makefiles, `references/`, `scripts/`, and `templates/` inside the skills. A root `apm.yml` is optional. APM fills in metadata when the file is absent.
+`apm install` reads every `skills/<name>/` directory and copies it to `.claude/skills/<name>/`, including makefiles, `references/`, `scripts/`, and `templates/` inside the skills. That was tested with APM 0.36.1: nine skills installed into a sample project, and `make toon`, `make ids`, `make project-report`, and `make decision-log` ran there. A root `apm.yml` is optional. APM fills in metadata when the file is absent.
 
 ```yaml
 targets:
@@ -76,6 +76,6 @@ dependencies:
 
 A Make-only repository leaves `github-pipeline` out. A repository that still has `docs/BUGS.md`, `docs/WAVES.md`, `docs/FEATURES.md`, `docs/bugs/`, `docs/waves/`, or `docs/features/` adds `migrate-docs` and runs it first.
 
-The APM documentation says that `apm compile` writes a `CLAUDE.md` at the project root for the target `claude`. This collection ships no APM instructions, and `project-setup` owns the entry file. Check the diff of `CLAUDE.md` after a compile.
+`apm install` does not write `CLAUDE.md`. `apm compile` for the target `claude` keeps a `CLAUDE.md` that a person wrote and prints a warning. That was tested with APM 0.36.1. `project-setup` owns the entry file. APM adds `apm_modules/` to `.gitignore`.
 
 Install one skill with `--skill`. Repeat the flag to add another. `apm install rbe/ralfskills --skill '*'` installs every skill again.

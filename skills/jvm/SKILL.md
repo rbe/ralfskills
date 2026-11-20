@@ -18,5 +18,5 @@ files: [java, groovy, gradle, kts]
 
 1. Read the reference that matches the file: `references/java.md`, `references/groovy.md`, `references/grails.md`, or `references/gradle.md`.
 2. `make test` runs the tests. `make build` runs Gradle. The workflow does not call Gradle itself.
-3. Do not write a linter. Java's formatter is google-java-format and its linter is Checkstyle. Groovy's linter is CodeNarc. `make coverage` runs JaCoCo's XML through diff-cover. The report is the lines this change touched. Do not use a repository-wide percentage.
+3. Do not write a linter. Java's formatter is google-java-format and its linter is Checkstyle. Groovy's linter is CodeNarc. `make coverage` runs JaCoCo's XML through diff-cover. The report is the lines this change touched. Do not use a repository-wide percentage. `make coverage` also runs `jacoco_cover_map.py` from `project-report`. That script reads the JaCoCo execution data and writes the coverage map: each test class, and the source files that ran in its JVM. `make test-changed` gives the test classes that `changed_tests.py --print` names to Gradle with `--tests`.
 4. Podman, XDG paths, and what a shipment may contain are `project-setup`.

@@ -1,6 +1,6 @@
 ---
 name: privacy
-description: Ask before a slice is closed, and check after implementation, when the change stores, logs, exports, or shows personal data. plan asks the questions. review runs the checks. Skip with the line "privacy: not installed" only when this skill is not installed.
+description: Ask before a slice is closed, and check after implementation, when the change stores, logs, exports, or shows personal data. plan asks the questions. review runs the checks. Write the not-installed line only when this skill is not installed.
 kind: check
 order: 20
 ---

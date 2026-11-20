@@ -17,6 +17,7 @@ SKIP = {
     ".gradle",
     ".venv",
     "__pycache__",
+    "apm_modules",
     "build",
     "dist",
     "node_modules",

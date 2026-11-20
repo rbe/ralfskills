@@ -18,7 +18,7 @@ files: [js, jsx, ts, tsx, mjs, cjs]
 
 1. `make test` runs the tests. `make setup` installs dependencies. Do not run the package manager from a workflow step.
 2. The formatter is Prettier. The linter is ESLint, including for TypeScript. Do not write a linter. Do not add a second formatter or a second linter.
-3. `make coverage` runs the test runner's lcov or Cobertura output through diff-cover. The report is the lines this change touched. Do not use a repository-wide percentage.
+3. `make coverage` runs the test runner's lcov or Cobertura output through diff-cover. The report is the lines this change touched. Do not use a repository-wide percentage. `make coverage` also runs the tests with `NODE_V8_COVERAGE` set to `build/coverage/v8`, then `node_cover_map.py` from `project-report`. That script writes the coverage map: each test file, and the project files that ran in its process. `make test-changed` gives the test files that `changed_tests.py --print` names to the test runner. The map is exact when the runner starts one process for each test file, as `node --test` does. A runner that shares a process selects more tests, never fewer.
 4. The language is TypeScript when the project already uses it. A new file follows that choice.
 5. When `CLAUDE.md` names a framework, read `references/` beside this skill for that name. The framework file does not replace this skill or the stage skill.
 6. Podman, XDG paths, and what a shipment may contain are `project-setup`.

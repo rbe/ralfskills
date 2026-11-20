@@ -1,3 +1,3 @@
 # Gradle
 
-The Gradle wrapper is the Gradle the project runs. Versions live in the version catalog. `make build` and `make test` call the wrapper. A workflow step calls `make`, not the wrapper. `make format` runs google-java-format through Spotless (`spotlessCheck`). `make lint` runs Checkstyle (`checkstyleMain`). `make coverage` runs JaCoCo's XML through diff-cover.
+The Gradle wrapper is the Gradle the project runs. Versions live in the version catalog. `make build` and `make test` call the wrapper. A workflow step calls `make`, not the wrapper. `make format` runs google-java-format through Spotless (`spotlessCheck`). `make lint` runs Checkstyle (`checkstyleMain`). `make coverage` runs JaCoCo's XML through diff-cover. The test task sets `forkEvery = 1`, so each test class has its own JVM and its own entry in the coverage map. With one JVM for all tests, `make test-changed` runs every test.
