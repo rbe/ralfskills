@@ -10,6 +10,8 @@ PROJECT_TOOLS_MK := 1
 
 EDITORCONFIG_IMAGE ?= ghcr.io/editorconfig-checker/editorconfig-checker:4.0.2
 RUFF_IMAGE ?= ghcr.io/astral-sh/ruff:0.15.2
+# The branch a slice is compared with. coverage and test-changed read it.
+DEFAULT_BRANCH ?= main
 COVERAGE_VERSION ?= 7.17.3
 DIFF_COVER_VERSION ?= 11.0.2
 

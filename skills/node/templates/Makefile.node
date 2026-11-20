@@ -1,7 +1,6 @@
-# The Makefile of a Node project on project.mk. Copy this file to
-# Makefile, or copy the lines the project lacks above its include.
-# Copy prettierignore beside this file to .prettierignore and
-# eslint.config.mjs to the project root.
+# The Makefile of a Node project on project.mk, from the template of
+# the node skill. .prettierignore and eslint.config.mjs come from the
+# same skill.
 #
 # Node and npm run through $(NODE), which is Podman on this machine.
 # Prettier is the formatter. ESLint is the linter. The test runner is
@@ -11,7 +10,7 @@
 # A new project has no package.json yet. Create it through Make:
 #   make npm ARGS='init -y'
 #   make npm ARGS='pkg set name=<project> version=0.1.0 type=module'
-#   make npm ARGS='pkg delete main repository'
+#   make npm ARGS='pkg delete main repository scripts'
 #   make npm ARGS='install --save-dev --save-exact prettier eslint @eslint/js globals'
 # A library names what it ships, so that make build packs nothing else:
 #   make npm ARGS='pkg set exports=./src/index.js files[0]=src'
@@ -36,7 +35,7 @@ FORMAT_CMD = $(NODE) npm exec -- prettier --check .
 FORMAT_FIX_CMD = $(NODE) npm exec -- prettier --write .
 LINT_CMD = $(NODE) npm exec -- eslint .
 COVERAGE_CMD = set -eu; \
-	base=$$(git merge-base HEAD origin/main 2>/dev/null || git rev-parse -q --verify HEAD 2>/dev/null || git hash-object -t tree /dev/null); \
+	base=$$(git merge-base HEAD origin/$(DEFAULT_BRANCH) 2>/dev/null || git rev-parse -q --verify HEAD 2>/dev/null || git hash-object -t tree /dev/null); \
 	git add -N .; \
 	git diff "$$base" > build/coverage/change.diff; \
 	NODE_V8_COVERAGE=/work/build/coverage/v8 $(NODE) node --test --experimental-test-coverage \
@@ -45,7 +44,7 @@ COVERAGE_CMD = set -eu; \
 	REPORT=build/coverage/lcov.info $(DIFF_COVER)
 TEST_CHANGED_CMD = chosen=$$($(PYTHON) .claude/skills/project-report/scripts/changed_tests.py --print); \
 	if [ -z "$$chosen" ]; then printf '%s\n' "test-changed: no test covers the changed files. make test runs the full suite."; \
-	else $(NODE) node --test $$chosen; fi
+	else printf 'test-changed: %s\n' "$$chosen"; $(NODE) node --test $$chosen; fi
 
 include .claude/skills/project-setup/project.mk
 

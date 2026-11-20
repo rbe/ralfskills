@@ -112,7 +112,11 @@ class RequirementIdTest(unittest.TestCase):
                 "docs/adr/ADR-0001.md",
                 "---\nid: ADR-0001\ntitle: One\nstatus: Accepted\n---\n",
             )
-            write(root, "src/a.test.ts", "// id: ADR-0001\ntest('a', () => {})\n")
+            write(
+                root,
+                "src/a.test.ts",
+                "// id: ADR-0001\n// id: ADR-0001\ntest('a', () => {})\n",
+            )
             write(
                 root,
                 "src/test/java/PortTest.java",
@@ -126,6 +130,8 @@ class RequirementIdTest(unittest.TestCase):
             self.assertIsNone(named["src/b.spec.js"])
             errors = requirements.problems(requirements.collect(root), found)
             self.assertEqual(errors, ["src/b.spec.js has no id"])
+            text, _errors = project_report.build(root)
+            self.assertEqual(text.count("src/a.test.ts; src/a.test.ts"), 0)
 
     def test_a_test_inside_an_installed_skill_is_not_a_project_test(self):
         """id: R-63"""
@@ -429,7 +435,11 @@ class ProjectReportTest(unittest.TestCase):
                 "docs/KNOWN_ISSUES.md",
                 "| Id | Defect |\n| --- | --- |\n| K-1 | divide returns 0 on zero. |\n",
             )
-            write(root, "docs/ROADMAP.md", "# Roadmap\n\n- H-2026-11-20-divide\n")
+            write(
+                root,
+                "docs/ROADMAP.md",
+                "# Roadmap\n\nOne line for each slice in progress.\n\n- H-2026-11-20-divide\n",
+            )
             write(
                 root,
                 "tests/test_core.py",
@@ -446,6 +456,7 @@ class ProjectReportTest(unittest.TestCase):
             self.assertNotIn("zero.. Proved", text)
             self.assertNotIn("K-1, open, issue. divide returns 0 on zero. Proved", text)
             self.assertIn("H-2026-11-20-divide", text)
+            self.assertNotIn("One line for each slice in progress", text)
 
     def test_a_superseded_adr_is_not_an_id_with_no_test(self):
         """id: R-56"""
