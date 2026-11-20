@@ -9,3 +9,5 @@ One list. An Open row is work that is not finished. A Decided row is a choice in
 | D-6 | Decided | `project-setup` has the one template of the entry file. A product repository gets the communication contract from that template. |
 | D-8 | Decided | For Vitest, `make test-changed` uses `vitest related`. That selection is the module graph of Vitest, not coverage. |
 | D-9 | Decided | A test names an ADR or a decision. It does not name a roadmap line or a known issue, because those ids are retired when the work ends. |
+| D-10 | Open | No step says when a project that ships a binary sets `BUILD_CMD`. Setup mode copies the template before it asks how the project ships. |
+| D-11 | Open | The Go template has no `run` target, and `make build` writes a Linux binary on every host. No skill says how an agent runs the built binary. |
