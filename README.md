@@ -14,6 +14,7 @@ Install so the files land in `.claude/skills/`. That is the APM target `claude`.
 | [release](skills/release/SKILL.md) | Commit, push, merge when CI passed, and close the task. Invokes `github-pipeline` when delivery changes |
 | [record](skills/record/SKILL.md) | Ids, the board, the history file, the ADRs and their status, the ADR index, the decision log, and this collection's requirements index |
 | [onboard](skills/onboard/SKILL.md) | The order of the other skills for a project that adopts this collection. Say `report and integrate` |
+| [system-state-report](skills/system-state-report/SKILL.md) | A plain-language report on what the system does now, the decisions that shaped it, and the decisions that wait for the owner. Say `state report` |
 | [project-report](skills/project-report/SKILL.md) | Generated requirements map, architecture review, and development review |
 | [migrate-docs](skills/migrate-docs/SKILL.md) | The only skill that reads an old board. Other skills stop until it has deleted those files |
 | [project-setup](skills/project-setup/SKILL.md) | Writes `CLAUDE.md` from its template when the file is missing. Make is the only interface. `help` is the default goal. EditorConfig, one formatter, one linter, unit tests, one integration entry, and a diff-cover report are targets |
@@ -93,6 +94,7 @@ dependencies:
         - project-report
         - project-setup
         - onboard
+        - system-state-report   # the plain-language report for the owner
         - github-pipeline   # when the project publishes through GitHub
         - migrate-docs      # when the old board is still present
         - node              # or python, jvm, go: the language skills the project uses
