@@ -13,6 +13,7 @@ Install so the files land in `.claude/skills/`. That is the APM target `claude`.
 | [review](skills/review/SKILL.md) | Gates and the installed subskills, after the change |
 | [release](skills/release/SKILL.md) | Commit, push, merge when CI passed, and close the task. Invokes `github-pipeline` when delivery changes |
 | [record](skills/record/SKILL.md) | Ids, the board, the history file, the ADRs and their status, the ADR index, the decision log, and this collection's requirements index |
+| [onboard](skills/onboard/SKILL.md) | The order of the other skills for a project that adopts this collection. Say `report and integrate` |
 | [project-report](skills/project-report/SKILL.md) | Generated requirements map, architecture review, and development review |
 | [migrate-docs](skills/migrate-docs/SKILL.md) | The only skill that reads an old board. Other skills stop until it has deleted those files |
 | [project-setup](skills/project-setup/SKILL.md) | Writes `CLAUDE.md` from its template when the file is missing. Make is the only interface. `help` is the default goal. EditorConfig, one formatter, one linter, unit tests, one integration entry, and a diff-cover report are targets |
@@ -39,21 +40,22 @@ A request goes through `plan`, `develop`, `review`, and `release`. A new or vagu
 
 `record` keeps the decisions. A choice that is expensive to reverse becomes an ADR in `docs/adr/`. A small choice is an entry in `docs/DECISIONS.md`. `develop` and `review` open each accepted ADR that names a skill the slice uses, so an agent follows the rules of this one project. `make decision-log` writes `build/decision-log.md`, the same decisions as one document for a person. Each id in a document is a link to its item, written by `make links`.
 
-## A new project
+## Start
 
-1. Add the `apm.yml` below and run `apm install`.
-2. Ask the agent to run `project-setup` in setup mode. It copies the Makefile template of the language skill, creates the manifest of the project through Make, runs `make toon`, and writes `CLAUDE.md` from the template, `.editorconfig`, and `.gitignore`.
-3. Setup mode commits what it wrote, with `.claude/skills/`, `apm.yml`, and `apm.lock.yaml`, on the default branch. The Makefile includes files from `.claude/skills/`, so a clone needs them.
-4. When the project publishes through GitHub, ask for `github-pipeline` in setup mode.
-5. Start the first slice with `plan`.
+1. Add the `apm.yml` below and run `apm install`. APM must run first, because the skills are not on the machine before it.
+2. Tell the agent: `report and integrate`. The [onboard](skills/onboard/SKILL.md) skill carries the order, for a new project and for an existing one.
 
-## An existing project
+`onboard` does these steps, and each one is a skill that you can also start alone:
 
-1. Add the `apm.yml` below and run `apm install`.
-2. When `docs/BUGS.md`, `docs/WAVES.md`, `docs/FEATURES.md`, `docs/bugs/`, `docs/waves/`, or `docs/features/` exists, run `migrate-docs` first.
-3. Ask for `project-setup` in report mode, then in setup mode. Setup mode writes only what is missing. It keeps a `CLAUDE.md` and a target the project already has. It rewrites a recipe that runs a toolchain on the host. Each existing test gets a Decided row that states the behaviour it proves, and names that row.
-4. Record each rule the project already follows through `record`: an ADR for an architecture or development rule, a Decided row for a small choice. Name the skills an ADR governs in `skills`. A rule the code already breaks is also a row in `docs/KNOWN_ISSUES.md`.
-5. Each of the steps 2 to 4 ends with its own commit on the default branch: the new board, then the setup with `.claude/skills/`, `apm.yml`, and `apm.lock.yaml`, then the rules.
+1. It checks that Make, Git, and Podman run on the machine.
+2. It reads the project: the language, the old board, the remote, and the tests. It asks you only what the files do not tell, such as how the project ships.
+3. It runs `migrate-docs` when `docs/BUGS.md`, `docs/WAVES.md`, `docs/FEATURES.md`, or their directories, or `AGENTS.md` exist, and commits the new board.
+4. It runs `project-setup` in report mode, then in setup mode. Setup mode asks how the project ships, copies the Makefile template of the language, and runs the tooling target of that language: `make node-tooling`, `make python-tooling`, `make jvm-tooling`, or `make go-tooling`. It writes `CLAUDE.md`, `.editorconfig`, and `.gitignore`, and commits with `.claude/skills/`, `apm.yml`, and `apm.lock.yaml`.
+5. When the project publishes through GitHub, it runs `github-pipeline`: one workflow, a `Containerfile`, and the targets of the pipeline.
+6. It records each rule the project already follows as an ADR or a Decided row, and gives each existing test the `id:` of the row it proves.
+7. It runs every gate. It stops when one fails.
+
+Then the first slice starts with `plan`.
 
 ## How APM loads them
 
@@ -76,8 +78,12 @@ dependencies:
         - record
         - project-report
         - project-setup
-        - github-pipeline
-        - node
+        - onboard
+        - github-pipeline   # when the project publishes through GitHub
+        - migrate-docs      # when the old board is still present
+        - node              # or python, jvm, go: the language skills the project uses
+        - shell
+        - security
 ```
 
 A Make-only repository leaves `github-pipeline` out. A repository that still has `docs/BUGS.md`, `docs/WAVES.md`, `docs/FEATURES.md`, `docs/bugs/`, `docs/waves/`, or `docs/features/` adds `migrate-docs` and runs it first.

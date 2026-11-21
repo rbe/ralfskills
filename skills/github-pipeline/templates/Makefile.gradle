@@ -32,6 +32,9 @@ TEST_CHANGED_CMD = chosen=$$($(PYTHON) .claude/skills/project-report/scripts/cha
 	if [ -z "$$chosen" ]; then printf '%s\n' "test-changed: no test covers the changed files. make test runs the full suite."; \
 	else printf 'test-changed: %s\n' "$$chosen"; args=""; for name in $$chosen; do args="$$args --tests $$name"; done; $(GRADLE) test $$args; fi
 
+# This makefile writes its own recipes for the contract and image
+# targets, so sdlc.mk leaves its shared ones out.
+SDLC_OWN_CONTRACT = 1
 include .claude/skills/github-pipeline/sdlc.mk
 
 setup: ## Match CI: resolve Gradle dependencies into the Gradle cache
