@@ -8,13 +8,16 @@
 #
 # 1. OWNER and NAME come from `git remote get-url origin`:
 #    github.com/<owner>/<name>. Set them here only to override. A project
-#    with no remote yet sets both.
+#    with no remote yet, or a remote on another host, sets both. The
+#    commented lines below are the place.
 # 2. Copy the Containerfile template of the language to Containerfile and
 #    `containerignore` to .containerignore.
 # 3. Put the three lines marked "language" below into the Makefile.
 
 IMAGE ?= ghcr.io/$(OWNER)/$(NAME)
 PACKAGE ?= $(OWNER)/$(NAME)
+# OWNER = <github owner>
+# NAME = <image name>
 KEEP_VERSIONS ?= 2
 CI_IMAGE ?= localhost/$(NAME):ci
 PUBLISH_IMAGE = 1
