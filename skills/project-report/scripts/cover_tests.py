@@ -106,6 +106,8 @@ def main(argv: list[str]) -> int:
 
     root = sibling("requirements").repo_root(Path.cwd())
     sys.path.insert(0, str(root))
+    if (root / "src").is_dir():
+        sys.path.insert(0, str(root / "src"))
     reads: dict[str, set[str]] = {}
 
     def audit(event, args):

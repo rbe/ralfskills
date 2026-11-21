@@ -35,6 +35,9 @@ TEST_CHANGED_CMD = chosen=$$($(PYTHON) .claude/skills/project-report/scripts/cha
 	if [ -z "$$chosen" ]; then printf '%s\n' "test-changed: no test covers the changed files. make test runs the full suite."; \
 	else printf 'test-changed: %s\n' "$$chosen"; $(NODE_RUN) npm test -- $$chosen; fi
 
+# This makefile writes its own recipes for the contract and image
+# targets, so sdlc.mk leaves its shared ones out.
+SDLC_OWN_CONTRACT = 1
 include .claude/skills/github-pipeline/sdlc.mk
 
 NODE_RUN = podman run --rm -e HOME=/tmp -e CI -e NODE_V8_COVERAGE -e npm_config_cache=/tmp/npm-cache \
@@ -110,6 +113,7 @@ clean: ## Remove build/, dist/, and node_modules/
 	rm -rf build dist node_modules
 
 _setup:
+	@$(MAKE) --no-print-directory doctor
 	@set -eu; \
 	if [ ! -d node_modules ]; then $(NODE_RUN) npm ci; fi; \
 	$(NODE_RUN) sh -c 'npm audit --audit-level=high || echo "npm audit reported advisories; continuing"'; \
@@ -134,6 +138,7 @@ _build:
 	podman rm -f "$$name" >/dev/null 2>&1 || true; \
 	test "$$ok" = 1; \
 	mkdir -p build/image; \
+	rm -f build/image/$(NAME)-image.tar; \
 	podman save -o build/image/$(NAME)-image.tar "$(CI_IMAGE)"; \
 	printf '# build\n\nImage %s saved.\n' "$(CI_IMAGE)" > build/summaries/build.md
 

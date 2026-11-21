@@ -2,7 +2,7 @@
 
 This repository is the skill collection. `CLAUDE.md` is the only entry file.
 
-Stages, in order: `plan`, `develop`, `review`, `release`. `record` writes every id and every board document. `project-report` generates the requirements-to-tests map and the architecture and development reviews. `project-setup` is the Make contract. `github-pipeline` is the delivery contract, and `release` invokes it when delivery changes.
+Stages, in order: `plan`, `develop`, `review`, `release`. `record` writes every id and every board document. `project-report` generates the requirements-to-tests map and the architecture and development reviews. `onboard` brings a project onto this collection: it runs the skills below in order. `project-setup` is the Make contract. `github-pipeline` is the delivery contract, and `release` invokes it when delivery changes.
 
 Language skills: `node`, `python`, `shell`, `jvm`, `go`. Subskills `plan` asks and `review` checks: `security`, `privacy`, `ux-ui-design`, `api-design`. A project skill is an extra name listed here.
 

@@ -80,9 +80,11 @@ A project with no dependency to resolve, no artifact to build, or no integration
 
 Do not write `project.mk` at the repository root. A root `project.mk` is off the contract. Leave its bytes and name it in the report.
 
-`project.mk` provides `help`, `setup`, `build`, `test`, and, when the variables say so, `docs` and `login`. The Makefile sets variables and includes `.claude/skills/project-setup/project.mk` before any target. Setup mode does not define `setup`, `build`, or `test` again. A target repeated after the include, with a recipe, replaces the recipe from `project.mk`.
+`project.mk` provides `help`. It includes `contract.mk` beside it, which provides `setup`, `build`, `test`, the quality targets, and, when the variables say so, `docs` and `login`. The `sdlc.mk` of `github-pipeline` includes the same `contract.mk`, so the targets stay when a project switches to it. The Makefile sets variables and includes `.claude/skills/project-setup/project.mk` before any target. Setup mode does not define `setup`, `build`, or `test` again. A target repeated after the include, with a recipe, replaces the recipe from `project.mk`.
 
 The project fills a target in with `SETUP_CMD`, `BUILD_CMD`, or `TEST_CMD`, and with `DOCS_CMD` when it renders docs. Set a variable only when it is empty and the toolchain is already in the project (`package.json`, Gradle, python, or tar). A value already set stays. When the Makefile already has a recipe for that target, leave the recipe and leave the command variable empty. The report names that empty variable as missing.
+
+`doctor.mk` provides `make doctor`. It checks GNU Make 3.81 or newer, Git, `podman info`, and, when the project has a workflow, the remote `origin` and `gh`. Each check prints `ok`, `warn`, or `FAIL` with the fix, and a `FAIL` stops with exit 1. On macOS a stopped Podman machine fails `podman info`, and the fix line says `podman machine start`. `DOCTOR_SKIP_PODMAN=1` leaves the Podman check out. `make setup` runs `make doctor` first, and so does the `setup` of the Node and Gradle templates of `github-pipeline`. `project.mk` and `sdlc.mk` both include `doctor.mk`.
 
 `setup` installs `jq` through Homebrew when `brew` is on `PATH`, then any names in `BREW_TOOLS`. A tool already on `PATH` stays. Leave `BREW_TOOLS` when the project set it. The system `make` stays GNU Make 3.81.
 
@@ -108,6 +110,7 @@ A project that uses this standard uses these names.
 
 | Target | When |
 | --- | --- |
+| `doctor` | Always. Check that this machine has Make, Git, and Podman. `setup` runs it first |
 | `setup` | Always. Install the standard tools, then resolve dependencies |
 | `build` | Always. Produce the artifact |
 | `test` | Always. Run the unit tests |

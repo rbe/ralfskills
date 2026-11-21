@@ -38,6 +38,7 @@ The include is `.claude/skills/github-pipeline/sdlc.mk`. A root `sdlc.mk` is off
 | Every `run:` step is `make <target>` | | |
 | `publish-*` runs on the default branch or the dispatch input | | |
 | Version comes from a `vMAJOR.MINOR.PATCH` tag via `make version` | | |
+| `make setup`, `make build`, and `make test` each run a recipe after the include | | |
 | `report` is last and has `!cancelled()` | | |
 | Uploads set `retention-days`: 1 for intermediates, 14 for `report` and rendered docs | | |
 | The Makefile includes `.claude/skills/github-pipeline/sdlc.mk` before any target and leaves `project.mk` out | | |

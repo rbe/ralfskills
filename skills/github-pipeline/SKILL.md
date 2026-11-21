@@ -41,7 +41,9 @@ Read:
 | `templates/Makefile.node`, `templates/ci.node.yml` | Node toolchain |
 | `templates/Makefile.gradle`, `templates/ci.gradle.yml` | Gradle toolchain |
 | `templates/pipeline-rules.md` | The source for `docs/pipeline-rules.md` |
-| `templates/Containerfile.node`, `templates/Containerfile.gradle` | The source for `Containerfile`, by toolchain |
+| `templates/Containerfile.node`, `templates/Containerfile.gradle`, `templates/Containerfile.python`, `templates/Containerfile.go` | The source for `Containerfile`, by toolchain |
+| `templates/ci.make.yml`, `templates/Makefile.image` | The workflow and the image block of a project on the Makefile of its language skill: Python, Go, or another. No Node or Gradle template applies |
+| `container.mk` | The image targets of a project with no recipe of its own for them. `sdlc.mk` includes it |
 | `templates/containerignore`, `templates/gitignore` | The source for `.containerignore` and `.gitignore` |
 | `Makefile` | The project, when present |
 | `.github/workflows/` | The project |
@@ -60,7 +62,9 @@ The workflow is one file, `.github/workflows/ci.yml`, named `CI`. It calls `make
 
 A second workflow file is named in the report. This mode does not delete it and does not add a workflow beside `ci.yml`.
 
-When the Makefile includes `project.mk` or `.claude/skills/project-setup/project.mk`, switch the include to `.claude/skills/github-pipeline/sdlc.mk` and remove the `project.mk` include. `sdlc.mk` already provides `help`. Keep the command variables as the recipes of the targets this mode adds. The Node or Gradle template fills a target only when that target has no recipe and the command variable is empty. A root `sdlc.mk` is off the contract. Leave its bytes and name it in the report.
+When the Makefile includes `project.mk` or `.claude/skills/project-setup/project.mk`, switch the include to `.claude/skills/github-pipeline/sdlc.mk` and remove the `project.mk` include. `sdlc.mk` already provides `help`, and it includes the contract targets of `project-setup` (`setup`, `build`, `test`, `format`, `lint`, `coverage`, and the others). So the command variables of the language Makefile keep working, and the switch loses no target. A project that has no `project.mk` include and writes its own recipes for those targets sets `SDLC_OWN_CONTRACT = 1` before the include, as the Node and Gradle templates do. Check `make test` after the switch. It must run the tests, not print that there is nothing to do. A root `sdlc.mk` is off the contract. Leave its bytes and name it in the report.
+
+A project on the Makefile of the `python` or `go` skill takes the image block of `templates/Makefile.image`. `OWNER` and `NAME` default to the owner and the repository name in `git remote get-url origin`. Set them only for a project with no remote or another name. Copy the `Containerfile` template of the language, change `PACKAGE` or `NAME` in it, and use `templates/ci.make.yml` as `.github/workflows/ci.yml`. `make build` then builds the image, runs the smoke check, and saves the image tar. The Node and Gradle templates are for a project that has no language Makefile of its own.
 
 A recipe this mode adds follows Make 3.81. No `.ONESHELL`. No Make 4 function (`$(file ...)`, `$(guile ...)`, `!=`). Each recipe line is one POSIX shell, joined with backslashes. No shell-script wrapper. A shell `$` is `$$`.
 
@@ -78,10 +82,11 @@ This repository is the shared skill collection. Node 24 is the Node template onl
 
 | File | Role |
 | --- | --- |
-| `sdlc.mk` | Version, publish tags, cleanup, and report. The project includes the installed file |
+| `sdlc.mk` | Version, publish tags, cleanup, and report, and the contract targets of `project-setup` through `contract.mk`. The project includes the installed file |
+| `container.mk` | `image`, `image-ci`, and `publish-container` for a project on a language Makefile. `sdlc.mk` includes it unless `SDLC_OWN_CONTRACT = 1` |
 | `templates/Makefile.node` | Node app, image only. Node 24 is this template's toolchain. Make contract: `project-setup` |
 | `templates/Makefile.gradle` | Gradle app, image plus a JAR release. The JDK image in this file is this template's toolchain. Make contract: `project-setup` |
-| `templates/ci.node.yml`, `templates/ci.gradle.yml` | `.github/workflows/ci.yml` |
+| `templates/ci.node.yml`, `templates/ci.gradle.yml`, `templates/ci.make.yml` | `.github/workflows/ci.yml` |
 | `templates/pipeline-rules.md` | `docs/pipeline-rules.md`. Points at `project-setup` for the Make contract |
 | `templates/contract-report.md` | Report mode skeleton. The reply fills it. The file in this skill stays blank |
 
@@ -205,6 +210,7 @@ The repo's own test reads the workflow, the Makefile, and `sdlc.mk`. It fails wh
 - `publish-*` is not limited to the default branch or the dispatch input, or it does not need `build` and `test`
 - `report` is not last or lacks `!cancelled()`
 - the Makefile does not include `.claude/skills/github-pipeline/sdlc.mk` before any target, or a root `sdlc.mk` is the include
+- `make test`, `make build`, or `make setup` runs no recipe, that is, the include switch lost a contract target
 
 Do not weaken the test to make a run pass. Fix the pipeline, or record a real divergence.
 
