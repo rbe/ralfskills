@@ -39,8 +39,8 @@ The order of setup mode:
 
 1. Ask the owner how the project ships: a binary, a container image, a library package, or with the merge only. Do not copy a template before the answer.
 2. Copy the Makefile template of the language skill and the other files that template names, or add the lines an existing Makefile lacks. When the project ships a binary, set what the language skill names for a binary, such as `BIN` for Go, or set `BUILD_CMD` to the command that writes the binary. Then `make build` writes the binary from the first run.
-3. Create the manifest of a new project through the Make target the template names: `make node-tooling` for Node, which also adds Prettier, ESLint, and the config files, `make wrapper` for Gradle, `make go` for Go. A Python project with no dependency has no manifest.
-4. Add the missing lines to `.gitignore`.
+3. Set up the tooling of a new project through the one Make target the template names: `make node-tooling` for Node, `make python-tooling` for Python, `make jvm-tooling` for Gradle, and `make go-tooling` for Go. Each target creates the manifest when it is missing, writes the config files and `.editorconfig` that are missing, adds its lines to `.gitignore`, and runs `make format-fix`. A file already in the project stays. A Python project with no dependency has no manifest.
+4. Add the missing lines to `.gitignore`. The target of step 3 added the lines of its language.
 5. Run `make toon`.
 6. Write `CLAUDE.md` from the template, or add the paragraphs an existing file lacks. The answer of step 1 is the ship sentence.
 7. Do the Quality targets steps.
