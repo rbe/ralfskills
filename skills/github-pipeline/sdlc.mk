@@ -47,6 +47,7 @@ SDLC_MK := 1
 SDLC_MK_DIR := $(dir $(lastword $(MAKEFILE_LIST)))
 include $(SDLC_MK_DIR)../project-setup/podman-python.mk
 include $(SDLC_MK_DIR)../project-setup/tools.mk
+include $(SDLC_MK_DIR)../project-setup/doctor.mk
 include $(SDLC_MK_DIR)../project-setup/test-changed.mk
 -include .claude/skills/project-report/report.mk
 ifndef SDLC_OWN_CONTRACT

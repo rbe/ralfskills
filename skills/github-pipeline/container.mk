@@ -10,8 +10,11 @@
 #   BUILD_CMD = true && $(MAKE) --no-print-directory image-ci
 #
 # Set before the include:
-#   OWNER         GitHub owner. IMAGE defaults to ghcr.io/OWNER/NAME
-#   NAME          image name. Default: the name of the directory
+#   OWNER         GitHub owner. Default: the owner in the URL of the git
+#                 remote origin, in lower case. IMAGE defaults to
+#                 ghcr.io/OWNER/NAME
+#   NAME          image name. Default: the repository name in the URL of
+#                 the git remote origin, else the name of the directory
 #   IMAGE         ghcr.io/owner/name, no tag. Replaces OWNER and NAME
 #   CONTAINERFILE default Containerfile
 #   IMAGE_BUILD_ARGS  extra podman build arguments, such as --build-arg X=Y
@@ -24,8 +27,8 @@
 ifndef CONTAINER_MK
 CONTAINER_MK := 1
 
-NAME ?= $(notdir $(CURDIR))
-OWNER ?=
+NAME ?= $(or $(shell git remote get-url origin 2>/dev/null | sed -n 's|.*github\.com[:/][^/]*/\([^/]*\)$$|\1|p' | sed 's|\.git$$||'),$(notdir $(CURDIR)))
+OWNER ?= $(shell git remote get-url origin 2>/dev/null | sed -n 's|.*github\.com[:/]\([^/]*\)/.*|\1|p' | tr 'A-Z' 'a-z')
 IMAGE ?= ghcr.io/$(OWNER)/$(NAME)
 CI_IMAGE ?= localhost/$(NAME):ci
 CONTAINERFILE ?= Containerfile

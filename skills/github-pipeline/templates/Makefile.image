@@ -6,13 +6,13 @@
 # targets of project-setup, so setup, build, test, format, lint, and
 # coverage keep working from the command variables.
 #
-# 1. Fill OWNER from `git remote get-url origin`: github.com/<owner>/<name>.
+# 1. OWNER and NAME come from `git remote get-url origin`:
+#    github.com/<owner>/<name>. Set them here only to override. A project
+#    with no remote yet sets both.
 # 2. Copy the Containerfile template of the language to Containerfile and
 #    `containerignore` to .containerignore.
 # 3. Put the three lines marked "language" below into the Makefile.
 
-NAME ?= [name]
-OWNER ?= [owner]
 IMAGE ?= ghcr.io/$(OWNER)/$(NAME)
 PACKAGE ?= $(OWNER)/$(NAME)
 KEEP_VERSIONS ?= 2

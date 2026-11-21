@@ -19,6 +19,7 @@ REGISTRY ?= ghcr.io
 
 # Real recipe for the tools every project shares, then the project stub.
 setup: ## Resolve dependencies
+	@$(MAKE) --no-print-directory doctor
 	@set -eu; \
 	tools="jq $(BREW_TOOLS)"; \
 	list=""; \

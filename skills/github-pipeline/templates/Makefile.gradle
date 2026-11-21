@@ -103,6 +103,7 @@ clean: ## Remove build/ and .gradle/
 	rm -rf build .gradle
 
 _setup:
+	@$(MAKE) --no-print-directory doctor
 	@set -eu; \
 	mkdir -p "$$HOME/.gradle"; \
 	$(GRADLE) --version; \

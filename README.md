@@ -47,7 +47,7 @@ A request goes through `plan`, `develop`, `review`, and `release`. A new or vagu
 
 `onboard` does these steps, and each one is a skill that you can also start alone:
 
-1. It checks that Make, Git, and Podman run on the machine.
+1. It checks that Make, Git, and Podman run on the machine. `make doctor` is the same check, and `make setup` runs it first.
 2. It reads the project: the language, the old board, the remote, and the tests. It asks you only what the files do not tell, such as how the project ships.
 3. It runs `migrate-docs` when `docs/BUGS.md`, `docs/WAVES.md`, `docs/FEATURES.md`, or their directories, or `AGENTS.md` exist, and commits the new board.
 4. It runs `project-setup` in report mode, then in setup mode. Setup mode asks how the project ships, copies the Makefile template of the language, and runs the tooling target of that language: `make node-tooling`, `make python-tooling`, `make jvm-tooling`, or `make go-tooling`. It writes `CLAUDE.md`, `.editorconfig`, and `.gitignore`, and commits with `.claude/skills/`, `apm.yml`, and `apm.lock.yaml`.

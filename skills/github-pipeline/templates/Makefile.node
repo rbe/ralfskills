@@ -113,6 +113,7 @@ clean: ## Remove build/, dist/, and node_modules/
 	rm -rf build dist node_modules
 
 _setup:
+	@$(MAKE) --no-print-directory doctor
 	@set -eu; \
 	if [ ! -d node_modules ]; then $(NODE_RUN) npm ci; fi; \
 	$(NODE_RUN) sh -c 'npm audit --audit-level=high || echo "npm audit reported advisories; continuing"'; \

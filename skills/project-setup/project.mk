@@ -53,6 +53,7 @@ PROJECT_MK := 1
 PROJECT_MK_DIR := $(dir $(lastword $(MAKEFILE_LIST)))
 include $(PROJECT_MK_DIR)podman-python.mk
 include $(PROJECT_MK_DIR)tools.mk
+include $(PROJECT_MK_DIR)doctor.mk
 include $(PROJECT_MK_DIR)test-changed.mk
 -include .claude/skills/project-report/report.mk
 
