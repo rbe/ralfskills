@@ -98,8 +98,7 @@ class RequirementIdTest(unittest.TestCase):
 
     def test_review_fails_a_test_that_has_no_id(self):
         """id: R-1"""
-        for name in ("develop", "review", "project-setup"):
-            text = (ROOT / "skills" / name / "SKILL.md").read_text(encoding="utf-8")
+        for text in general_rules():
             self.assertIn("Stop when a test has no id.", text)
         record = (ROOT / "skills" / "record" / "SKILL.md").read_text(encoding="utf-8")
         self.assertIn("`id:`", record)
@@ -412,8 +411,7 @@ class ChangedTestsTest(unittest.TestCase):
         ci_targets = [line for line in sdlc.splitlines() if line.startswith("SDLC_CI")]
         self.assertEqual(len(ci_targets), 1)
         self.assertNotIn("test-changed", ci_targets[0])
-        for name in ("develop", "review", "project-setup"):
-            text = (ROOT / "skills" / name / "SKILL.md").read_text(encoding="utf-8")
+        for text in general_rules():
             self.assertIn("A green `test-changed` does not replace `make test`.", text)
         for name in ("ci.node.yml", "ci.gradle.yml"):
             workflow = (
@@ -421,6 +419,150 @@ class ChangedTestsTest(unittest.TestCase):
             ).read_text(encoding="utf-8")
             self.assertIn("\n      - run: make test\n", workflow)
             self.assertNotIn("test-changed", workflow)
+
+
+ENTRY_FILES = ("CLAUDE.md", "skills/project-setup/templates/CLAUDE.md")
+
+
+def general_rules():
+    """The general rules of the entry file and of its template.
+
+    A skill does not repeat a general rule, so a test reads the rule here.
+    """
+    found = []
+    for name in ENTRY_FILES:
+        text = (ROOT / name).read_text(encoding="utf-8")
+        found.append(text.split("<general_rules>", 1)[1].split("</general_rules>")[0])
+    return found
+
+
+class GeneralRulesTest(unittest.TestCase):
+    def test_the_entry_file_and_its_template_have_the_same_general_rules(self):
+        """id: R-76"""
+        for name in ENTRY_FILES:
+            text = (ROOT / name).read_text(encoding="utf-8")
+            self.assertEqual(text.count("\n## General rules\n"), 1)
+            self.assertEqual(text.count("<general_rules>"), 1)
+            self.assertEqual(text.count("</general_rules>"), 1)
+            self.assertLess(
+                text.index("</general_rules>"),
+                text.index("\n## Communication contract\n"),
+            )
+        collection, template = general_rules()
+        self.assertEqual(collection, template)
+
+    def test_the_general_rules_name_the_interface_and_the_start_of_a_task(self):
+        """id: R-75"""
+        for text in general_rules():
+            self.assertIn("Type only `make <target>` and Git commands.", text)
+            self.assertIn("The host needs only Make, Git, and Podman.", text)
+            self.assertIn("Run `make old-board` before the first skill.", text)
+            self.assertIn("the only skill is `migrate-docs`", text)
+            self.assertIn("`record` writes every id and every board document.", text)
+            self.assertIn("Run `make toon` before you read an index.", text)
+
+
+ONE_LINE = "The general rules in `CLAUDE.md` apply."
+SKILL_TAGS = (
+    "purpose",
+    "inputs",
+    "steps",
+    "rules",
+    "output",
+    "references",
+    "example",
+    "questions",
+    "checks",
+)
+OLD_BOARD = (
+    "docs/BUGS.md",
+    "docs/WAVES.md",
+    "docs/FEATURES.md",
+    "docs/bugs/",
+    "docs/waves/",
+    "docs/features/",
+)
+
+
+def skill_files():
+    return sorted((ROOT / "skills").glob("*/SKILL.md"))
+
+
+def skill_body(path):
+    """The lines of a skill file after its frontmatter."""
+    text = path.read_text(encoding="utf-8")
+    return text.split("\n---\n", 1)[1].splitlines()
+
+
+def tag_problems(lines):
+    """Each line that breaks the tag shape of a skill file.
+
+    A tag line is a line that holds one tag and no other text.
+    """
+    problems = []
+    open_tags = []
+    for line in lines:
+        closing = re.fullmatch(r"</([a-z]+)>", line)
+        opening = re.fullmatch(r'<([a-z]+)(?: name="[a-z-]+")?>', line)
+        if closing:
+            if not open_tags or open_tags.pop() != closing.group(1):
+                problems.append(line)
+        elif opening:
+            name = opening.group(1)
+            inside_mode = open_tags == ["mode"] and name in ("steps", "rules")
+            known = name in SKILL_TAGS or name == "mode"
+            if not known or (open_tags and not inside_mode):
+                problems.append(line)
+            open_tags.append(name)
+        elif line.startswith("#"):
+            problems.append(line)
+    return problems + [f"<{name}> is not closed" for name in open_tags]
+
+
+class SkillShapeTest(unittest.TestCase):
+    def test_each_skill_refers_to_the_general_rules_in_one_line(self):
+        """id: R-76"""
+        self.assertEqual(len(skill_files()), 20)
+        for path in skill_files():
+            text = path.read_text(encoding="utf-8")
+            self.assertEqual(text.count(ONE_LINE), 1, path)
+            self.assertEqual(skill_body(path)[:3], ["", ONE_LINE, ""], path)
+
+    def test_each_skill_body_is_closed_tags_of_the_fixed_vocabulary(self):
+        """id: R-76"""
+        for path in skill_files():
+            self.assertEqual(tag_problems(skill_body(path)), [], path)
+
+    def test_the_tag_check_finds_a_heading_an_unknown_tag_and_an_open_tag(self):
+        """id: R-76"""
+        self.assertEqual(tag_problems(["<steps>", "1. One.", "</steps>"]), [])
+        self.assertEqual(
+            tag_problems(['<mode name="setup">', "<rules>", "</rules>", "</mode>"]),
+            [],
+        )
+        self.assertEqual(tag_problems(["## Work"]), ["## Work"])
+        self.assertEqual(tag_problems(["<notes>", "</notes>"]), ["<notes>"])
+        self.assertEqual(
+            tag_problems(["<steps>", "<rules>", "</rules>", "</steps>"]), ["<rules>"]
+        )
+        self.assertEqual(tag_problems(["<steps>"]), ["<steps> is not closed"])
+
+    def test_only_migrate_docs_names_a_path_of_the_old_board(self):
+        """id: R-21"""
+        for path in skill_files():
+            if path.parent.name == "migrate-docs":
+                continue
+            text = path.read_text(encoding="utf-8")
+            for old_path in OLD_BOARD:
+                self.assertNotIn(old_path, text, path)
+
+    def test_a_skill_names_each_of_its_reference_files(self):
+        """id: R-76"""
+        for path in skill_files():
+            text = path.read_text(encoding="utf-8")
+            named = set(re.findall(r"`references/([a-z-]+\.md)`", text))
+            kept = {item.name for item in (path.parent / "references").glob("*.md")}
+            self.assertEqual(named, kept, path)
 
 
 class ProjectReportTest(unittest.TestCase):
@@ -668,7 +810,9 @@ class ProjectReportTest(unittest.TestCase):
         for name in ("review", "project-setup", "project-report"):
             text = (ROOT / "skills" / name / "SKILL.md").read_text(encoding="utf-8")
             self.assertIn("`make project-report`", text)
-            self.assertIn("Hand-editing", text)
+        for text in general_rules():
+            self.assertIn("`make project-report` writes", text)
+            self.assertIn("Hand-editing it is a defect.", text)
         contract = (ROOT / "skills" / "project-setup" / "contract.mk").read_text(
             encoding="utf-8"
         )
@@ -816,7 +960,7 @@ class MakeAndPodmanInterfaceTest(unittest.TestCase):
         return files
 
     def test_no_recipe_calls_a_host_tool_other_than_git_and_podman(self):
-        """id: R-45"""
+        """id: R-75"""
         self.assertGreater(len(self.makefiles()), 15)
         found = []
         for path in self.makefiles():
@@ -824,7 +968,7 @@ class MakeAndPodmanInterfaceTest(unittest.TestCase):
         self.assertEqual(found, [])
 
     def test_the_host_call_check_finds_a_host_tool(self):
-        """id: R-45"""
+        """id: R-75"""
         with tempfile.TemporaryDirectory() as tmp:
             bad = write(
                 Path(tmp),
@@ -852,8 +996,14 @@ class MakeAndPodmanInterfaceTest(unittest.TestCase):
         for name in ("doctor.mk", "contract.mk", "tools.mk", "project.mk"):
             text = (self.SETUP / name).read_text(encoding="utf-8")
             self.assertNotIn("brew", text.lower())
-        contract = (self.SETUP / "contract.mk").read_text(encoding="utf-8")
-        self.assertIn("@$(MAKE) --no-print-directory doctor", contract)
+        doctor_mk = (self.SETUP / "doctor.mk").read_text(encoding="utf-8")
+        self.assertIn("\nsetup: doctor\n", doctor_mk)
+        for name in ("project.mk", "../github-pipeline/sdlc.mk"):
+            text = (self.SETUP / name).read_text(encoding="utf-8")
+            self.assertLess(text.index("doctor.mk"), text.index("contract.mk"), name)
+            self.assertLess(
+                text.index("doctor.mk"), text.index("record/index.mk"), name
+            )
 
     def test_apm_runs_in_a_pinned_image_behind_a_target(self):
         """id: R-16"""

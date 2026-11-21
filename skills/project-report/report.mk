@@ -12,6 +12,12 @@ PROJECT_REPORT_MK := 1
 
 PROJECT_REPORT_DIR := $(dir $(lastword $(MAKEFILE_LIST)))
 
+# Alone, as `make -f <this file> project-report`, no makefile has
+# defined $(PYTHON) yet.
+ifndef PYTHON
+include $(PROJECT_REPORT_DIR)../project-setup/podman-python.mk
+endif
+
 ifeq ($(strip $(PROJECT_REPORT_CMD)),)
 PROJECT_REPORT_CMD = $(PYTHON) "$(PROJECT_REPORT_DIR)scripts/project_report.py"
 endif

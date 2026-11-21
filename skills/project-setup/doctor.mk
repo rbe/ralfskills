@@ -1,6 +1,7 @@
 # make doctor checks the tools a machine needs before any other target
 # runs. project.mk and the sdlc.mk of github-pipeline both include this
-# file, and `make setup` runs it first. It changes nothing.
+# file. doctor is the first prerequisite of setup, so `make setup` runs
+# it before any other target. It changes nothing.
 #
 # Checks, each printed as ok or FAIL with the fix:
 #   make    GNU Make 3.81 or newer
@@ -15,13 +16,10 @@
 # A project whose Makefile has no include yet runs
 #   make -f .claude/skills/project-setup/doctor.mk doctor
 #
-# Set DOCTOR_SKIP_PODMAN=1 for a project that does not use Podman.
 # GNU Make 3.81. See project.mk for the rules of a recipe.
 
 ifndef DOCTOR_MK
 DOCTOR_MK := 1
-
-DOCTOR_SKIP_PODMAN ?=
 
 .PHONY: doctor
 
@@ -41,9 +39,7 @@ doctor: ## Check that this machine has the tools the targets need
 	fi; \
 	if git --version >/dev/null 2>&1; then ok "$$(git --version)"; \
 	else bad "git does not run" "Install Git. On macOS: xcode-select --install"; fi; \
-	if [ -n "$(DOCTOR_SKIP_PODMAN)" ]; then \
-	  ok "podman skipped by DOCTOR_SKIP_PODMAN"; \
-	elif ! command -v podman >/dev/null 2>&1; then \
+	if ! command -v podman >/dev/null 2>&1; then \
 	  if [ "$$os" = "Darwin" ]; then hint="Install Podman from podman.io, then run podman machine init and podman machine start."; \
 	  else hint="Install Podman with the package manager of this system."; fi; \
 	  bad "podman is not on PATH" "$$hint"; \
@@ -60,5 +56,9 @@ doctor: ## Check that this machine has the tools the targets need
 	fi; \
 	if [ "$$failed" -ne 0 ]; then printf '%s\n' "doctor: fix the FAIL lines, then run make doctor again." >&2; exit 1; fi; \
 	printf '%s\n' "doctor: ready"
+
+# This file is included before contract.mk and before the index.mk of
+# record, so doctor runs before toon and before the recipe of setup.
+setup: doctor
 
 endif

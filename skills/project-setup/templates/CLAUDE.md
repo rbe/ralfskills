@@ -10,7 +10,7 @@ Language skills: [the installed ones of `node`, `python`, `shell`, `jvm`, `go`].
 
 [Keep this paragraph only when `system-state-report` is installed:] `system-state-report` writes the plain-language report on what the system does now and which decisions wait for the owner. Say `state report` to start it.
 
-This project ships [as a container image, with the merge into the default branch / as a binary, with `make <target>` / as a library package, with `make build` / as a library, with the merge into the default branch].
+This project ships [as a binary, with `make <target>` / as a container image, with the merge into the default branch / as a library package, with `make build` / with the merge into the default branch only].
 
 ## General rules
 
@@ -20,14 +20,17 @@ These rules apply to every skill. A skill states only what it adds.
 
 Interface:
 
-- Type only `make <target>` and Git commands. `make` prints the targets. Make runs every other tool in a Podman image, on this machine and in CI.
+- Type only `make <target>` and Git commands. `make` prints the targets. Make runs every other tool in a Podman image, on this machine and in CI. The host needs only Make, Git, and Podman.
 - If no target runs the command that the work needs, `project-setup` adds the target. Do not run the tool on the host.
+- If the Makefile does not include `project.mk` or `sdlc.mk` yet, run a target as `make -f .claude/skills/<skill>/<file>.mk <target>`. An example is `make -f .claude/skills/project-setup/old-board.mk old-board`.
 - `project-setup` owns the rules for Podman, XDG paths, Make 3.81 recipes, and what a shipment may contain.
+- A skill with modes runs one mode. Report mode reads the project and writes nothing. Setup mode writes only what is missing or off the contract, and it leaves a target that the project already filled in. If a request asks for both modes, run report mode first.
 - A divergence from a skill rule names the rule, what differs, and why.
+- The owner creates a `v*` tag. A skill creates none.
 
 Start of a task:
 
-- Run `make old-board` before the first skill. If the target fails, the only skill is `migrate-docs`.
+- Run `make old-board` before the first skill. If the target fails, the only skill is `migrate-docs`, and `migrate-docs` may invoke `record`. `onboard` invokes `migrate-docs` itself.
 - If a step needs a skill that is not installed, stop and name that skill. A subskill is optional. For a subskill that is not installed, `plan` and `review` write the line `<name>: not installed`.
 - If a step says stop, take no later step. Tell the user the step and the reason.
 - Ask the owner one question at a time. Ask only what the code and the board do not answer.
@@ -39,10 +42,10 @@ Board:
 - An ADR with the status `Accepted` is a rule for every change.
 - If the repository keeps `docs/REQUIREMENTS.md` and no `docs/adr/`, a row of that list replaces an ADR, and an Open row of `docs/DECISIONS.md` replaces a roadmap line.
 - Run `make toon` before you read an index.
-- Write an id as plain text. `make links` makes each id in a document a link. `make links-check` checks the links.
+- Write an id as plain text. After a document under `docs/` changes, run `make links`. It makes each id a link. `make links-check` checks the links.
 - `make decision-log` writes the decisions as one document.
 - A file that a Make target writes is generated. Hand-editing it is a defect.
-- A stage asks `record` to write its section of the history file. Each other skill asks `record` to add one line that names the skill to the open section. Such a skill opens no history file.
+- A stage asks `record` to write its section of the history file. Each other skill asks `record` to add one line that names the skill to the open section. Such a skill opens no history file. If no history file is open, the skill adds no line.
 - The work of `onboard`, of `migrate-docs`, and of setup mode is not a slice. It has no history file. Its commits go on the default branch.
 
 Gates:

@@ -17,10 +17,10 @@ REGISTRY ?= ghcr.io
 
 .PHONY: setup build test project-report editorconfig format format-fix lint integration coverage
 
-# doctor first, then the project stub. setup installs no tool on the
-# host: every tool is a Podman image behind a target.
+# The project stub. doctor.mk makes doctor the first prerequisite of
+# setup. setup installs no tool on the host: every tool is a Podman
+# image behind a target.
 setup: ## Resolve dependencies
-	@$(MAKE) --no-print-directory doctor
 	@set -eu; \
 	if [ -z "$(SETUP_CMD)" ]; then \
 	  printf '%s\n' "setup: stub. Set SETUP_CMD before the include. Resolve this project's dependencies." >&2; \

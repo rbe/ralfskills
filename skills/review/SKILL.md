@@ -1,28 +1,38 @@
 ---
 name: review
-description: Check a change after implementation and before it ships. Run the gates and each check row in docs/skill-index.toon. A change that breaks an accepted ADR is a finding. A missing line for a row fails the check. A method, a domain name, or the pattern plan named can fail the check. Write findings through record. Do not weaken a test.
+description: Checks a change after implementation and before it ships. Runs the gates and each check row in docs/skill-index.toon, checks the change against the accepted ADRs, and writes findings through record. Use after develop and before release.
 ---
 
-# Review
+The general rules in `CLAUDE.md` apply.
 
-## Steps
+<purpose>
+`review` is the stage between `develop` and `release`. It finds each rule that the change breaks and records each break as a finding.
+</purpose>
 
-1. If `docs/BUGS.md`, `docs/WAVES.md`, `docs/FEATURES.md`, `docs/bugs/`, `docs/waves/`, or `docs/features/` exists, stop. Name `migrate-docs`. Do not take a later step.
-2. Invoke `record` before creating an id or a document. A write that skips `record` fails this step.
-3. Do the work below, in order.
-4. Ask `record` to write the Review section, or one sentence that says why `review` was not invoked. `record` rejects a history file missing Plan, Develop, Review, or Release.
+<steps>
+1. Read `docs/skill-index.toon`. For each row whose `kind` is `check`, in file order, read that skill and run its checks. Write one line for each row. If a check does not apply to this change, the line says why. If there is no `check` row, write `checks: none installed`. A row without a line fails this step.
+2. Read `docs/adr/index.toon`. Open each ADR whose status is `Accepted` and whose `skills` names a skill that this slice uses. A change that breaks one of these ADRs is a finding. If the repository keeps no `docs/adr/`, skip this step.
+3. Run `make lint` and `make test`.
+4. Check each test of the change against the test-id rule in `record`. If a test has no id or has an id in a path, stop.
+5. Check the change against each rule under "Gates" in the general rules, and compare the code with the pattern that `plan` named. A break of a rule is a finding. Code that ignores the pattern is a finding. Write the method rule, the name rule, and the pattern as one check.
+6. Run `make project-report` as steps 1 and 2 of `project-report` say. Stop also if a person edited `build/project-report.md`.
+7. Read the list of ids with no test in `build/project-report.md`. If an ADR or a Decided row states behaviour of the code and has no test, write a finding. If the ADR or the row is a rule about how to work, write it under what was left alone.
+8. Run `make links-check`. An id in a document that is not a link is a finding. `make links` fixes it.
+9. Read `build/coverage/diff.md`. A repository-wide percentage that the change gives as its result is a finding.
+10. If the repository has a CI workflow, read each workflow step. A `run:` step that is not `make <target>` is a finding. A step that runs `make test-changed` is a finding, because `test-changed` is not a CI target.
+11. A finding that is fixed stays in this change. Ask `record` for a known-issue id for each finding that waits.
+12. Ask `record` to write the Review section. The section holds the line for each check row, each finding, each gate that did not run, and what this change deliberately left alone.
+</steps>
 
-## Work
+<rules>
+- A finding states the location, the mechanism, the evidence, whether it predates this change, and the check that proves the fix.
+- A finding about a model change or a prompt change needs a baseline from the same session.
+- An accepted ADR replaces a skill rule only if the ADR is a divergence. An ADR that differs from a skill rule and does not name the three parts of a divergence is a finding.
+- A divergence that the contract reference of `github-pipeline` lists as not allowed is a finding, also when an ADR records it.
+- `plan` chose the pattern. Do not name a different pattern.
+</rules>
 
-1. Run `make toon`. Read `docs/skill-index.toon`. For each row whose `kind` is `check`, in file order, read that skill and run its checks. If there is no `check` row, write `checks: none installed`. A missing line for a row fails this step. A check that does not apply to this change is one line that says why.
-2. Read `docs/adr/index.toon`. Open each ADR whose status is `Accepted` and whose `skills` names a skill this slice uses. A change that breaks an accepted ADR is a finding. An accepted ADR replaces a skill rule only when the ADR is a divergence. A divergence names the rule, what differs, and why. An ADR that differs from a skill rule and does not name these three is a finding. What `github-pipeline` says is not a divergence stays not allowed. Skip this step when the repository does not keep `docs/adr/`.
-3. Run `make lint` and `make test` for the change. A gate that did not run is reported as not run, with the reason. Do not weaken a test to make the change pass. Do not skip a test. `make test` is the full suite. A green `test-changed` does not replace `make test`.
-4. A test names the requirement it proves. The line is `id:` in the test's header or metadata, the line `record` matches. The id is an ADR id or a decision id. A roadmap line and a known issue are work, not rules. Their ids are retired when the work ends, so a test does not name them. A test for a fixed known issue names the ADR or the Decided entry that states the fixed behaviour. `record` writes that Decided entry when there is none. When the repository keeps `docs/REQUIREMENTS.md` and does not keep `docs/adr/`, the id is a row in that list. The test name states what the system does when that requirement holds. Stop when a test has no id. Do not take a later step. An id in a path fails this check.
-5. Run `make project-report`. It writes `build/project-report.md`: the requirements-to-tests map, the architecture review, and the development review. Stop when the target fails, when a part is missing, or when the file was hand-edited. Do not take a later step. Hand-editing it is a defect. Run `make links-check`. An id in a document that is not a link is a finding. `make links` fixes it. Read the list of ids with no test. An ADR or a Decided row that states behaviour the code has needs a test, and a missing one is a finding. A rule about how to work needs no test. "Only one package starts the command" is behaviour of the code. "The engine is Podman" is a rule about how to work. Write it under what was left alone.
-6. A finding has a location, the mechanism, the evidence, whether it predates this change, and the check that proves the fix. A model or prompt change needs a baseline from the same session.
-7. A finding that is fixed stays in this change. A finding that waits becomes a known-issue id through `record`.
-8. Write what this change deliberately left alone.
-9. Read `build/coverage/diff.md`. It lists the lines this change touched. A repository-wide percentage used as the result is a finding. A missing report is not run, with the reason.
-10. These are findings, in one check: a method that neither does one thing nor only composes other methods; a unit, function, method, class, or file whose name is not from the domain; code that ignores the pattern Plan named. Plan chose the pattern. Do not name a different pattern.
-11. A skipped test, a silent catch, or a secret or personal data in a fixture is a finding.
-12. CI runs `make editorconfig`, `make format`, `make lint`, `make test`, `make integration`, and `make coverage`. `test-changed` is not a CI target. A step that is not `make <target>` is a finding.
+<example>
+"Only one package starts the command" is behaviour of the code. It needs a test.
+"The engine is Podman" is a rule about how to work. It needs no test.
+</example>

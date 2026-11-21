@@ -22,7 +22,6 @@ JDK_IMAGE ?= docker.io/library/eclipse-temurin:25-jdk
 JRE_IMAGE ?= docker.io/library/eclipse-temurin:25-jre
 CI_IMAGE ?= localhost/$(NAME):ci
 JAR_GLOB ?= build/libs/$(NAME)-*.jar
-# Host JDK: set GRADLE=./gradlew and record that under Divergences.
 GRADLE ?= podman run --rm -e CI -e GRADLE_USER_HOME=/gradle -v "$$HOME/.gradle":/gradle:Z -v "$(CURDIR)":/work:Z -w /work $(JDK_IMAGE) ./gradlew --console=plain
 
 # The tests that cover the diff. make coverage writes the coverage map.
@@ -103,7 +102,6 @@ clean: ## Remove build/ and .gradle/
 	rm -rf build .gradle
 
 _setup:
-	@$(MAKE) --no-print-directory doctor
 	@set -eu; \
 	mkdir -p "$$HOME/.gradle"; \
 	$(GRADLE) --version; \

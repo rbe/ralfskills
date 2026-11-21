@@ -33,7 +33,9 @@ The `name` in each skill's frontmatter matches its directory. A project installs
 
 `project-setup` and `github-pipeline` each have setup mode and report mode, written in the skill. Setup mode changes only what is missing or off the contract. Report mode names what matches and what is missing, and it changes nothing.
 
-`make toon` writes the ADR index and the skill index for a product repository. In this collection it writes `docs/requirements-index.toon` and the skill index, and it does not create `docs/adr/`. `make decision-log` writes `build/decision-log.md` from the ADRs and the decisions. `project.mk` and `sdlc.mk` include these targets from `record` when the skill is installed, and `make setup` runs `make toon` first. Every Python command, including a one-off `make py ARGS='...'`, runs in Podman on the machine where Make runs. Set `PYTHON_IMAGE` before the include to pick the version. The host does not need Python.
+The rules that hold for every skill stand once, in the `<general_rules>` block of `CLAUDE.md`: the interface, the start of a task, the board, and the gates. Each `SKILL.md` starts with the line ``The general rules in `CLAUDE.md` apply.`` and states only what the skill adds. The body is XML tags: `purpose`, `steps`, `rules`, `output`, and `references`, with `mode` for a skill that has modes, and `questions` and `checks` for a subskill. A table, a sample, or a rule for one condition is in `references/` beside the skill. The agent reads such a file only when a step names it.
+
+`make toon` writes the ADR index and the skill index for a product repository. In this collection it writes `docs/requirements-index.toon` and the skill index, and it does not create `docs/adr/`. `make decision-log` writes `build/decision-log.md` from the ADRs and the decisions. `project.mk` and `sdlc.mk` include these targets from `record` when the skill is installed, and `make setup` runs `make toon` after `make doctor`. Every Python command, including a one-off `make py ARGS='...'`, runs in Podman on the machine where Make runs. Set `PYTHON_IMAGE` before the include to pick the version. The host does not need Python.
 
 ## The cycle
 
@@ -50,6 +52,8 @@ The host needs GNU Make 3.81 or newer, Git, and Podman. It needs no other tool: 
    ```sh
    podman run --rm -v "$PWD":/work:Z -w /work docker.io/library/python:3.13 sh -c 'pip install -q --root-user-action=ignore apm-cli==0.36.1 && apm install'
    ```
+
+   Behind a proxy with its own CA, add `-v <CA file>:/ca.crt:ro -e GIT_SSL_CAINFO=/ca.crt -e SSL_CERT_FILE=/ca.crt` to the `podman run` arguments. For a private repository, add `-e GITHUB_APM_PAT`. `PODMAN_NET_ARGS` holds the same arguments for the Make targets.
 
 2. Tell the agent: `report and integrate`. The [onboard](skills/onboard/SKILL.md) skill carries the order, for a new project and for an existing one.
 

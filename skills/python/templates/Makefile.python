@@ -3,7 +3,8 @@
 #
 # Python runs through $(PYTHON), which is Podman on this machine.
 # Ruff is the formatter and the linter. UNIT_TESTS is every file
-# tests/test_*.py, so a new test file runs with no change here. Change
+# tests/test_*.py and tests/*/test_*.py, so a new test file runs with
+# no change here. Change
 # the pattern when the unit tests are in another place. A project with
 # no dependency to resolve, no artifact to build, or no integration
 # entry keeps that command as `true`.
