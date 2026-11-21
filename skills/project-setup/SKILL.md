@@ -100,7 +100,7 @@ When the required command variables are set, or the Makefile already defines tho
 
 ### Report mode
 
-Read `templates/contract-report.md` in this skill, this skill's `project.mk`, and the Check section. Read the project's `Makefile` and `CLAUDE.md`. `make -qp` shows `.DEFAULT_GOAL`. The include path is `.claude/skills/project-setup/project.mk`, or `.claude/skills/github-pipeline/sdlc.mk` when that file provides `help`.
+Read `templates/contract-report.md` in this skill, this skill's `project.mk`, and the Check section. Read the project's `Makefile` and `CLAUDE.md`. When there is no `Makefile`, mark every row that needs one as `missing`, and do not run `make -qp`. Otherwise `make -qp` shows `.DEFAULT_GOAL`. The include path is `.claude/skills/project-setup/project.mk`, or `.claude/skills/github-pipeline/sdlc.mk` when that file provides `help`.
 
 Fill the skeleton in the reply. `State` is `matches` or `missing`. The verdict lists both. Leave the skill's template blank. Write no project file, do not copy `project.mk`, and do not run `make setup`, `make build`, `make test`, `make docs`, `make login`, or `brew install`.
 

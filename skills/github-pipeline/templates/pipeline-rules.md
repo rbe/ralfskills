@@ -1,6 +1,6 @@
 # Pipeline rules
 
-The shared part is the same in every repository. Change it everywhere or nowhere. This repository is the shared skill collection. This repository's facts go under "This repository" and "Divergences". The Node 24 line is the Node template only. A Gradle project uses the JDK in its template. A project diverges by toolchain and writes that down.
+The shared part is the same in every repository. Change it everywhere or nowhere. This repository's facts go under "This repository" and "Divergences". The Node 24 line is the Node template only. A Gradle project uses the JDK in its template. A project diverges by toolchain and writes that down.
 
 ## Shared rules
 
