@@ -51,4 +51,4 @@ No finding. Left alone: the Python target was not run against a project with an 
 
 ## Release
 
-The branch is pushed. The owner decides on the merge.
+The branch is pushed and merged into the default branch with a pull request, after the owner confirmed. This collection publishes no image.
