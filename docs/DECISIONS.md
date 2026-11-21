@@ -13,3 +13,4 @@ One list. An Open row is work that is not finished. A Decided row is a choice in
 | <a id="d-11"></a>D-11 | Decided | An agent runs a Go program with `make run`, in the container. The file in `build/` is a Linux binary, and `GOOS` and `GOARCH` give the binary of another machine. |
 | <a id="d-12"></a>D-12 | Decided | An id in running text is a link, and a tool writes it. This replaces the rule that a document does not build a path to another document. |
 | <a id="d-13"></a>D-13 | Decided | `sdlc.mk` includes the contract targets of `project-setup`, so the switch from `project.mk` loses no target. A makefile with its own recipes for them sets `SDLC_OWN_CONTRACT = 1`. |
+| <a id="d-14"></a>D-14 | Decided | The talking rules of the owner are the communication contract in `CLAUDE.md` and in its template, and replace the shorter text there. `system-state-report` keeps only the rules that the contract lacks, and sends a missing decision to `record`. |
