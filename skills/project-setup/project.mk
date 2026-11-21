@@ -23,15 +23,12 @@
 # a ## comment. docs and login are listed only when that target exists.
 # The `# help-docs` and `# help-login` markers are how help knows.
 #
-# setup installs jq through Homebrew when brew is on PATH, then any
-# names in BREW_TOOLS, then runs SETUP_CMD. A tool already on PATH is
-# left in place. When brew is missing, setup prints `brew install` and
-# the tool names, then continues if those tools are already on PATH.
-# A missing tool and no Homebrew fails setup before SETUP_CMD.
+# setup runs make doctor, then SETUP_CMD. It installs no tool on the
+# host. The host needs make, git, and podman. Every other tool runs in a
+# Podman image behind a target.
 #
 # Set before the include:
 #   HELP_LEAD        first line of `make help`
-#   BREW_TOOLS       extra tools setup installs. jq is always included
 #   SETUP_CMD        how this project resolves dependencies
 #   BUILD_CMD        how this project produces the artifact
 #   TEST_CMD         how this project runs the unit tests
@@ -54,6 +51,8 @@ PROJECT_MK_DIR := $(dir $(lastword $(MAKEFILE_LIST)))
 include $(PROJECT_MK_DIR)podman-python.mk
 include $(PROJECT_MK_DIR)tools.mk
 include $(PROJECT_MK_DIR)doctor.mk
+include $(PROJECT_MK_DIR)skills.mk
+include $(PROJECT_MK_DIR)old-board.mk
 include $(PROJECT_MK_DIR)test-changed.mk
 -include .claude/skills/project-report/report.mk
 
@@ -73,6 +72,7 @@ help: ## Show the targets
 include $(PROJECT_MK_DIR)contract.mk
 
 -include .claude/skills/record/index.mk
+-include .claude/skills/migrate-docs/migrate.mk
 
 # After the fragments this file includes. A fragment must not replace it.
 .DEFAULT_GOAL := help

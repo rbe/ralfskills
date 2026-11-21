@@ -5,6 +5,7 @@ import importlib.util
 import io
 import json
 import os
+import re
 import tempfile
 import unittest
 from contextlib import redirect_stderr, redirect_stdout
@@ -437,12 +438,14 @@ class ProjectReportTest(unittest.TestCase):
         write(
             root,
             "skills/plan/SKILL.md",
-            "# Plan\n\n## Work\n\n1. Name who owns state.\n",
+            "---\nname: plan\n---\n\n<steps>\n1. Name who owns state.\n</steps>\n",
         )
         write(
             root,
             "skills/develop/SKILL.md",
-            "# Develop\n\n## Work\n\n1. Run `make lint` and `make test`.\n",
+            "---\nname: develop\n---\n\n<purpose>\n1. Not a step.\n</purpose>\n"
+            "<steps>\n1. Run `make lint` and `make test`.\n</steps>\n"
+            "<rules>\n1. Not a step either.\n</rules>\n",
         )
         write(
             root,
@@ -621,6 +624,45 @@ class ProjectReportTest(unittest.TestCase):
             self.assertIn("Run `make lint` and `make test`.", development)
             self.assertIn("project-setup: not installed", development)
 
+    def test_the_reviews_read_the_checks_tag_of_project_setup(self):
+        """id: R-3"""
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            self.sample(root)
+            write(
+                root,
+                "skills/project-setup/SKILL.md",
+                '---\nname: project-setup\n---\n\n<mode name="setup">\n<steps>\n'
+                "1. Ask how the project ships.\n</steps>\n</mode>\n\n<checks>\n"
+                "1. `integration` is the one integration entry.\n"
+                "   Stop when a second one exists.\n"
+                "2. `lint` is one linter.\n</checks>\n",
+            )
+            text, _errors = project_report.build(root)
+            development = text.split("## Development review", 1)[1]
+            self.assertIn(
+                "- 1. `integration` is the one integration entry. "
+                "Stop when a second one exists.\n- 2. `lint` is one linter.\n",
+                development,
+            )
+            self.assertNotIn("Ask how the project ships.", development)
+            self.assertNotIn("Not a step", development)
+
+    def test_the_reviews_still_read_a_skill_that_keeps_the_work_heading(self):
+        """id: R-3"""
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            self.sample(root)
+            write(
+                root,
+                "skills/review/SKILL.md",
+                "# Review\n\n## Steps\n\n1. Not a check.\n\n## Work\n\n"
+                "1. Run the gates.\n\n## Later\n\n1. Not a check.\n",
+            )
+            text, _errors = project_report.build(root)
+            self.assertEqual(text.count("- 1. Run the gates."), 2)
+            self.assertNotIn("Not a check.", text)
+
     def test_make_project_report_is_the_writer(self):
         """id: R-3"""
         for name in ("review", "project-setup", "project-report"):
@@ -722,6 +764,196 @@ class ReportLinkTest(unittest.TestCase):
             rows = requirements.decision_rows(root)
             self.assertEqual([row.id for row in rows], ["D-5"])
             self.assertEqual(requirements.strip_anchor('<a id="d-5"></a>D-5'), "D-5")
+
+
+HOST_TOOL = re.compile(
+    r"(?:^|[\s;|&(])"
+    r"(gh|jq|brew|curl|apm|pip|pip3|npm|npx|node|python|python3|gradle|go)"
+    r" +[a-z-]"
+)
+
+
+PODMAN_VARIABLES = "GO_RUN|GO|NODE_RUN|NODE|GRADLE_RUN|GRADLE|PYTHON|GH|APM"
+
+
+def recipe_lines(path):
+    """The lines of a makefile that are not comments."""
+    lines = path.read_text(encoding="utf-8").splitlines()
+    return [line for line in lines if not line.lstrip().startswith("#")]
+
+
+def host_calls(path):
+    """Recipe lines that call a tool the host does not have.
+
+    The rest of a command that starts with `podman run` or with a
+    Podman variable, as in `$(GO_RUN) go build`, runs in the container.
+    So does a tool inside quotes, as in `sh -c '...'`. A `## ` help text
+    is not a call. GO_FILES is a fragment of a `$(GO_RUN) sh -c` command.
+    """
+    found = []
+    for line in recipe_lines(path):
+        if line.startswith("GO_FILES = "):
+            continue
+        outside = line.split(" ## ")[0]
+        outside = re.sub(r"'[^']*'", "''", outside)
+        outside = re.sub(r'"[^"]*"', '""', outside)
+        outside = re.sub(
+            rf"(podman run|\$\(({PODMAN_VARIABLES})\))[^;|&]*", " ", outside
+        )
+        if HOST_TOOL.search(outside):
+            found.append(f"{path.name}: {line.strip()}")
+    return found
+
+
+class MakeAndPodmanInterfaceTest(unittest.TestCase):
+    SETUP = ROOT / "skills" / "project-setup"
+    PIPELINE = ROOT / "skills" / "github-pipeline"
+
+    def makefiles(self):
+        files = sorted((ROOT / "skills").glob("*/*.mk"))
+        files += sorted((ROOT / "skills").glob("*/templates/Makefile.*"))
+        files.append(ROOT / "Makefile")
+        return files
+
+    def test_no_recipe_calls_a_host_tool_other_than_git_and_podman(self):
+        """id: R-45"""
+        self.assertGreater(len(self.makefiles()), 15)
+        found = []
+        for path in self.makefiles():
+            found += host_calls(path)
+        self.assertEqual(found, [])
+
+    def test_the_host_call_check_finds_a_host_tool(self):
+        """id: R-45"""
+        with tempfile.TemporaryDirectory() as tmp:
+            bad = write(
+                Path(tmp),
+                "bad.mk",
+                "a:\n\tgh api repos/x\n\tif curl -fsS http://x; then true; fi\n"
+                "\tx=$$(jq -r .a f.json)\n\tbrew install jq\n",
+            )
+            good = write(
+                Path(tmp),
+                "good.mk",
+                "# gh api is a comment\na: ## Run go in Podman\n\t$(GH) api repos/x\n"
+                "\t$(GO_RUN) sh -c 'go test ./...'\n\t$(NODE) npm ci\n"
+                "\tpodman run --rm $(GO_IMAGE) go run .\n\tgit log\n",
+            )
+            self.assertEqual(len(host_calls(bad)), 4)
+            self.assertEqual(host_calls(good), [])
+
+    def test_doctor_checks_only_make_git_and_podman(self):
+        """id: R-73"""
+        doctor = "\n".join(recipe_lines(self.SETUP / "doctor.mk"))
+        for tool in ("$(MAKE) --version", "git --version", "podman info"):
+            self.assertIn(tool, doctor)
+        self.assertIn("git remote get-url origin", doctor)
+        self.assertEqual(re.findall(r"command -v (\w+)", doctor), ["podman"])
+        for name in ("doctor.mk", "contract.mk", "tools.mk", "project.mk"):
+            text = (self.SETUP / name).read_text(encoding="utf-8")
+            self.assertNotIn("brew", text.lower())
+        contract = (self.SETUP / "contract.mk").read_text(encoding="utf-8")
+        self.assertIn("@$(MAKE) --no-print-directory doctor", contract)
+
+    def test_apm_runs_in_a_pinned_image_behind_a_target(self):
+        """id: R-16"""
+        tools = (self.SETUP / "tools.mk").read_text(encoding="utf-8")
+        image = re.search(r"^APM_IMAGE \?= (\S+)$", tools, re.M).group(1)
+        version = re.search(r"^APM_VERSION \?= (\S+)$", tools, re.M).group(1)
+        self.assertIn("$(APM_IMAGE)", tools)
+        self.assertIn('"apm-cli==$(APM_VERSION)"', tools)
+        skills = (self.SETUP / "skills.mk").read_text(encoding="utf-8")
+        for target in ("skills-install:", "skills-update:", "apm:"):
+            self.assertIn("\n" + target + " ## ", skills)
+        self.assertIn("$(APM) install $(if $(DRY_RUN),--dry-run)", skills)
+        self.assertIn("$(APM) update $(if $(DRY_RUN),--dry-run,--yes)", skills)
+        project = (self.SETUP / "project.mk").read_text(encoding="utf-8")
+        self.assertIn("include $(PROJECT_MK_DIR)skills.mk", project)
+        sdlc = (self.PIPELINE / "sdlc.mk").read_text(encoding="utf-8")
+        self.assertIn("project-setup/skills.mk", sdlc)
+        readme = (ROOT / "README.md").read_text(encoding="utf-8")
+        start = [line for line in readme.splitlines() if "apm install'" in line]
+        self.assertEqual(len(start), 1)
+        self.assertTrue(start[0].strip().startswith("podman run --rm "))
+        self.assertIn(f" {image} ", start[0])
+        self.assertIn(f"apm-cli=={version} ", start[0])
+
+    def test_the_readme_updates_the_skills_through_make(self):
+        """id: R-72"""
+        readme = (ROOT / "README.md").read_text(encoding="utf-8")
+        self.assertIn("Run `make skills-update`.", readme)
+        self.assertIn("`make skills-update DRY_RUN=1`", readme)
+        self.assertNotIn("Run `apm update`", readme)
+        self.assertNotIn("run `apm install`", readme)
+
+    def test_old_board_is_a_target_and_migrate_docs_types_no_host_command(self):
+        """id: R-21"""
+        board = (self.SETUP / "old-board.mk").read_text(encoding="utf-8")
+        paths = re.search(r"^OLD_BOARD_PATHS := (.+)$", board, re.M).group(1).split()
+        self.assertEqual(
+            paths,
+            [
+                "docs/BUGS.md",
+                "docs/WAVES.md",
+                "docs/FEATURES.md",
+                "docs/bugs",
+                "docs/waves",
+                "docs/features",
+            ],
+        )
+        self.assertIn("\nold-board: ## ", board)
+        self.assertIn("exit 1", board)
+        migrate = (ROOT / "skills" / "migrate-docs" / "migrate.mk").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("project-setup/old-board.mk", migrate)
+        self.assertIn("\nold-board-delete: ## ", migrate)
+        project = (self.SETUP / "project.mk").read_text(encoding="utf-8")
+        self.assertIn("include $(PROJECT_MK_DIR)old-board.mk", project)
+        self.assertIn("-include .claude/skills/migrate-docs/migrate.mk", project)
+        sdlc = (self.PIPELINE / "sdlc.mk").read_text(encoding="utf-8")
+        self.assertIn("project-setup/old-board.mk", sdlc)
+        self.assertIn("-include .claude/skills/migrate-docs/migrate.mk", sdlc)
+        skill = (ROOT / "skills" / "migrate-docs" / "SKILL.md").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("`make old-board`", skill)
+        self.assertIn("`make old-board-delete`", skill)
+        self.assertNotIn("ls -d", skill)
+        self.assertNotIn("rmdir", skill)
+
+    def test_the_github_cli_runs_in_podman_with_the_token_of_the_environment(self):
+        """id: R-46"""
+        sdlc = (self.PIPELINE / "sdlc.mk").read_text(encoding="utf-8")
+        self.assertRegex(sdlc, r"(?m)^GH_VERSION \?= \d+\.\d+\.\d+$")
+        self.assertRegex(sdlc, r"(?m)^GH_BASE_IMAGE \?= \S+:\S+$")
+        gh = re.search(r"^GH = (.+)$", sdlc, re.M).group(1)
+        self.assertTrue(gh.startswith("podman run --rm "))
+        self.assertIn("-e GH_TOKEN -e GITHUB_TOKEN", gh)
+        self.assertTrue(gh.endswith("$(GH_IMAGE)"))
+        self.assertIn("\ngh-image: ## ", sdlc)
+        self.assertEqual(sdlc.count("$(GH) api"), 8)
+        self.assertEqual(host_calls(self.PIPELINE / "sdlc.mk"), [])
+        for target in (
+            "cleanup-container-versions",
+            "cleanup-github-releases",
+            "cleanup-actions-artifacts",
+        ):
+            recipe = sdlc.split("\n" + target + ": ## ")[1].split("\n\n")[0]
+            self.assertIn("$(THIS_MAKE) --no-print-directory gh-image", recipe)
+            self.assertIn("$(GH) api", recipe)
+        gradle = (self.PIPELINE / "templates" / "Makefile.gradle").read_text(
+            encoding="utf-8"
+        )
+        self.assertEqual(gradle.count("$(GH) release"), 3)
+        self.assertEqual(gradle.count('-R "$(PACKAGE)"'), 3)
+        for name in ("ci.make.yml", "ci.node.yml", "ci.gradle.yml"):
+            workflow = (self.PIPELINE / "templates" / name).read_text(encoding="utf-8")
+            runs = re.findall(r"^\s+(?:- )?run: (.+)$", workflow, re.M)
+            self.assertGreater(len(runs), 8)
+            for run in runs:
+                self.assertRegex(run, r"^make [a-z-]+$")
+            self.assertIn("GH_TOKEN: ${{ github.token }}", workflow)
 
 
 if __name__ == "__main__":

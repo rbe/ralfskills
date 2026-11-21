@@ -42,7 +42,9 @@ The include is `.claude/skills/project-setup/project.mk`. A repository that incl
 | `DOCS_CMD` is non-empty when the repository renders docs | | |
 | Gradle, npm, Podman, python, and tar run inside those targets | | |
 | No `.ONESHELL`, no Make 4 function, no shell-script wrapper. GNU Make 3.81 | | |
-| `setup` installs `jq` through Homebrew when `brew` is on `PATH` | | |
+| `setup` runs `make doctor` first and installs no tool on the host | | |
+| `doctor`, `skills-install`, `skills-update`, and `old-board` exist | | |
+| No recipe calls a host tool other than `git` and `podman` | | |
 
 ## Filled in
 

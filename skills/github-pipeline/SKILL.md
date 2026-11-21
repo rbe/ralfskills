@@ -90,7 +90,7 @@ This repository is the shared skill collection. Node 24 is the Node template onl
 | `templates/pipeline-rules.md` | `docs/pipeline-rules.md`. Points at `project-setup` for the Make contract |
 | `templates/contract-report.md` | Report mode skeleton. The reply fills it. The file in this skill stays blank |
 
-No shell script is shipped. Version, both cleanups, artifact cleanup, the report, logging, `help`, and `ci` are recipes in `sdlc.mk`. `gh api --jq` does the listing. A short `awk` plan inside the cleanup recipe picks what to keep. That stayed readable, so it did not become a script.
+No shell script is shipped. Version, both cleanups, artifact cleanup, the report, logging, `help`, and `ci` are recipes in `sdlc.mk`. `gh api --jq` does the listing. The GitHub CLI runs in Podman through `$(GH)`, in the image that `make gh-image` builds from `GH_BASE_IMAGE` and `GH_VERSION`. The host needs no `gh` and no `jq`. The token is `GH_TOKEN` or `GITHUB_TOKEN` of the environment. A short `awk` plan inside the cleanup recipe picks what to keep. That stayed readable, so it did not become a script.
 
 ## How a repository uses it
 

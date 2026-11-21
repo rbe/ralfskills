@@ -19,7 +19,9 @@ NODE_VERSION ?= 24
 NODE_IMAGE ?= docker.io/library/node:$(NODE_VERSION)-bookworm-slim
 CI_IMAGE ?= localhost/$(NAME):ci
 PORT ?= 4173
-SMOKE_PORT ?= 18080
+# curl runs in this image for the smoke check of make build. It joins
+# the network of the smoke container, so no port of the host is used.
+CURL_IMAGE ?= docker.io/curlimages/curl:8.17.0
 SMOKE_PATH ?= /api/health
 SMOKE_NEEDLE ?= ok
 DATA_DIR ?= data
@@ -128,11 +130,11 @@ _build:
 	$(THIS_MAKE) --no-print-directory image; \
 	name=$(NAME)-smoke; \
 	podman rm -f "$$name" >/dev/null 2>&1 || true; \
-	podman run -d --name "$$name" -p 127.0.0.1:$(SMOKE_PORT):$(PORT) -e PORT=$(PORT) "$(CI_IMAGE)" >/dev/null; \
+	podman run -d --name "$$name" -e PORT=$(PORT) "$(CI_IMAGE)" >/dev/null; \
 	ok=0; \
 	i=0; \
 	while [ "$$i" -lt 30 ]; do \
-	  if curl -fsSk "https://127.0.0.1:$(SMOKE_PORT)$(SMOKE_PATH)" 2>/dev/null | grep -qF '$(SMOKE_NEEDLE)'; then ok=1; break; fi; \
+	  if podman run --rm --network "container:$$name" $(CURL_IMAGE) -fsSk "https://127.0.0.1:$(PORT)$(SMOKE_PATH)" 2>/dev/null | grep -qF '$(SMOKE_NEEDLE)'; then ok=1; break; fi; \
 	  i=$$((i + 1)); sleep 1; \
 	done; \
 	podman rm -f "$$name" >/dev/null 2>&1 || true; \

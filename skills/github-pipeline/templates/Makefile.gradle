@@ -150,10 +150,11 @@ _publish-github:
 	version=$$($(THIS_MAKE) -s --no-print-directory version); \
 	asset=build/dist/$(NAME)-$$version.jar; \
 	cp build/dist/$(NAME).jar "$$asset"; \
-	if gh release view "$$version" >/dev/null 2>&1; then \
-	  gh release upload "$$version" "$$asset" --clobber; \
+	$(THIS_MAKE) --no-print-directory gh-image; \
+	if $(GH) release view "$$version" -R "$(PACKAGE)" >/dev/null 2>&1; then \
+	  $(GH) release upload "$$version" "$$asset" -R "$(PACKAGE)" --clobber; \
 	else \
-	  gh release create "$$version" "$$asset" --title "$$version" \
+	  $(GH) release create "$$version" "$$asset" -R "$(PACKAGE)" --title "$$version" \
 	    --notes "Build $$version." --target "$$(git rev-parse HEAD)"; \
 	fi; \
 	printf '# publish-github\n\nStatus: released\nRelease: %s\n' "$$version" > build/summaries/publish-github.md

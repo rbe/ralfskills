@@ -17,31 +17,11 @@ REGISTRY ?= ghcr.io
 
 .PHONY: setup build test project-report editorconfig format format-fix lint integration coverage
 
-# Real recipe for the tools every project shares, then the project stub.
+# doctor first, then the project stub. setup installs no tool on the
+# host: every tool is a Podman image behind a target.
 setup: ## Resolve dependencies
 	@$(MAKE) --no-print-directory doctor
 	@set -eu; \
-	tools="jq $(BREW_TOOLS)"; \
-	list=""; \
-	for tool in $$tools; do \
-	  if [ -z "$$tool" ]; then continue; fi; \
-	  case " $$list " in \
-	    *" $$tool "*) continue ;; \
-	  esac; \
-	  if [ -z "$$list" ]; then list="$$tool"; else list="$$list $$tool"; fi; \
-	done; \
-	if command -v brew >/dev/null 2>&1; then \
-	  for tool in $$list; do \
-	    if ! command -v "$$tool" >/dev/null 2>&1; then brew install "$$tool"; fi; \
-	  done; \
-	else \
-	  for tool in $$list; do \
-	    if ! command -v "$$tool" >/dev/null 2>&1; then \
-	      printf '%s\n' "Missing $$tool. Homebrew is not on PATH. Install it with: brew install $$tool" >&2; \
-	      exit 1; \
-	    fi; \
-	  done; \
-	fi; \
 	if [ -z "$(SETUP_CMD)" ]; then \
 	  printf '%s\n' "setup: stub. Set SETUP_CMD before the include. Resolve this project's dependencies." >&2; \
 	  exit 1; \
