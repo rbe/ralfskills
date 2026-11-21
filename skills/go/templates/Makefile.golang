@@ -6,13 +6,17 @@
 # not directories of the project. A project with no integration entry
 # keeps that command as `true`.
 #
-# A new project has no go.mod yet. Create it through Make:
-#   make go ARGS='mod init example.com/<project>'
-# Add build/ and bin/ to .gitignore.
+# A new project, or a project with no go.mod yet, runs
+#   make go-tooling
+# once. MODULE sets the module path, for example:
+#   make go-tooling MODULE=github.com/acme/app
 #
 # lint, test, and build fail until the first Go file exists. coverage
 # and test-changed fail until the first unit test exists.
 
+# The module path of a new project, and the name of its directory.
+NAME ?= $(notdir $(CURDIR))
+MODULE ?= example.com/$(NAME)
 GO_IMAGE ?= docker.io/library/golang:1.25-bookworm
 # The Go caches are volumes of this project. Two projects on one machine
 # do not share a volume, so their containers do not wait for each other.
@@ -75,3 +79,22 @@ run: ## Run the program in Podman on this machine. Set BIN. ARGS are its argumen
 	if [ -z "$(BIN)" ]; then printf '%s\n' "run: set BIN to the name of the binary. A library has no program to run." >&2; exit 1; fi; \
 	tty=""; if [ -t 0 ] && [ -t 1 ]; then tty="-it"; fi; \
 	podman run --rm $$tty $(GO_OPTS) $(GO_IMAGE) go run $(BIN_PKG) $(ARGS)
+
+# One target for the Go tooling, every step through Podman:
+# 1. go.mod (go mod init MODULE) when missing
+# 2. .editorconfig from project-setup when missing
+# 3. build/ and bin/ in .gitignore, each line when missing
+# 4. make format-fix, when the project has a Go package already
+# gofmt and go vet come with the Go image, so nothing is installed.
+# A file already in the project stays as it is.
+.PHONY: go-tooling
+go-tooling: ## Set up go.mod, EditorConfig, and .gitignore, then format
+	@set -eu; \
+	if [ ! -f go.mod ]; then $(GO) mod init $(MODULE); fi; \
+	if [ ! -f .editorconfig ]; then cp .claude/skills/project-setup/templates/editorconfig .editorconfig; fi; \
+	touch .gitignore; \
+	for line in build/ bin/; do \
+	  if ! grep -qx "$$line" .gitignore; then printf '%s\n' "$$line" >> .gitignore; fi; \
+	done; \
+	if [ -n "$$($(GO) list ./... 2>/dev/null)" ]; then $(MAKE) --no-print-directory format-fix; \
+	else echo "go-tooling: no Go package yet, so nothing to format."; fi

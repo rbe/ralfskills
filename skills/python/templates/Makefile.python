@@ -7,6 +7,10 @@
 # the pattern when the unit tests are in another place. A project with
 # no dependency to resolve, no artifact to build, or no integration
 # entry keeps that command as `true`.
+#
+# A new project, or a project with no .coveragerc yet, runs
+#   make python-tooling
+# once. A file already in the project stays as it is.
 
 UNIT_TESTS = $(wildcard tests/test_*.py tests/*/test_*.py)
 
@@ -28,3 +32,21 @@ COVERAGE_CMD = set -eu; \
 include .claude/skills/project-setup/project.mk
 
 # Project targets and overrides.
+
+# One target for the Python tooling, every step through Podman:
+# 1. .coveragerc from the python skill and .editorconfig from
+#    project-setup, each one when missing
+# 2. build/, __pycache__/, and .venv/ in .gitignore, each line when missing
+# 3. make format-fix, so make format passes from the first commit
+# Ruff and diff-cover are container images, so nothing is installed.
+# A file already in the project stays as it is.
+.PHONY: python-tooling
+python-tooling: ## Set up .coveragerc, EditorConfig, and .gitignore, then format
+	@set -eu; \
+	if [ ! -f .coveragerc ]; then cp .claude/skills/python/templates/coveragerc .coveragerc; fi; \
+	if [ ! -f .editorconfig ]; then cp .claude/skills/project-setup/templates/editorconfig .editorconfig; fi; \
+	touch .gitignore; \
+	for line in build/ __pycache__/ .venv/; do \
+	  if ! grep -qx "$$line" .gitignore; then printf '%s\n' "$$line" >> .gitignore; fi; \
+	done; \
+	$(MAKE) --no-print-directory format-fix

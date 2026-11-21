@@ -49,4 +49,4 @@ No finding. Left alone: a project that keeps Jest or Vitest has no test runner s
 
 ## Release
 
-The branch is pushed. The owner decides on the merge.
+The branch is pushed and merged into the default branch with a pull request, after the owner confirmed. This collection publishes no image.
