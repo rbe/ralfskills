@@ -57,6 +57,20 @@ A request goes through `plan`, `develop`, `review`, and `release`. A new or vagu
 
 Then the first slice starts with `plan`.
 
+## Update
+
+This collection has tags named `vMAJOR.MINOR.PATCH`. A project that wants a fixed version sets `ref: v0.1.0` under the `git:` line of `apm.yml`. Without `ref`, APM follows the default branch and prints a warning.
+
+To take a newer version:
+
+1. Change `ref` to the new tag. Skip this step when the project has no `ref`.
+2. Run `apm update`. `apm update --dry-run` shows the plan and changes nothing. `apm update --yes` skips the question, for CI. `apm install --update` is deprecated in APM 0.36.1.
+3. Run `make toon` and `make links`, because a new skill can add rows to the indexes and the links.
+4. Run the gates: `make editorconfig`, `make format`, `make lint`, `make test`, and `make ci` when the project has a workflow.
+5. Commit `.claude/skills/`, `apm.yml`, and `apm.lock.yaml` together, on the default branch.
+
+`apm update` overwrites a skill file that a person changed in `.claude/skills/`. Keep project rules in a project skill or in `CLAUDE.md`, not in an installed file. A new Makefile template does not change the `Makefile` of the project. Run `project-setup` in report mode to see what a new version adds.
+
 ## How APM loads them
 
 The `apm.yml` of a project needs `name` and `version`. APM refuses the file without them. `apm install` reads every `skills/<name>/` directory and copies it to `.claude/skills/<name>/`, including makefiles, `references/`, `scripts/`, and `templates/` inside the skills. That was tested with APM 0.36.1: nine skills installed into a sample project, and `make toon`, `make ids`, `make project-report`, and `make decision-log` ran there. This collection itself has no root `apm.yml`. APM does not need one in a skill collection.
