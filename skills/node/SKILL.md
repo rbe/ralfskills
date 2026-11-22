@@ -20,8 +20,7 @@ This skill names the tools and the Make targets for JavaScript and TypeScript fi
 
 <rules>
 - The formatter is Prettier. The linter is ESLint, also for TypeScript.
-- `templates/Makefile.node` beside this skill is the Makefile of a Node project on `project.mk`. The comment at its top explains each command.
-- A workflow step calls a Make target. It does not call the package manager.
+- The comment at the top of `templates/Makefile.node` explains each command.
 - A library sets `exports` and `files` in `package.json`. `make build` then packs only the source. `references/tooling.md` has the command.
 - A framework file does not replace this skill or the stage skill.
 </rules>

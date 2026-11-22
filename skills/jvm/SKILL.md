@@ -18,7 +18,6 @@ This skill gives the Make targets and the code rules for Java, Groovy, Grails, a
 </steps>
 
 <rules>
-- `templates/Makefile.gradle` beside this skill is the Makefile of a Gradle project on `project.mk`. It fills in each command variable.
 - In a recipe, `$(GRADLE)` runs the Gradle wrapper in Podman. `make build` runs Gradle.
 - `make wrapper` writes the Gradle wrapper alone.
 - The formatter of Java is google-java-format. The linter of Java is Checkstyle. The linter of Groovy is CodeNarc. `templates/Makefile.gradle` runs only Checkstyle, so a Groovy project sets `LINT_CMD` to add it.

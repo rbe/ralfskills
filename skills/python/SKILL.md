@@ -18,7 +18,6 @@ This skill gives the Make targets and the code rules for Python files.
 </steps>
 
 <rules>
-- `templates/Makefile.python` beside this skill is the Makefile of a Python project. Take each command from it.
 - In a recipe, `$(PYTHON)` runs Python in Podman. `make setup` resolves the dependencies.
 - The formatter is Ruff (`ruff format`). The linter is Ruff (`ruff check`). Ruff does not read `.claude/`, `apm_modules/`, or `docs/`.
 - `make coverage` runs coverage.py and then diff-cover.

@@ -66,13 +66,14 @@ wrapper: ## Write the Gradle wrapper in Podman. A new project runs this once
 #    needs the settings file of step 1 to write it.
 # 3. build/ and .gradle/ in .gitignore, each line when missing
 # 4. make format-fix, so make format passes from the first commit
-# A file already in the project stays as it is. Set the group in
-# build.gradle afterwards.
+# A file already in the project stays as it is, and a Kotlin build file
+# (build.gradle.kts, settings.gradle.kts) counts as present. Set the
+# group in the build file afterwards.
 .PHONY: jvm-tooling
 jvm-tooling: ## Set up the wrapper, Gradle files, Checkstyle, and EditorConfig, then format
 	@set -eu; \
-	if [ ! -f build.gradle ]; then cp .claude/skills/jvm/templates/build.gradle build.gradle; fi; \
-	if [ ! -f settings.gradle ]; then sed "s/'project-name'/'$(NAME)'/" .claude/skills/jvm/templates/settings.gradle > settings.gradle; fi; \
+	if [ ! -f build.gradle ] && [ ! -f build.gradle.kts ]; then cp .claude/skills/jvm/templates/build.gradle build.gradle; fi; \
+	if [ ! -f settings.gradle ] && [ ! -f settings.gradle.kts ]; then sed "s/'project-name'/'$(NAME)'/" .claude/skills/jvm/templates/settings.gradle > settings.gradle; fi; \
 	if [ ! -f config/checkstyle/checkstyle.xml ]; then mkdir -p config/checkstyle; cp .claude/skills/jvm/templates/checkstyle.xml config/checkstyle/checkstyle.xml; fi; \
 	if [ ! -f gradlew ]; then $(MAKE) --no-print-directory wrapper; fi; \
 	if [ ! -f .editorconfig ]; then cp .claude/skills/project-setup/templates/editorconfig .editorconfig; fi; \

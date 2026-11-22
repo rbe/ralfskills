@@ -14,14 +14,14 @@ The report is successful if the reader understands each sentence on the first re
 1. Collect the evidence. Read before you write. Write down each thing that you cannot read or run. It goes in the section "Not verified".
    - The repository: structure, entry points, configuration, tests.
    - The history: `git log`, and the diffs of the period that the user names. If the user names no period, use the time since the last report in `reports/`, or the full history.
-   - The board: `docs/DECISIONS.md`, `docs/KNOWN_ISSUES.md`, `docs/REQUIREMENTS.md`, the ADRs in `docs/adr/`, and the history files in `docs/history/`, each when it exists.
+   - The board, each file when it exists: `docs/DECISIONS.md`, `docs/KNOWN_ISSUES.md`, `docs/REQUIREMENTS.md`, the ADRs in `docs/adr/`, and the history files in `docs/history/`.
    - `build/project-report.md`, after you run `make project-report`, when `project-report` is installed.
    - The current chat, and the transcripts or notes that the user supplies.
-   - The result of `make test`, and of the target that `CLAUDE.md` names for starting the system, if it names one. Run each only if it changes no data and no external system. Record the real result.
+   - The result of `make test`, and of the target that `CLAUDE.md` names for starting the system. Run each only if it changes no data and no external system. Record the real result.
 2. Build the glossary before you write the report.
    - List the things that the report must name: components, data, actors, processes.
    - Select one name for each thing. Prefer the word of the user, then the identifier in the code, then a plain descriptive phrase.
-   - Find each label that appears in a chat or a commit message, but not in the code and not in the words of the user. Replace it with a selected name, or define it in one sentence.
+   - Replace each label that appears in a chat or a commit message, but not in the code and not in the words of the user, with a selected name, or define it in one sentence.
    - Write a table: the name, what it is in one sentence, and its path in the project.
 3. Write the report in the language of the user. Use these sections in this order. If a section has no content, say so in one line.
    1. Summary. Maximum 5 sentences: what the system does now, the largest difference from what was asked, and the number of decisions that wait for the human.
@@ -32,13 +32,7 @@ The report is successful if the reader understands each sentence on the first re
    6. Risks and defects. Only those that you can point to, each with the location and the effect.
    7. Decisions for you. Each item is a question that the human answers with a selection. Give the options, the effect of each option, and your recommendation with one reason.
    8. Glossary. The table from step 2.
-4. Run the cold-reader check, because you cannot find your own unclear terms. Give a subagent only the report: no code, no chat, no explanation. Ask it to return the items below. Correct each finding. If the first run had more than 5 findings, run the check again.
-   - Each term that the report does not define and that is not a common word.
-   - Each sentence that it can read in two ways.
-   - Each statement without a source and a status.
-   - Each sentence that breaks the communication contract or a rule of this skill.
-   - For each item in "Decisions for you": whether it can select an option with only the report.
-   If you cannot start a subagent, read the report sentence by sentence against the glossary and the rules. Tell the user that no independent reader checked the report.
+4. Read `references/cold-reader.md` and run the cold-reader check.
 5. Save the report as `reports/state-YYYY-MM-DD.md`.
 6. Ask `record` to add each decision that step 3 marked as missing from the board. A row that `record` adds has the status Decided.
 7. In the chat, give the summary, the list "Decisions for you", and the rows that `record` added. Do not repeat the full report.
@@ -61,3 +55,7 @@ The report is successful if the reader understands each sentence on the first re
 <example>
 The import job tries a failed write 3 times. Status: read. Source: `db/orders.py:41`.
 </example>
+
+<references>
+- `references/cold-reader.md`: the cold-reader check of step 4. Read it in step 4.
+</references>

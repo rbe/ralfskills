@@ -22,7 +22,7 @@ The general rules in `CLAUDE.md` apply.
 4. If the files in hand have two languages, split them into two disjoint file sets. Finish one set before you edit the other.
 5. Write the change, and write a unit test for each behaviour change.
    Stop when one target runs both unit tests and integration tests.
-6. Give each test its `id:` line. The rules of `record` under "Tests" state which id the line names and the form of the line in each language.
+6. Give each test its `id:` line. The test rules of `record` state which id the line names and the form of the line in each language.
    If a test has no ADR and no Decided row to name, ask `record` to write the Decided row.
 7. Compare the change with the general rules on tests, fixtures, methods, and names. Stop when the change breaks one.
 8. Run `make coverage`, then `make test-changed`.
@@ -38,5 +38,4 @@ The general rules in `CLAUDE.md` apply.
 <rules>
 - The Develop section does not copy the proposal.
 - A method that first rejects bad input and then does one computation does one thing.
-- The recipe of `make coverage` marks a new file with `git add -N`. A file that Git does not track yet is therefore in `build/coverage/diff.md`.
 </rules>

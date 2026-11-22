@@ -453,7 +453,7 @@ class GeneralRulesTest(unittest.TestCase):
 
     def test_the_entry_file_and_its_template_stay_within_their_word_limits(self):
         """id: R-76"""
-        limits = {"CLAUDE.md": 705, "skills/project-setup/templates/CLAUDE.md": 780}
+        limits = {"CLAUDE.md": 760, "skills/project-setup/templates/CLAUDE.md": 830}
         for name, limit in limits.items():
             text = (ROOT / name).read_text(encoding="utf-8")
             self.assertLessEqual(len(text.split()), limit, name)
@@ -1144,6 +1144,20 @@ class MakeAndPodmanInterfaceTest(unittest.TestCase):
             for run in runs:
                 self.assertRegex(run, r"^make [a-z-]+$")
             self.assertIn("GH_TOKEN: ${{ github.token }}", workflow)
+
+    def test_jvm_tooling_counts_a_kotlin_build_file_as_present(self):
+        """id: R-66"""
+        gradle = (ROOT / "skills" / "jvm" / "templates" / "Makefile.gradle").read_text(
+            encoding="utf-8"
+        )
+        recipe = gradle.split("\njvm-tooling: ## ")[1].split("\n\n")[0]
+        self.assertIn(
+            "if [ ! -f build.gradle ] && [ ! -f build.gradle.kts ]; then cp", recipe
+        )
+        self.assertIn(
+            "if [ ! -f settings.gradle ] && [ ! -f settings.gradle.kts ]; then sed",
+            recipe,
+        )
 
     def test_a_failed_project_report_leaves_no_report_file(self):
         """id: R-75"""

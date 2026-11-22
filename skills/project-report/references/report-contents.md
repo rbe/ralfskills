@@ -3,7 +3,7 @@
 ## Requirements-to-tests map
 
 - The map names which tests prove each requirement id, and which ids have no test.
-- The Tests rules of `record` state the form of the `id:` line. In a Python test, the test is the proof. In a test file of another language, the file is the proof.
+- The test rules of `record` state the form of the `id:` line. In a Python test, the test is the proof. In a test file of another language, the file is the proof.
 - A file under `.claude/`, `apm_modules/`, `node_modules/`, or `build/` is not a project test. The map does not read it.
 
 ## Sources of the two reviews

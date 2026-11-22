@@ -22,5 +22,4 @@
 - `skills` names each skill whose work the ADR governs. Each name is an installed skill: a stage, a language skill, or a subskill.
 - A rule for every change names the two stages that every slice uses: `skills: [develop, review]`.
 - A rule for one language names that language skill too: `skills: [python, develop, review]`.
-- `develop` and `review` open an accepted ADR when `skills` names a skill the slice uses.
 - An ADR with an empty `skills` list has no reader. Do not write one.

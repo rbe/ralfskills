@@ -20,8 +20,6 @@ This skill gives the Make targets and the code rules for Go files.
 </steps>
 
 <rules>
-- `templates/Makefile.golang` beside this skill is the Makefile of a Go project on `project.mk`. Take each command from it.
-- A project that keeps its own Makefile can have no target `go` or `go-tooling`. Then invoke `project-setup` to add it.
 - `$(GO)` runs Go in Podman on this machine. `make setup` downloads the modules.
 - The formatter is gofmt. The linter is `go vet`.
 - `make format` lists the files that gofmt would change, and it fails when there is one.

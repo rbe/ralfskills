@@ -17,7 +17,7 @@ This skill is the order of the other skills. Each skill named in a step owns the
    - Run `make -f .claude/skills/project-setup/old-board.mk old-board`. A failure of this target does not stop this run. Step 5 handles it.
    - Name `AGENTS.md` if it exists.
    - Read each of `Makefile`, `CLAUDE.md`, `README.md`, and `.github/workflows/` that exists.
-   - Run `git remote get-url origin`. Take the host, the owner, and the name from the result. If there is no remote `origin`, name that in the reply and leave out each push of this run. Ask the owner for the owner and the name only if step 8 runs.
+   - Run `git remote get-url origin`. Take the host, the owner, and the name from the result. If there is no remote `origin`, name that in the reply. Ask the owner for the owner and the name only if step 8 runs.
    - Run `git branch --show-current` to read the default branch.
 4. Ask the owner how the project ships, as setup step 1 of `project-setup` says. That step does not ask again in this run. A project on `github.com` that ships an image publishes through GitHub. If the project does not publish through GitHub, leave `github-pipeline` out of `apm.yml` and out of the skill list of `CLAUDE.md`.
 5. If the old board or `AGENTS.md` exists, run `migrate-docs`.

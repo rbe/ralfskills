@@ -4,13 +4,12 @@
 
 `make jvm-tooling` sets up a new Gradle project in one run. It does these things in order:
 
-1. If `build.gradle` is missing, it writes `build.gradle` from `templates/build.gradle`.
-2. If `settings.gradle` is missing, it writes `settings.gradle` from `templates/settings.gradle` with the project name `NAME`. The default of `NAME` is the directory name.
+1. If neither `build.gradle` nor `build.gradle.kts` exists, it writes `build.gradle` from `templates/build.gradle`.
+2. If neither `settings.gradle` nor `settings.gradle.kts` exists, it writes `settings.gradle` from `templates/settings.gradle` with the project name `NAME`. The default of `NAME` is the directory name.
 3. If `config/checkstyle/checkstyle.xml` is missing, it writes that file from `templates/checkstyle.xml`.
 4. If `gradlew` is missing, it runs `make wrapper`, which writes the Gradle wrapper.
-5. If `.editorconfig` is missing, it writes `.editorconfig`.
-6. It adds `build/` and `.gradle/` to `.gitignore`.
-7. It runs `make format-fix`.
+5. It adds `build/` and `.gradle/` to `.gitignore`.
+6. It runs `make format-fix`.
 
 ## After the first run
 

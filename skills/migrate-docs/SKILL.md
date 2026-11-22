@@ -15,7 +15,7 @@ This skill moves each still-true fact of the old board to the new board and dele
 3. Ask `record` to retire every old label that was used as an id, also a label whose text you did not copy. Name the old label in the text of the new row or file, so that a person can still find it.
 4. If `AGENTS.md` exists, move each constraint that is still true into `CLAUDE.md` and run `git rm AGENTS.md`. If `CLAUDE.md` does not exist, write it with the project title, the one sentence of `README.md` that says what the project is, and the constraints.
 5. Run `make old-board-delete` in the same change, or `make -f .claude/skills/migrate-docs/migrate.mk old-board-delete` when the Makefile has no include. The target deletes the six paths and then runs `make old-board`. Run no other skill until it passes.
-6. Commit the files that this skill wrote or deleted. Push when the project has a remote `origin`.
+6. Commit the files that this skill wrote or deleted. Push.
 </steps>
 
 <rules>

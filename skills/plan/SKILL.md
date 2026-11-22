@@ -15,7 +15,7 @@ The general rules in `CLAUDE.md` apply.
    If the index names an ADR that this slice can change, read that ADR.
 2. For each row of `docs/skill-index.toon` with the `kind` `check`, in file order: read that skill and ask its questions.
    If the request is too vague for these questions, do step 3 first. Ask them when the slice is one sentence.
-   Keep one line for each row with the answers, as `security: no listener, no secret.` If there is no `check` row, the line is `checks: none installed`. A row without a line fails this step.
+   Write the line with the answers, as `security: no listener, no secret.`
 3. Ask the owner until the slice is one sentence with an out-of-scope line.
    Architectural patterns are part of these questions.
    Before the slice closes, ask what the result looks like: the output or the interface, the empty case, and the error case. `develop` cannot ask the owner later.
@@ -25,7 +25,7 @@ The general rules in `CLAUDE.md` apply.
    If that sentence is missing, stop.
 5. Evaluate architecture, scalability, and code quality against the constraints of this system. Prefer the smallest design that stays operable and maintainable.
    When a choice is expensive to reverse, name the options, recommend one, and wait. Otherwise implement it in small modules.
-6. If the owner answers a choice that is expensive to reverse, ask `record` for an ADR id. `record` writes `docs/adr/<id>.md` with the status `Accepted`.
+6. If the owner answers a choice that is expensive to reverse, ask `record` for an ADR id.
    A storage format, a protocol, and the interface of a library are such choices. The project is a library when the entry file says it ships as a library package.
    For a library interface, the ADR is the public names and their signatures. What a function does is Decided rows.
    A choice that is cheap to reverse is a Decided row.
@@ -40,7 +40,6 @@ The general rules in `CLAUDE.md` apply.
 
 <rules>
 - Ask the owner one question at a time. Ask only what the code and the board do not answer.
-- For a subskill that is not installed, write the line `<name>: not installed`.
 - Do not ask a question that an accepted ADR, a Decided row, or an open proposal already answers.
 - If the code or the board answers a question of step 2, write that answer in the line of that row.
 - The roadmap line holds only the id of the slice. The questions and answers stay in the Plan section.
