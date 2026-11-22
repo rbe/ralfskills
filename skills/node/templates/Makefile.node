@@ -52,7 +52,7 @@ TEST_CHANGED_CMD = chosen=$$($(PYTHON) .claude/skills/project-report/scripts/cha
 
 include .claude/skills/project-setup/project.mk
 
-# Project targets and overrides.
+# Project targets.
 
 .PHONY: npm
 npm: ## Run npm in Podman on this machine. Set ARGS.

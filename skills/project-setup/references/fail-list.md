@@ -11,6 +11,7 @@ The repository fails this contract when:
 - `SETUP_CMD`, `BUILD_CMD`, or `TEST_CMD` is empty, or `DOCS_CMD` is empty while the repository renders docs
 - a person, an agent, or a workflow step runs Gradle, npm, Podman, python, or tar directly, except the one `podman run` line of the README, instead of `make setup`, `make build`, `make test`, `make docs`, or `make login`
 - the Makefile does not include `.claude/skills/project-setup/project.mk` before any target, unless it includes `.claude/skills/github-pipeline/sdlc.mk` instead, or a root `project.mk` is still the include
+- the Makefile defines a target of the Make contract again after the include, instead of setting its command variable. The Node and Gradle templates of `github-pipeline` are the exception today, as `SDLC_OWN_CONTRACT` says
 - the Makefile uses `.ONESHELL` or a Make 4 function, or the standard targets call out to a shell script
 - a recipe calls a host tool that the Podman rule in `SKILL.md` does not allow, or `setup` installs a tool on the host
 - `.editorconfig` is missing, or `editorconfig` does not run editorconfig-checker

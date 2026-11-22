@@ -14,7 +14,7 @@ DOCS_CMD = node scripts/render-docs.mjs docs build/docs
 PUBLISH_IMAGE = 1
 include .claude/skills/project-setup/project.mk
 
-# Project targets and overrides.
+# Project targets. A target of the Make contract is not defined again here.
 ```
 
 Make reads `RENDER_DOCS` and `PUBLISH_IMAGE` while it parses `project.mk`. Set them above the include.

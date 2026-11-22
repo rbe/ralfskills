@@ -32,7 +32,7 @@ COVERAGE_CMD = set -eu; \
 
 include .claude/skills/project-setup/project.mk
 
-# Project targets and overrides.
+# Project targets.
 
 # One target for the Python tooling, every step through Podman:
 # 1. .coveragerc from the python skill and .editorconfig from

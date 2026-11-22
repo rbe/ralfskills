@@ -3,10 +3,11 @@
 # github-pipeline both include this file, so the targets are the same
 # on either include. It does not define help.
 #
-# A project that writes its own recipe for these targets, as the
-# Node and Gradle makefiles of github-pipeline do, sets
-# SDLC_OWN_CONTRACT = 1 before the sdlc.mk include. sdlc.mk then
-# leaves this file out, so no recipe is defined twice.
+# A project changes what these targets do only through the command
+# variables. Only the Node and Gradle makefiles of github-pipeline write
+# their own recipes today. They set SDLC_OWN_CONTRACT = 1 before the
+# sdlc.mk include, and sdlc.mk then leaves this file out, so no recipe
+# is defined twice.
 #
 # GNU Make 3.81. See project.mk for the rules of a recipe.
 
