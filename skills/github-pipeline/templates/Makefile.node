@@ -19,7 +19,9 @@ NODE_VERSION ?= 24
 NODE_IMAGE ?= docker.io/library/node:$(NODE_VERSION)-bookworm-slim
 CI_IMAGE ?= localhost/$(NAME):ci
 PORT ?= 4173
-SMOKE_PORT ?= 18080
+# curl runs in this image for the smoke check of make build. It joins
+# the network of the smoke container, so no port of the host is used.
+CURL_IMAGE ?= docker.io/curlimages/curl:8.17.0
 SMOKE_PATH ?= /api/health
 SMOKE_NEEDLE ?= ok
 DATA_DIR ?= data
@@ -72,7 +74,7 @@ coverage: ## diff-cover report of the lines this change touched
 	if [ ! -d node_modules ]; then tar -xf build/deps/node_modules.tar; fi; \
 	NODE_V8_COVERAGE=/work/build/coverage/v8 $(NODE_RUN) npm test -- --coverage; \
 	$(PYTHON) .claude/skills/project-report/scripts/node_cover_map.py; \
-	base=$$(git merge-base HEAD origin/$(DEFAULT_BRANCH) 2>/dev/null || git rev-parse -q --verify HEAD 2>/dev/null || git hash-object -t tree /dev/null); \
+	base=$$(git merge-base HEAD origin/$(DEFAULT_BRANCH) 2>/dev/null || git merge-base HEAD $(DEFAULT_BRANCH) 2>/dev/null || git rev-parse -q --verify HEAD 2>/dev/null || git hash-object -t tree /dev/null); \
 	git add -N .; \
 	git diff "$$base" > build/coverage/change.diff; \
 	report=$$(find . -name lcov.info -o -name coverage.xml | head -n 1); \
@@ -113,7 +115,6 @@ clean: ## Remove build/, dist/, and node_modules/
 	rm -rf build dist node_modules
 
 _setup:
-	@$(MAKE) --no-print-directory doctor
 	@set -eu; \
 	if [ ! -d node_modules ]; then $(NODE_RUN) npm ci; fi; \
 	$(NODE_RUN) sh -c 'npm audit --audit-level=high || echo "npm audit reported advisories; continuing"'; \
@@ -128,11 +129,11 @@ _build:
 	$(THIS_MAKE) --no-print-directory image; \
 	name=$(NAME)-smoke; \
 	podman rm -f "$$name" >/dev/null 2>&1 || true; \
-	podman run -d --name "$$name" -p 127.0.0.1:$(SMOKE_PORT):$(PORT) -e PORT=$(PORT) "$(CI_IMAGE)" >/dev/null; \
+	podman run -d --name "$$name" -e PORT=$(PORT) "$(CI_IMAGE)" >/dev/null; \
 	ok=0; \
 	i=0; \
 	while [ "$$i" -lt 30 ]; do \
-	  if curl -fsSk "https://127.0.0.1:$(SMOKE_PORT)$(SMOKE_PATH)" 2>/dev/null | grep -qF '$(SMOKE_NEEDLE)'; then ok=1; break; fi; \
+	  if podman run --rm --network "container:$$name" $(CURL_IMAGE) -fsSk "https://127.0.0.1:$(PORT)$(SMOKE_PATH)" 2>/dev/null | grep -qF '$(SMOKE_NEEDLE)'; then ok=1; break; fi; \
 	  i=$$((i + 1)); sleep 1; \
 	done; \
 	podman rm -f "$$name" >/dev/null 2>&1 || true; \

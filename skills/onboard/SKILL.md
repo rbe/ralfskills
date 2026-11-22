@@ -1,30 +1,43 @@
 ---
 name: onboard
-description: Bring a project onto this skill collection in one run. Use when the owner says report and integrate, onboard, adopt, or add the skills to a project, for a new project and for an existing one. Checks the prerequisites, runs migrate-docs when the old board exists, then project-setup in report mode and setup mode, github-pipeline when the project publishes through GitHub, record for the rules the project already follows, and every gate. It stops when a gate fails. It writes no feature.
+description: Brings a new or an existing project onto this skill collection in one run. Use when the owner says report and integrate, onboard, adopt, or add the skills to a project. Runs migrate-docs, project-setup, github-pipeline, record, and every gate, in order. Writes no feature.
 ---
 
-# Onboard
+The general rules in `CLAUDE.md` apply.
 
-This skill is the order of the other skills. It does no work of its own that a skill below does not own. The skills named here must be installed. Stop and name the missing skill when one is not.
+<purpose>
+This skill is the order of the other skills. Each skill named in a step owns the work of that step.
+</purpose>
 
-The onboarding of a project is not a slice. It has no history file. Its commits go on the default branch. The owner's request to integrate covers those commits and the push to the remote the project already has. Do not push to another remote.
+<steps>
+1. If `CLAUDE.md` is missing or has no `<general_rules>` block, read `.claude/skills/project-setup/templates/CLAUDE.md`. Its general rules apply to this run.
+2. Run `make -f .claude/skills/project-setup/doctor.mk doctor`. If the target fails, stop and tell the owner each `FAIL` line and its fix.
+3. Read the project before you ask a question.
+   - Name the language from the manifest and the file types: `package.json`, `build.gradle`, `go.mod`, `pyproject.toml`, `*.py`, or a shell recipe.
+   - Run `make -f .claude/skills/project-setup/old-board.mk old-board`. A failure of this target does not stop this run. Step 5 handles it.
+   - Name `AGENTS.md` if it exists.
+   - Read each of `Makefile`, `CLAUDE.md`, `README.md`, and `.github/workflows/` that exists.
+   - Run `git remote get-url origin`. Take the host, the owner, and the name from the result. If there is no remote `origin`, name that in the reply. Ask the owner for the owner and the name only if step 8 runs.
+   - Run `git branch --show-current` to read the default branch.
+4. Ask the owner how the project ships, as setup step 1 of `project-setup` says. That step does not ask again in this run. A project on `github.com` that ships an image publishes through GitHub. If the project does not publish through GitHub, leave `github-pipeline` out of `apm.yml` and out of the skill list of `CLAUDE.md`.
+5. If the old board or `AGENTS.md` exists, run `migrate-docs`.
+6. Run `project-setup` in report mode. If the project publishes through GitHub, also run `github-pipeline` in report mode. Write both reports in the reply before any change to the Makefile, `CLAUDE.md`, or `.claude/skills/`.
+7. Run `project-setup` in setup mode. If the language has no installed skill, no template exists. Stop, name the language, and ask the owner whether to write the Makefile by hand.
+8. If the project publishes through GitHub, run `github-pipeline` in setup mode. Check that `make test` runs the tests after the include changed. Commit and push.
+9. Ask `record` to write each rule that the project already follows. If the code already breaks a rule of an installed skill or of an ADR, that break gets a row in `docs/KNOWN_ISSUES.md`. A Decided row with no test is allowed in this run, and `make project-report` lists it. Commit and push.
+10. Run the six gates, then `make ids`, `make toon`, `make links-check`, and `make project-report`. If the project has a workflow, also run `make ci`. If a target fails, stop and fix the cause. Leave each check as strict as it was, and skip none. On the default branch the diff is empty, so `make coverage` reports no line and is only a smoke check.
+11. Run `git ls-remote --tags` with the URL of the `git:` source of the collection in `apm.yml`. If the source is `owner/name`, the URL is `https://github.com/owner/name`. If the source is another form, skip this step. If the command lists a tag, read `references/skill-version.md`.
+12. Write the reply in this order:
+    - what the project is;
+    - what changed in each commit;
+    - which gate passed, and which gate did not run and why;
+    - what only the owner can do. Candidates are a `GH_TOKEN` in the environment for the cleanup targets on a laptop, the package permission of the repository on GitHub, the first `vMAJOR.MINOR.PATCH` tag, and the first publish from the Actions tab;
+    - that the first slice starts with `plan`.
+</steps>
 
-## Steps
-
-1. Check the prerequisites on this machine. `make --version` runs. `git --version` runs. `podman info` runs. On macOS, a stopped Podman machine fails that command, so start it with `podman machine start`. Stop when one of them fails. Name what is missing and how to install it. Do not install a tool on the host. Once the Makefile has the include, `make doctor` is the same check, and `make setup` runs it first.
-2. Read the project before any question. Name the language from the manifest and the file types: `package.json`, `build.gradle`, `go.mod`, `pyproject.toml`, `*.py`, or a shell recipe. Name the old board: test each path in `migrate-docs` with `ls -d`, because an empty directory counts and Git does not list it. Also name `AGENTS.md`. Read `Makefile`, `CLAUDE.md`, `README.md`, and `.github/workflows/`. Read the remote with `git remote get-url origin` for the host, the owner, and the name. Read the default branch. Count the tests.
-3. Ask the owner only what the files do not tell. Ask one question at a time. The one question that is always open is how the project ships: a binary, a container image, a library package, or with the merge only. A project on `github.com` that ships an image publishes through GitHub.
-4. When the old board exists, run `migrate-docs` now. Every other skill stops until it has deleted those paths. Fold `AGENTS.md` into `CLAUDE.md` as that skill says. Commit the board on the default branch and push.
-5. Run `project-setup` in report mode. Run `github-pipeline` in report mode when the project publishes through GitHub. Write both reports in the reply, before any change. Name what matches and what is missing.
-6. Run `project-setup` in setup mode, in the order that skill gives. The language skill names the tooling target: `make node-tooling`, `make python-tooling`, `make jvm-tooling`, or `make go-tooling`. A language that has no installed skill has no template. Stop and name the language, then ask the owner whether to write the Makefile by hand. Setup mode needs an `id:` in each test. Ask `record` now for a Decided row for each existing test, and name it in the test. A Python test file that has an `if __name__ == "__main__":` block loses that block, as the `python` skill says. Commit the setup, with `.claude/skills/`, `apm.yml`, and `apm.lock.yaml`, on the default branch. Push.
-7. When the project publishes through GitHub, run `github-pipeline` in setup mode. Node and Gradle have a template for the whole Makefile and the workflow. For any other language, take the image block of the Makefile from `templates/Makefile.image`, the `Containerfile` template of the language, and `templates/ci.make.yml`. Fill the owner and the name from step 2. Do not leave `OWNER` or `NAME` as a placeholder. Check that `make test` runs the tests after the include switch. Commit and push.
-8. Record each rule the project already follows through `record`. An architecture or development rule is an ADR. A small choice is a Decided row. A rule the code already breaks is also a row in `docs/KNOWN_ISSUES.md`. The Decided rows of the existing tests are done in step 6. Run `make links`. Commit and push.
-9. Run every gate through Make: `make editorconfig`, `make format`, `make lint`, `make test`, `make integration`, `make coverage`, `make ids`, `make toon`, `make links-check`, `make project-report`. A project with a workflow also runs `make ci`. Stop when a gate fails. Fix the cause. Do not loosen a check, and do not skip one.
-10. Answer in the reply, in this order: what the project is, what changed in each commit, which gate passed, and which gate did not run and why. Then name what only the owner can do. That list can hold `make auth`, the package permission of the repository on GitHub, the first `vMAJOR.MINOR.PATCH` tag, and the first publish from the Actions tab. Run `git ls-remote --tags` with the `git:` source of the collection in `apm.yml`. When it lists a tag, say that `ref: <tag>` under that `git:` line pins the version. To take a newer version: set `ref` to the new tag, run `apm update`, run `make toon` and `make links`, run the gates, and commit `.claude/skills/`, `apm.yml`, and `apm.lock.yaml` together. Then say that the first slice starts with `plan`.
-
-## Do not
-
-- Do not write a feature, a fix, or a refactor in this run.
-- Do not pick the language, the shipment, or the owner from a guess. A file or the owner states each one.
-- Do not leave a file from the old board beside the new board.
-- Do not write a second entry file. `CLAUDE.md` is the only one.
+<rules>
+- The owner's request to integrate covers the commits of this run and the push to the remote that the project already has. Push to no other remote.
+- This run writes no feature, no fix, and no refactor.
+- A file or the owner states the language, the shipment, and the owner of the repository. A guess does not.
+- When the run ends, no file of the old board exists beside the new board.
+</rules>

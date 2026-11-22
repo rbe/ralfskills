@@ -2,49 +2,74 @@
 
 [One sentence that says what this project is.]
 
-`CLAUDE.md` is the only entry file. The skills are installed under `.claude/skills/` with APM.
+`CLAUDE.md` is the only entry file. The skills are under `.claude/skills/`.
 
-Stages, in order: `plan`, `develop`, `review`, `release`. A new or vague request starts at `plan`. A request that names a source file, a failing test, or a known issue starts at `develop`. `record` writes every id and every board document. `project-report` generates the requirements-to-tests map and the architecture and development reviews. `project-setup` is the Make contract. [Keep this sentence only when `github-pipeline` is installed:] `github-pipeline` is the delivery contract, and `release` invokes it when delivery changes.
+Stages, in order: `plan`, `develop`, `review`, `release`. A new or vague request starts at `plan`. A request that names a source file, a failing test, or a known issue starts at `develop`. Other skills: `record`, `project-report`, `project-setup`[, `onboard`, `migrate-docs`, `github-pipeline`, `system-state-report` (say `state report`): keep each only when installed]. Language skills: [the installed ones of `node`, `python`, `shell`, `jvm`, `go`]. Subskills `plan` asks and `review` checks: [the installed ones of `security`, `privacy`, `ux-ui-design`, `api-design`]. A project skill is an extra name listed here. [Name each project skill, or write none.]
 
-Language skills: [the installed ones of `node`, `python`, `shell`, `jvm`, `go`]. Subskills `plan` asks and `review` checks: [the installed ones of `security`, `privacy`, `ux-ui-design`, `api-design`]. A project skill is an extra name listed here. [Name each project skill and each framework here, or write that there is none.]
+This project ships [as a binary, with `make <target>` / as a container image, with the merge into the default branch / as a library package, with `make build` / with the merge only].
 
-`plan` names who owns state and what may call what. `develop` is not done until `make lint` and `make test` pass. The linter is the one the language skill names. `make test` is the full suite. `make test-changed` runs the tests that cover the diff. `make coverage` lists the lines the change touched. `make project-report` writes the generated report. `make format-fix` rewrites the files with the formatter.
+## General rules
 
-[Keep this paragraph only when `system-state-report` is installed:] `system-state-report` writes the plain-language report on what the system does now and which decisions wait for the owner. Say `state report` to start it.
+A skill states only what it adds to these rules.
 
-This project ships [as a container image, with the merge into the default branch / as a binary, with `make <target>` / as a library package, with `make build` / as a library, with the merge into the default branch].
+<general_rules>
 
-In-progress work is a line in `docs/ROADMAP.md`. A defect is a row in `docs/KNOWN_ISSUES.md`. A small choice is a row in `docs/DECISIONS.md`. An architecture or development rule is an ADR in `docs/adr/`. Work for later is a file in `docs/proposals/`. A started slice is a file in `docs/history/`. An accepted ADR is a rule for every change. A test names the ADR or the decision it proves with `id:`. Run `make toon` before reading an index. `make decision-log` writes the decisions as one document. An id in a document is a link. `make links` writes the links.
+Interface:
 
-If `docs/BUGS.md`, `docs/WAVES.md`, `docs/FEATURES.md`, `docs/bugs/`, `docs/waves/`, or `docs/features/` exists, the only skill is `migrate-docs`.
+- Type only `make <target>` and Git commands. Make runs every other tool in a Podman image, on this machine and in CI. The host needs only Make, Git, and Podman. Push only with a remote `origin`.
+- If no target runs a command that the work needs, `project-setup` adds the target.
+- Report mode writes nothing and fills its skeleton in the reply. Setup mode writes only what is missing or off the contract. A request for both runs report mode first.
+
+Start of a task:
+
+- Run `make old-board` before the first skill. If the target fails, the only skill is `migrate-docs`.
+- If a step says stop, or needs a skill that is not installed, take no later step. Tell the user the step, the reason, and the missing skill.
+
+Board:
+
+- `record` writes every id and every board document. Invoke `record` before you create one.
+- An architecture decision record (ADR) in `docs/adr/` is an architecture or development rule. An ADR with the status `Accepted` is a rule for every change.
+- If the repository keeps `docs/REQUIREMENTS.md` and no `docs/adr/`, a row of that list replaces an ADR, and an Open row of `docs/DECISIONS.md` replaces a roadmap line. Where a step names `docs/adr/index.toon`, read `docs/requirements-index.toon` in such a repository and open each row that names a part that the change touches.
+- Write one line for each `check` row of `docs/skill-index.toon`, or `checks: none installed`. For a subskill that is not installed, write `<name>: not installed`. A row without a line fails the step.
+- Run `make toon` before you read an index. Hand-editing a file that a Make target writes is a defect.
+
+Gates:
+
+- The gates are `make editorconfig`, `make format`, `make lint`, `make test`, `make integration`, and `make coverage`. CI runs the same six targets.
+- A change is done when `make lint` and `make test` passed after the last edit. Report a gate that did not run as not run, and why.
+- A test names the ADR id or the decision id that it proves in a line `id:`. Stop when a test has no id.
+- Do not weaken a test, skip a test, catch an error silently, or put a secret or personal data in a fixture.
+- A method does one thing or only composes other methods. Name each unit, function, method, class, and file from the domain.
+
+</general_rules>
 
 ## Communication contract
 
-The user reads each reply once, often after a break. The user has not read the code and does not remember earlier chats. The user decides from what you write. Each sentence must be clear on the first reading.
+The user reads each reply once, often after a break, has not read the code, remembers no earlier chat, and decides from what you write.
 
 Names:
 
-- Use the user's words and the identifiers of the project. Use one name for one thing. Do not change it for variety. Do not invent a synonym for a term the project already uses.
-- During work you give things your own labels. The user does not know them. Before you send a reply, find each label you invented. Replace it with the project name or with a description. If you must keep a new term, define it in one sentence at its first use.
+- Use the user's words and the identifiers of the project, one name for one thing. Invent no synonym.
+- Replace each label you invented with the project name or a description, or define it at its first use.
 - Define an abbreviation at its first use.
 
 Sentences:
 
-- The first sentence to the user states the understood intent, in one sentence. Stop when that sentence is wrong.
+- The first sentence states the understood intent. Stop when it is wrong.
 - One statement per sentence. Maximum 25 words.
-- Use active voice with a named actor: "The import job deletes the old rows", not "Old rows are deleted".
-- Put the condition before the result: "If the token is expired, the system asks for a new login."
-- Use full sentences. Do not use arrows, symbols, or note style in place of sentences.
+- Use active voice with a named actor.
+- Put the condition before the result.
+- Use full sentences, not arrows, symbols, or note style.
 
 Content:
 
-- Use the specific noun, number, path, or name. Write "3 of 14 tests fail", not "some tests fail". Write "the function `send_invoice`", not "the logic".
-- When you say that something is better, say what changed and what the effect is. Do not use a word that judges without a measure.
-- For each statement about the system, say how you know it: you ran it, you read it in the code, or you only assume it.
-- Use literal language. Do not use figures of speech.
+- Use the specific noun, number, path, or name.
+- For "better", say what changed and what the effect is. Use no judging word without a measure.
+- Say how you know each statement about the system: you ran it, you read it in the code, or you only assume it.
+- Use literal language, not figures of speech.
 
-Example. Not: "Refactored the persistence layer for improved robustness." But: "The function `save_order` in `db/orders.py` now tries a failed write 3 times. Before, one failed write stopped the import. I read this in the code. I did not run it."
+Example. Not: "Improved the persistence layer." But: "`save_order` in `db/orders.py` now tries a failed write 3 times. Before, one failed write stopped the import. I read this in the code. I did not run it."
 
-These rules apply to what you write to the user. They do not apply to code, to quotes, or to a text the user asks you to write for a different reader.
+These rules apply to what you write to the user, not to code, quotes, or a text for a different reader.
 
-English follows ASD-STE100. German follows "Deutsch für die Technische Kommunikation" (tekom Deutschland e.V.). Name the standards. Do not copy their text. Keep German and English separate.
+English follows ASD-STE100. German follows "Deutsch für die Technische Kommunikation" (tekom Deutschland e.V.). Name the standards. Copy no text of them. Keep German and English separate.

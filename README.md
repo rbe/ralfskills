@@ -33,7 +33,9 @@ The `name` in each skill's frontmatter matches its directory. A project installs
 
 `project-setup` and `github-pipeline` each have setup mode and report mode, written in the skill. Setup mode changes only what is missing or off the contract. Report mode names what matches and what is missing, and it changes nothing.
 
-`make toon` writes the ADR index and the skill index for a product repository. In this collection it writes `docs/requirements-index.toon` and the skill index, and it does not create `docs/adr/`. `make decision-log` writes `build/decision-log.md` from the ADRs and the decisions. `project.mk` and `sdlc.mk` include these targets from `record` when the skill is installed, and `make setup` runs `make toon` first. Every Python command, including a one-off `make py ARGS='...'`, runs in Podman on the machine where Make runs. Set `PYTHON_IMAGE` before the include to pick the version. The host does not need Python.
+The rules that hold for every skill stand once, in the `<general_rules>` block of `CLAUDE.md`: the interface, the start of a task, the board, and the gates. Each `SKILL.md` starts with the line ``The general rules in `CLAUDE.md` apply.`` and states only what the skill adds. The body is XML tags: `purpose`, `steps`, `rules`, `output`, and `references`, with `mode` for a skill that has modes, and `questions` and `checks` for a subskill. A table, a sample, or a rule for one condition is in `references/` beside the skill. The agent reads such a file only when a step names it.
+
+`make toon` writes the ADR index and the skill index for a product repository. In this collection it writes `docs/requirements-index.toon` and the skill index, and it does not create `docs/adr/`. `make decision-log` writes `build/decision-log.md` from the ADRs and the decisions. `project.mk` and `sdlc.mk` include these targets from `record` when the skill is installed, and `make setup` runs `make toon` after `make doctor`. Every Python command, including a one-off `make py ARGS='...'`, runs in Podman on the machine where Make runs. Set `PYTHON_IMAGE` before the include to pick the version. The host does not need Python.
 
 ## The cycle
 
@@ -43,20 +45,29 @@ A request goes through `plan`, `develop`, `review`, and `release`. A new or vagu
 
 ## Start
 
-1. Add the `apm.yml` below and run `apm install`. APM must run first, because the skills are not on the machine before it.
+The host needs GNU Make 3.81 or newer, Git, and Podman. It needs no other tool: no APM, no Python, no GitHub CLI, and no Homebrew. Every other tool runs in a Podman image behind a Make target.
+
+1. Add the `apm.yml` below. Then run this one line in the root of the project. It runs APM in a Podman image and installs the skills. The project has no Makefile before the skills are on the machine, so this line is the only command that is not `make` or `git`.
+
+   ```sh
+   podman run --rm -v "$PWD":/work:Z -w /work docker.io/library/python:3.13 sh -c 'pip install -q --root-user-action=ignore apm-cli==0.36.1 && apm install'
+   ```
+
+   Behind a proxy with its own CA, add `-v <CA file>:/ca.crt:ro -e GIT_SSL_CAINFO=/ca.crt -e SSL_CERT_FILE=/ca.crt` to the `podman run` arguments. For a private repository, add `-e GITHUB_APM_PAT`. These flags change only that one line. `PODMAN_NET_ARGS` holds the same arguments for the Make targets.
+
 2. Tell the agent: `report and integrate`. The [onboard](skills/onboard/SKILL.md) skill carries the order, for a new project and for an existing one.
 
 `onboard` does these steps, and each one is a skill that you can also start alone:
 
-1. It checks that Make, Git, and Podman run on the machine. `make doctor` is the same check, and `make setup` runs it first.
+1. It checks that Make, Git, and Podman run on the machine, with `make -f .claude/skills/project-setup/doctor.mk doctor`. Once the Makefile has the include, `make doctor` is the same check, and `make setup` runs it first.
 2. It reads the project: the language, the old board, the remote, and the tests. It asks you only what the files do not tell, such as how the project ships.
-3. It runs `migrate-docs` when `docs/BUGS.md`, `docs/WAVES.md`, `docs/FEATURES.md`, or their directories, or `AGENTS.md` exist, and commits the new board.
+3. It runs `migrate-docs` when `docs/BUGS.md`, `docs/WAVES.md`, `docs/FEATURES.md`, or their directories, or `AGENTS.md` exist, and commits the new board. `make old-board` tests those six paths and fails when one exists.
 4. It runs `project-setup` in report mode, then in setup mode. Setup mode asks how the project ships, copies the Makefile template of the language, and runs the tooling target of that language: `make node-tooling`, `make python-tooling`, `make jvm-tooling`, or `make go-tooling`. It writes `CLAUDE.md`, `.editorconfig`, and `.gitignore`, and commits with `.claude/skills/`, `apm.yml`, and `apm.lock.yaml`.
 5. When the project publishes through GitHub, it runs `github-pipeline`: one workflow, a `Containerfile`, and the targets of the pipeline.
 6. It records each rule the project already follows as an ADR or a Decided row, and gives each existing test the `id:` of the row it proves.
 7. It runs every gate. It stops when one fails.
 
-Then the first slice starts with `plan`.
+Then the first slice starts with `plan`. From here on, a person and the agent type only `make <target>` and Git commands.
 
 ## Update
 
@@ -65,12 +76,12 @@ This collection has tags named `vMAJOR.MINOR.PATCH`. A project that wants a fixe
 To take a newer version:
 
 1. Change `ref` to the new tag. Skip this step when the project has no `ref`.
-2. Run `apm update`. `apm update --dry-run` shows the plan and changes nothing. `apm update --yes` skips the question, for CI. `apm install --update` is deprecated in APM 0.36.1.
+2. Run `make skills-update`. `make skills-update DRY_RUN=1` shows the plan and changes nothing. The target runs `apm update --yes` in Podman, so it asks no question. `APM_VERSION` and `APM_IMAGE` in `tools.mk` of `project-setup` pin APM. `apm install --update` is deprecated in APM 0.36.1.
 3. Run `make toon` and `make links`, because a new skill can add rows to the indexes and the links.
-4. Run the gates: `make editorconfig`, `make format`, `make lint`, `make test`, and `make ci` when the project has a workflow.
+4. Run the gates of `CLAUDE.md`, and `make ci` when the project has a workflow.
 5. Commit `.claude/skills/`, `apm.yml`, and `apm.lock.yaml` together, on the default branch.
 
-`apm update` overwrites a skill file that a person changed in `.claude/skills/`. Keep project rules in a project skill or in `CLAUDE.md`, not in an installed file. A new Makefile template does not change the `Makefile` of the project. Run `project-setup` in report mode to see what a new version adds.
+APM 0.36.1 does not overwrite a skill file that a person changed in `.claude/skills/`. If such a file exists, `make skills-update` fails and names the file. Restore the file with `git restore <file>`, then run the target again. Keep project rules in a project skill or in `CLAUDE.md`, not in an installed file. A new Makefile template does not change the `Makefile` of the project. Run `project-setup` in report mode to see what a new version adds.
 
 ## How APM loads them
 
@@ -106,4 +117,4 @@ A Make-only repository leaves `github-pipeline` out. A repository that still has
 
 `apm install` does not write `CLAUDE.md`. `apm compile` for the target `claude` keeps a `CLAUDE.md` that a person wrote and prints a warning. That was tested with APM 0.36.1. `project-setup` owns the entry file. APM adds `apm_modules/` to `.gitignore`. It also creates `.apm-local/`, which has its own `.gitignore`.
 
-Install one skill with `--skill`. Repeat the flag to add another. `apm install rbe/ralfskills --skill '*'` installs every skill again.
+`make skills-install` installs the skills that `apm.yml` names. `make apm ARGS='...'` is a one-off APM command in Podman. Install one skill with `make apm ARGS='install rbe/ralfskills --skill go'`. Repeat the flag to add another. `make apm ARGS="install rbe/ralfskills --skill '*'"` installs every skill again.

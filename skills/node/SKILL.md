@@ -1,24 +1,32 @@
 ---
 name: node
-description: Node and TypeScript. Use when node is installed and the files in hand are JavaScript or TypeScript. Tests and installs run through make. A framework named in CLAUDE.md is a reference file beside this skill. The stage skill still applies.
+description: Node and TypeScript. Applies the Node rules to a change. Use when node is installed and the files in hand are JavaScript or TypeScript. A framework named in CLAUDE.md is a reference file beside this skill. The stage skill still applies.
 kind: language
 files: [js, jsx, ts, tsx, mjs, cjs]
 ---
 
-# Node
+The general rules in `CLAUDE.md` apply.
 
-## Steps
+<purpose>
+This skill names the tools and the Make targets for JavaScript and TypeScript files.
+</purpose>
 
-1. If `docs/BUGS.md`, `docs/WAVES.md`, `docs/FEATURES.md`, `docs/bugs/`, `docs/waves/`, or `docs/features/` exists, stop. Name `migrate-docs`. Do not take a later step.
-2. Invoke `record` before creating an id or a document. A write that skips `record` fails this step.
-3. Do the work below. `develop` invokes this skill for JavaScript and TypeScript files.
-4. Ask `record` to add one line under Develop naming `node`. Do not open a second history file.
+<steps>
+1. If the project has no `package.json`, or no Prettier and no ESLint, read `references/tooling.md` and run `make node-tooling`.
+2. If `CLAUDE.md` names a framework, read `references/frameworks.md` and the file in `references/` that has the name of the framework.
+3. Write source in `src/`. Use TypeScript if the project already uses it. A new file follows that choice.
+4. To add a dependency, run `make npm ARGS='...'`. `make setup` installs the dependencies.
+</steps>
 
-## Work
+<rules>
+- The formatter is Prettier. The linter is ESLint, also for TypeScript.
+- The comment at the top of `templates/Makefile.node` explains each command.
+- A library sets `exports` and `files` in `package.json`. `make build` then packs only the source. `references/tooling.md` has the command.
+- A framework file does not replace this skill or the stage skill.
+</rules>
 
-1. `make test` runs the tests. `make setup` installs dependencies. Do not run the package manager from a workflow step. `templates/Makefile.node` beside this skill is the Makefile of a Node project on `project.mk`: `$(NODE)` runs Node and npm in Podman, and each command variable is filled in for `node --test`, Prettier, and ESLint. `make npm ARGS='...'` runs npm in Podman. Use it to add a dependency. Do not run npm on the host. `make node-tooling` sets up a new project, or a project with no Prettier and no ESLint, in one run: it creates `package.json` with the name (`NAME`, the directory name by default), the version `0.1.0`, and `type=module`, adds the dev tools in `NODE_DEV_TOOLS` as exact versions, writes `.prettierignore`, `eslint.config.mjs`, and `.editorconfig`, adds `node_modules/` and `coverage/` to `.gitignore`, and runs `make format-fix`. A file or a dependency that is already there stays as it is, so the target is safe to run again. `templates/prettierignore` and `templates/eslint.config.mjs` are the files those tools need. A library sets `exports` and `files` in `package.json`, so `make build` packs the source and nothing else. Source is in `src/`. The comment at the top of the template has each command.
-2. The formatter is Prettier. The linter is ESLint, including for TypeScript. Do not write a linter. Do not add a second formatter or a second linter.
-3. `make coverage` runs the test runner's lcov or Cobertura output through diff-cover. The report is the lines this change touched. Do not use a repository-wide percentage. `make coverage` also runs the tests with `NODE_V8_COVERAGE` set to `build/coverage/v8`, then `node_cover_map.py` from `project-report`. That script writes the coverage map: each test file, and the project files that ran in its process. `make test-changed` gives the test files that `changed_tests.py --print` names to the test runner. The map is exact with `node --test` and with Jest. A runner that shares a process between test files selects more tests, never fewer. The workers of Vitest write no V8 coverage. A Vitest project leaves the map step out of `coverage` and sets `TEST_CHANGED_CMD` to `vitest related --run` with the files in `build/coverage/changed.txt`. Vitest then selects the tests from its module graph. Record that choice as a Decided entry through `record`.
-4. The language is TypeScript when the project already uses it. A new file follows that choice.
-5. When `CLAUDE.md` names a framework, read `references/` beside this skill for that name. The framework file does not replace this skill or the stage skill.
-6. Podman, XDG paths, and what a shipment may contain are `project-setup`.
+<references>
+- `references/tooling.md`: read it before you run `make node-tooling`, when you change `templates/Makefile.node`, or when the project is a library.
+- `references/coverage.md`: read it when the test runner is not `node --test`, or when `make coverage` or `make test-changed` fails.
+- `references/frameworks.md` and a file named by a framework: read them when `CLAUDE.md` names that framework.
+</references>

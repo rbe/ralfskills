@@ -50,6 +50,13 @@ decision-log: ## Write build/decision-log.md from the ADRs and the decisions
 
 setup: toon
 
+# GNU Make 3.81 joins the prerequisites of two setup rules in the reverse
+# order of the includes. When doctor.mk is included, toon waits for doctor,
+# so doctor runs first in every Make version.
+ifdef DOCTOR_MK
+toon: doctor
+endif
+
 # help is the default goal. This fragment does not take it.
 .DEFAULT_GOAL := help
 

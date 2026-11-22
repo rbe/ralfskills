@@ -1,44 +1,41 @@
 ---
 name: api-design
-description: Ask before a slice is closed, and check after implementation, when the change adds or alters an HTTP route, a body, a status code, or what a module or a library exports. plan asks the questions. review runs the checks. The project's route catalogue stays in a project skill. Write the not-installed line only when this skill is not installed.
+description: Gives the questions that plan asks and the checks that review runs for the shape of an API. Use when the change adds or alters an HTTP route, a body, a status code, or what a module or a library exports.
 kind: check
 order: 40
 ---
 
-# API design
+The general rules in `CLAUDE.md` apply.
 
-## Steps
+<purpose>
+One part of the questions and of the checks is HTTP. The other part is what a module or a library exports.
+</purpose>
 
-1. If `docs/BUGS.md`, `docs/WAVES.md`, `docs/FEATURES.md`, `docs/bugs/`, `docs/waves/`, or `docs/features/` exists, stop. Name `migrate-docs`. Do not take a later step.
-2. Invoke `record` before creating an id or a document. A write that skips `record` fails this step.
-3. Answer the questions when `plan` calls, or run the checks when `review` calls.
-4. Ask `record` to add one line under the open history section naming `api-design`. Do not open a second history file.
+<rules>
+- The list of routes for one product stays in a project skill that `CLAUDE.md` names.
+</rules>
 
-The list of routes for one product stays in a project skill named from `CLAUDE.md`. This skill is the shape of a change. HTTP is one part. The public API of a module or a library is the other part.
-
-`api-design` asks what is exported, what stays internal, and what the resource, the verb, and the status on success are.
-
-## Questions for plan
-
-HTTP, when the slice changes a route. Otherwise answer `not HTTP`.
+<questions>
+If the slice changes a route, answer questions 1 to 3. If not, answer `not HTTP`.
 
 1. What is the resource, the verb, and the status on success?
 2. What is the status and the error body on failure?
 3. Which existing contract has to change in the same change as the handler?
 
-A module or a library, when the slice changes what callers can import. Otherwise answer `not a module`.
+If the slice changes what callers can import, answer questions 4 to 6. If not, answer `not a module`.
 
 4. What is exported?
 5. What may a caller rely on?
 6. What stays internal?
+</questions>
 
-## Checks for review
-
-Skip the HTTP checks when the answer was `not HTTP`. Skip the export checks when the answer was `not a module`.
+<checks>
+If the answer was `not HTTP`, skip checks 1 to 3. If the answer was `not a module`, skip checks 4 to 6.
 
 1. The route matches the answers, including the failure status and the error body.
 2. The contract and the handler changed together.
 3. A new failure mode has a status and a body. A success body is not an error shape.
 4. The export list matches the answers.
 5. A caller relies only on what the answers named.
-6. A name the answers called internal is not exported.
+6. A name that the answers called internal is not exported.
+</checks>

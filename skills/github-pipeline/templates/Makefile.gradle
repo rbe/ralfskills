@@ -22,7 +22,6 @@ JDK_IMAGE ?= docker.io/library/eclipse-temurin:25-jdk
 JRE_IMAGE ?= docker.io/library/eclipse-temurin:25-jre
 CI_IMAGE ?= localhost/$(NAME):ci
 JAR_GLOB ?= build/libs/$(NAME)-*.jar
-# Host JDK: set GRADLE=./gradlew and record that under Divergences.
 GRADLE ?= podman run --rm -e CI -e GRADLE_USER_HOME=/gradle -v "$$HOME/.gradle":/gradle:Z -v "$(CURDIR)":/work:Z -w /work $(JDK_IMAGE) ./gradlew --console=plain
 
 # The tests that cover the diff. make coverage writes the coverage map.
@@ -65,7 +64,7 @@ coverage: ## diff-cover report of the lines this change touched
 	mkdir -p build/coverage; \
 	$(GRADLE) test jacocoTestReport; \
 	$(PYTHON) .claude/skills/project-report/scripts/jacoco_cover_map.py; \
-	base=$$(git merge-base HEAD origin/$(DEFAULT_BRANCH) 2>/dev/null || git rev-parse -q --verify HEAD 2>/dev/null || git hash-object -t tree /dev/null); \
+	base=$$(git merge-base HEAD origin/$(DEFAULT_BRANCH) 2>/dev/null || git merge-base HEAD $(DEFAULT_BRANCH) 2>/dev/null || git rev-parse -q --verify HEAD 2>/dev/null || git hash-object -t tree /dev/null); \
 	git add -N .; \
 	git diff "$$base" > build/coverage/change.diff; \
 	report=$$(find build -name jacocoTestReport.xml | head -n 1); \
@@ -103,7 +102,6 @@ clean: ## Remove build/ and .gradle/
 	rm -rf build .gradle
 
 _setup:
-	@$(MAKE) --no-print-directory doctor
 	@set -eu; \
 	mkdir -p "$$HOME/.gradle"; \
 	$(GRADLE) --version; \
@@ -150,10 +148,11 @@ _publish-github:
 	version=$$($(THIS_MAKE) -s --no-print-directory version); \
 	asset=build/dist/$(NAME)-$$version.jar; \
 	cp build/dist/$(NAME).jar "$$asset"; \
-	if gh release view "$$version" >/dev/null 2>&1; then \
-	  gh release upload "$$version" "$$asset" --clobber; \
+	$(THIS_MAKE) --no-print-directory gh-image; \
+	if $(GH) release view "$$version" -R "$(PACKAGE)" >/dev/null 2>&1; then \
+	  $(GH) release upload "$$version" "$$asset" -R "$(PACKAGE)" --clobber; \
 	else \
-	  gh release create "$$version" "$$asset" --title "$$version" \
+	  $(GH) release create "$$version" "$$asset" -R "$(PACKAGE)" --title "$$version" \
 	    --notes "Build $$version." --target "$$(git rev-parse HEAD)"; \
 	fi; \
 	printf '# publish-github\n\nStatus: released\nRelease: %s\n' "$$version" > build/summaries/publish-github.md

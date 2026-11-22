@@ -1,30 +1,41 @@
 ---
 name: develop
-description: Implement a slice plan already closed, or a request that names a source file, a failing test, or a known issue. A fix starts here. Read the accepted ADRs before editing. Use the installed language skill for the files in hand. Two languages means two disjoint file sets. Stop when that language skill is not installed. Do not report done until make lint and make test have passed. Tests come with the behaviour change. Invoke record for ids and the Develop section.
+description: Implements a closed slice plan with its tests, using the installed language skill for the files in hand. Use after plan, or when a request names a source file, a failing test, or a known issue. A fix starts here.
 ---
 
-# Develop
+The general rules in `CLAUDE.md` apply.
 
-## Steps
+<purpose>
+`develop` changes the code and the tests of one slice, and it proves the change with the gates.
+</purpose>
 
-1. If `docs/BUGS.md`, `docs/WAVES.md`, `docs/FEATURES.md`, `docs/bugs/`, `docs/waves/`, or `docs/features/` exists, stop. Name `migrate-docs`. Do not take a later step.
-2. Invoke `record` before creating an id or a document. A write that skips `record` fails this step.
-3. Do the work below, in order.
-4. Ask `record` to write the Develop section, or one sentence that says why `develop` was not invoked. `record` rejects a history file missing Plan, Develop, Review, or Release.
+<steps>
+1. Read the history file of the task.
+   If there is none, create the branch of the slice with `git checkout -b <slug>` and ask `record` for a history file.
+   The Plan section is then one sentence that says why `plan` was not invoked.
+   If the slice starts from a proposal, the Plan section cites the proposal id.
+2. Read `docs/skill-index.toon`. Invoke each `language` row whose `files` or `names` match the files in hand.
+   Stop when a file set has no matching row.
+   A document, such as `README.md` or a file under `docs/`, needs no language row.
+3. Read `docs/adr/index.toon`. Open each ADR whose status is `Accepted` and whose `skills` names a skill that this slice uses.
+   Stop when the change would break one of them.
+4. If the files in hand have two languages, split them into two disjoint file sets. Finish one set before you edit the other.
+5. Write the change, and write a unit test for each behaviour change.
+   Stop when one target runs both unit tests and integration tests.
+6. Give each test its `id:` line. The test rules of `record` state which id the line names and the form of the line in each language.
+   If a test has no ADR and no Decided row to name, ask `record` to write the Decided row.
+7. Compare the change with the general rules on tests, fixtures, methods, and names. Stop when the change breaks one.
+8. Run `make coverage`, then `make test-changed`.
+   `make coverage` writes the coverage map, and `test-changed` selects the tests from that map. A green `test-changed` does not replace `make test`.
+   Stop when the coverage map is missing.
+9. Run `make lint` and `make test`. Stop when either target fails.
+10. If a source or test file changed after the last run of `make coverage`, run `make coverage` again.
+    Stop when `build/coverage/diff.md` is missing.
+    If the change has only test files or documents, the report has no line. Write that in the Develop section.
+11. Ask `record` to write the Develop section.
+</steps>
 
-## Work
-
-1. Read the history file for this task. When there is none, because the request named a source file, a failing test, or a known issue, create the branch of the slice and ask `record` for a history id. `record` writes the file from its template and adds one roadmap line with that id. The Plan section is then one sentence that says why `plan` was not invoked. When the slice starts from a proposal, the Plan section cites that proposal id. Do not copy the proposal into Develop.
-2. Run `make toon`. Read `docs/skill-index.toon`. Invoke each `language` row whose `files` or `names` match the files in hand. A file set with no matching row stops this step. A document, such as `README.md` or a file under `docs/`, needs no language row.
-3. Read `docs/adr/index.toon`. Open each ADR whose status is `Accepted` and whose `skills` names a skill this slice uses. Stop when the change would break an accepted ADR. Do not take a later step. Skip this step when the repository does not keep `docs/adr/`.
-4. Two languages means two disjoint file sets. Finish one set before editing the other.
-5. A behaviour change has a unit test. `make test` runs the unit tests. `make integration` is the one integration entry. Stop when one target runs both. Do not take a later step. Podman, XDG paths, and what a shipment may contain are `project-setup`. Do not restate them.
-6. A test names the requirement it proves. The line is `id:` in the test's header or metadata, the line `record` matches. The id is an ADR id or a decision id. A roadmap line and a known issue are work, not rules. Their ids are retired when the work ends, so a test does not name them. A test for a fixed known issue names the ADR or the Decided entry that states the fixed behaviour. `record` writes that Decided entry when there is none. When the repository keeps `docs/REQUIREMENTS.md` and does not keep `docs/adr/`, the id is a row in that list. The test name states what the system does when that requirement holds. Stop when a test has no id. Do not take a later step. Do not put the id in a path.
-7. `make test` is the full suite. `make test-changed` runs the tests that cover the files in the diff. The selection is the coverage of those files. Stop when the selection is a hand-kept list, or when the coverage map is missing. Do not take a later step. Run `make coverage` to write the map, then `make test-changed`. A green `test-changed` does not replace `make test`.
-8. A method does one thing, or it only composes other methods. Stop when a method does both. Do not take a later step. A method that first rejects bad input and then does one computation does one thing.
-9. Name a unit, a function, a method, a class, and a file from the domain. Stop when a name is not from the domain. Do not take a later step.
-10. No skipped test. No silent catch. No secret and no personal data in a fixture. Stop when one of these is present. Do not take a later step.
-11. Run `make lint` and `make test`. The linter is the one the language skill names. Do not write a linter. Stop when either target fails. Do not take a later step.
-12. Run `make coverage` again when a file changed after the last run. It writes `build/coverage/diff.md` for the lines this change touched. The recipe marks a new file with `git add -N`, so a file git does not track yet is in the report. A change with only test files or documents has no line in the report. Write that in Develop. Stop when that report is missing. Do not take a later step.
-13. CI runs these same Make targets. `test-changed` is not a CI target. Stop when lint, test, or coverage runs outside Make. Do not take a later step.
-14. An id, a roadmap line, or a known-issue change goes through `record`. Run `make links` after the documents are written.
+<rules>
+- The Develop section does not copy the proposal.
+- A method that first rejects bad input and then does one computation does one thing.
+</rules>

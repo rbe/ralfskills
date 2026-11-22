@@ -5,12 +5,14 @@ import importlib.util
 import sys
 from pathlib import Path
 
-ARCHITECTURE_CHECKS = (("plan", "## Work"), ("review", "## Work"))
+# Each check is a skill, the tag that holds its numbered steps, and the
+# heading that held them before the skills used tags.
+ARCHITECTURE_CHECKS = (("plan", "steps", "## Work"), ("review", "steps", "## Work"))
 DEVELOPMENT_CHECKS = (
-    ("develop", "## Work"),
-    ("review", "## Work"),
-    ("release", "## Work"),
-    ("project-setup", "## Quality targets"),
+    ("develop", "steps", "## Work"),
+    ("review", "steps", "## Work"),
+    ("release", "steps", "## Work"),
+    ("project-setup", "checks", "## Quality targets"),
 )
 
 
@@ -36,20 +38,32 @@ def skill_text(root: Path, name: str) -> str | None:
     return None
 
 
-def numbered_steps(text: str, heading: str) -> list[str]:
+def block_lines(text: str, tag: str, heading: str) -> list[str]:
+    """The lines of the first `<tag>` block, or else the lines under the heading.
+
+    The opening tag and the closing tag are each alone on a line.
+    """
     lines = text.splitlines()
-    start = None
-    for index, line in enumerate(lines):
-        if line.strip() == heading:
-            start = index + 1
-            break
-    if start is None:
-        return []
+    stripped = [line.strip() for line in lines]
+    if f"<{tag}>" in stripped:
+        start = stripped.index(f"<{tag}>") + 1
+        end = start
+        while end < len(lines) and stripped[end] != f"</{tag}>":
+            end += 1
+        return lines[start:end]
+    if heading in stripped:
+        start = stripped.index(heading) + 1
+        end = start
+        while end < len(lines) and not lines[end].startswith("#"):
+            end += 1
+        return lines[start:end]
+    return []
+
+
+def numbered_steps(text: str, tag: str, heading: str) -> list[str]:
     steps = []
     current = ""
-    for line in lines[start:]:
-        if line.startswith("#"):
-            break
+    for line in block_lines(text, tag, heading):
         match_indent = line.startswith((" ", "\t"))
         numbered = line[:1].isdigit() and ". " in line[:4]
         if numbered and not match_indent:
@@ -137,7 +151,7 @@ def append_lines(lines: list[str], entries: list[str], link=str) -> None:
 
 
 def append_checks(lines: list[str], root: Path, checks) -> None:
-    for name, heading in checks:
+    for name, tag, heading in checks:
         lines.append(f"#### {name}")
         lines.append("")
         text = skill_text(root, name)
@@ -145,7 +159,7 @@ def append_checks(lines: list[str], root: Path, checks) -> None:
             lines.append(f"{name}: not installed")
             lines.append("")
             continue
-        steps = numbered_steps(text, heading)
+        steps = numbered_steps(text, tag, heading)
         if not steps:
             lines.append("None.")
         else:

@@ -25,7 +25,7 @@ The include is `.claude/skills/project-setup/project.mk`. A repository that incl
 | Check | State | Evidence |
 | --- | --- | --- |
 | `make` with no goal runs `help` | | |
-| `CLAUDE.md` names the stages, the installed language skills and subskills, and the communication contract | | |
+| `CLAUDE.md` names the stages, the installed language skills and subskills, the `<general_rules>` block of the template, and the communication contract | | |
 | The Makefile includes `.claude/skills/project-setup/project.mk`, or `sdlc.mk` from `github-pipeline` when that file provides `help` | | |
 | The include sits before any target | | |
 | `setup`, `build`, and `test` exist and are `.PHONY` | | |
@@ -42,7 +42,9 @@ The include is `.claude/skills/project-setup/project.mk`. A repository that incl
 | `DOCS_CMD` is non-empty when the repository renders docs | | |
 | Gradle, npm, Podman, python, and tar run inside those targets | | |
 | No `.ONESHELL`, no Make 4 function, no shell-script wrapper. GNU Make 3.81 | | |
-| `setup` installs `jq` through Homebrew when `brew` is on `PATH` | | |
+| `setup` runs `make doctor` first and installs no tool on the host | | |
+| `doctor`, `skills-install`, `skills-update`, and `old-board` exist | | |
+| No recipe calls a host tool other than `git` and `podman` | | |
 
 ## Filled in
 
