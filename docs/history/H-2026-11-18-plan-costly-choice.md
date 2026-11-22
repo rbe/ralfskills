@@ -2,7 +2,7 @@
 id: H-2026-11-18-plan-costly-choice
 title: Plan waits on a costly choice
 status: closed
-adrs: [ADR-0014, ADR-0007]
+adrs: []
 skills: [plan, develop, record, python]
 decisions: []
 proposals: []

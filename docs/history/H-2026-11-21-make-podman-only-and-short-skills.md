@@ -2,9 +2,9 @@
 id: H-2026-11-21-make-podman-only-and-short-skills
 title: Make and Podman as the only interface, general rules, and short skills
 status: closed
-adrs: []
+adrs: [R-75, R-76, R-66, R-57, R-60, R-54]
 skills: [develop, review, record, project-setup, github-pipeline, release, python, shell]
-decisions: [D-15, D-16, D-17]
+decisions: []
 proposals: []
 issues: []
 ---

@@ -126,10 +126,10 @@ class BoardNumbersTest(unittest.TestCase):
             root = Path(tmp)
             sample(root)
             rows = by_id(board_numbers.numbers(root))
-            self.assertEqual(rows["D-1"]["lists"], 1)
+            self.assertEqual(rows["D-1"]["lists"], 2)
             self.assertEqual(rows["R-1"]["lists"], 0)
 
-    def test_a_mention_in_a_history_file_is_not_counted(self):
+    def test_a_history_list_is_counted_and_a_history_link_is_not(self):
         """id: R-77"""
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
@@ -141,7 +141,7 @@ class BoardNumbersTest(unittest.TestCase):
                 "decisions: [D-1]\n---\n\nSee [R-2](../REQUIREMENTS.md#r-2).\n",
             )
             rows = by_id(board_numbers.numbers(root))
-            self.assertEqual(rows["D-1"]["lists"], 1)
+            self.assertEqual(rows["D-1"]["lists"], 3)
             self.assertEqual(rows["R-2"]["links"], 1)
 
     def test_the_output_has_a_header_one_line_for_each_unit_and_a_total(self):

@@ -2,9 +2,9 @@
 id: H-2026-11-20-go-format
 title: gofmt reads the Go files of the project, and the Go caches belong to the project
 status: closed
-adrs: []
+adrs: [R-60, R-68]
 skills: [develop, review, record, go, shell]
-decisions: [D-10, D-11]
+decisions: []
 proposals: []
 issues: []
 ---

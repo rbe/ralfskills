@@ -18,7 +18,7 @@ The agent writes each document by hand from a template in `templates/` beside th
 5. If the caller asks for a new history file or for a stage section, read `references/history.md`. Write a new file from `templates/history.md` and add one roadmap line with the history id.
 6. If a stage asks for its section, write it in sentences: what the stage did, each gate with its result, and what the stage left alone. Replace `Not invoked yet.` and keep the heading. Update the frontmatter lists.
 7. If another skill asks for its line, add the line to the section of the stage that runs, as `python: the language skill for the Python files.` or `security: no listener, no secret.` Add the skill name to `skills` in the frontmatter. That skill opens no history file. If no history file is open, add no line.
-8. If a document or a table row is deleted, retire its id.
+8. If a document or a table row is deleted, retire its id with `make ids-retire ID=<id>`. If other rows took over its facts, add `BY="<id> <id>"`. Each frontmatter list that named the retired id then names those ids, in the list of their kind.
 9. If ADR frontmatter, the requirements list, or the set of installed skills changed, run `make toon`. If `make toon` fails, read `references/indexes.md`.
 </steps>
 </mode>
@@ -34,6 +34,8 @@ The agent writes each document by hand from a template in `templates/` beside th
 - Do the id check in this skill. Do not delegate it, and do not accept an id that the caller invented in prose.
 - The next number of a kind is one above the highest number of that kind in the documents and in `docs/ids.yaml`.
 - Write an id as plain text. After a document under `docs/` changes, run `make links`. It makes each id a link.
+- A frontmatter list of ids holds live ids only. An empty list is `[]`. A list is never text, and it is never a bare id. `make ids` fails on a retired id in a list.
+- A history file is complete at every stage end. It holds no open question, no point that waits for the owner, and no item to decide. Open work is an Open row of `docs/DECISIONS.md`, a known issue, or a proposal, and the history names its id.
 - To retire an id, run `make ids-retire ID=<id>`, then `make links`. A retired id is never issued again. `make ids-retire` creates `docs/ids.yaml` at the first retire.
 - One task has one history file. A deferred slice is a proposal and has no history file.
 - `onboard`, `migrate-docs`, and setup mode of `project-setup` open no history file, and their commits go on the default branch. An agent on another task opens a history file only when an id names it.

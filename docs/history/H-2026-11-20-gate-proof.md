@@ -2,9 +2,9 @@
 id: H-2026-11-20-gate-proof
 title: Run every gate in its container and prove the selection with each runner
 status: closed
-adrs: []
+adrs: [R-2]
 skills: [develop, review, record, project-report, project-setup, github-pipeline, node, jvm, python, shell]
-decisions: [D-8]
+decisions: []
 proposals: []
 issues: []
 ---

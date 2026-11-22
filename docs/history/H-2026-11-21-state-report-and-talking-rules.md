@@ -2,9 +2,9 @@
 id: H-2026-11-21-state-report-and-talking-rules
 title: The skill system-state-report and the talking rules of the owner
 status: closed
-adrs: []
+adrs: [R-51, R-74]
 skills: [develop, review, record, project-setup, system-state-report]
-decisions: [D-14]
+decisions: []
 proposals: []
 issues: []
 ---

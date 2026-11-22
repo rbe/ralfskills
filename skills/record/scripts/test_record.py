@@ -62,6 +62,57 @@ class IdsTest(unittest.TestCase):
         )
         self.assertEqual(ids.check(self.root), [])
 
+    def test_a_list_that_names_a_retired_id_fails(self):
+        """id: R-13"""
+        self.write("docs/ids.yaml", "retired:\n- D-5\n")
+        self.write(
+            "docs/history/H-1.md",
+            "---\nid: H-1\nadrs: []\ndecisions: [D-5]\n---\n",
+        )
+        errors = ids.check(self.root)
+        self.assertTrue(any("retired id D-5" in error for error in errors))
+
+    def test_a_list_that_is_text_or_has_no_brackets_fails(self):
+        """id: R-13"""
+        self.write(
+            "docs/history/H-1.md",
+            "---\nid: H-1\nadrs: none\ndecisions: [D-5, text]\n---\n",
+        )
+        errors = ids.check(self.root)
+        self.assertTrue(any("adrs is not a list" in error for error in errors))
+        self.assertTrue(any("text, which is not an id" in error for error in errors))
+
+    def test_retire_moves_a_list_item_to_the_list_of_the_surviving_id(self):
+        """id: R-13"""
+        row = '| <a id="r-28"></a>R-28 | Title | One sentence. |\n'
+        self.write(
+            "docs/REQUIREMENTS.md", "| Id | T | S |\n| --- | --- | --- |\n" + row
+        )
+        history = self.write(
+            "docs/history/H-1.md",
+            "---\nid: H-1\nadrs: []\ndecisions: [D-5, D-6]\nissues: []\n---\n\nBody D-5.\n",
+        )
+        errors = ids.retire(self.root, "D-5", ["R-28"])
+        self.assertEqual(errors, [])
+        text = history.read_text(encoding="utf-8")
+        self.assertIn("adrs: [R-28]\ndecisions: [D-6]\nissues: []\n", text)
+        self.assertIn("Body D-5.", text)
+        self.assertEqual(ids.check(self.root), [])
+
+    def test_retire_without_a_surviving_id_empties_the_list(self):
+        """id: R-13"""
+        history = self.write(
+            "docs/history/H-1.md", "---\nid: H-1\ndecisions: [D-5]\n---\n"
+        )
+        self.assertEqual(ids.retire(self.root, "D-5"), [])
+        self.assertIn("decisions: []", history.read_text(encoding="utf-8"))
+
+    def test_retire_rejects_a_surviving_id_that_is_not_live(self):
+        """id: R-13"""
+        errors = ids.retire(self.root, "D-5", ["R-99"])
+        self.assertTrue(any("R-99 is not a live id" in error for error in errors))
+        self.assertFalse((self.root / "docs" / "ids.yaml").exists())
+
     def test_retire_rejects_a_live_id(self):
         """id: R-13"""
         self.write("docs/history/H-1.md", "---\nid: H-1\n---\n")

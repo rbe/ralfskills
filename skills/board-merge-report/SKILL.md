@@ -27,7 +27,7 @@ The report lists board text that says one fact twice, says opposite facts, or di
 
 <rules>
 - A merge keeps the id that more tests name. If the tests tie, it keeps the id with more links, then the lower number.
-- A merge lists the tests and the links that name the retired id. A history file is not counted.
+- A merge lists the tests and the links that name the retired id. The numbers count a frontmatter list of a history file. They do not count a link in its text.
 - A history file is never merged. It is deleted only when it is closed.
 - If a closed history file holds the only copy of a reason, say so. The reason moves to a row first.
 - A row that no test names is never a covered-by-code finding.

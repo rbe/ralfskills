@@ -2,9 +2,9 @@
 id: H-2026-11-22-board-merge-skills
 title: The skills board-merge-report and board-merge
 status: closed
-adrs: []
+adrs: [R-77, R-78]
 skills: [develop, review, record, project-setup, board-merge-report, board-merge, python, shell]
-decisions: [D-18]
+decisions: []
 proposals: []
 issues: []
 ---
@@ -41,19 +41,16 @@ Duplicates and broken sentences removed. [R-40](../REQUIREMENTS.md#r-40) points 
 
 Words. `docs/REQUIREMENTS.md` and `docs/DECISIONS.md` had 13633 words at `1859147` and have 13071 now. The repair itself changed 13124 to 13071. `make board-numbers` counts 28456 words for 102 units, history files included, and this paragraph is part of that count.
 
-## Waits for the owner
+## Points that the repair left
 
-These rows stay unchanged, because they are in open owner questions or because the code does not decide.
+The owner settled the points below after the trial. Each unsettled point is an Open row in `docs/DECISIONS.md`.
 
-- [R-3](../REQUIREMENTS.md#r-3) says a requirement id on this collection is a row of the requirements list. The code also accepts a Decided row. [R-3](../REQUIREMENTS.md#r-3) has a broken sentence that begins with `On a product repository and the two reviews`.
-- [R-20](../REQUIREMENTS.md#r-20) says the general rules state that a non-stage skill opens no history file. The general rules do not state it. `record` does.
-- [R-42](../REQUIREMENTS.md#r-42) lists 2 Containerfile templates, and the skill has 4. It also lists a shipment as a binary or an image, and [R-57](../REQUIREMENTS.md#r-57) adds the library package.
-- [R-45](../REQUIREMENTS.md#r-45) forbids every host tool but `git` and `podman`. [R-75](../REQUIREMENTS.md#r-75) allows the tools of POSIX `sh`. [R-45](../REQUIREMENTS.md#r-45), [R-37](../REQUIREMENTS.md#r-37), [R-36](../REQUIREMENTS.md#r-36), and [R-39](../REQUIREMENTS.md#r-39) also repeat rules that other rows state.
-- [D-3](../DECISIONS.md#d-3) says `in this list` and means the requirements list, but the Open and Decided rows live in `docs/DECISIONS.md`. A test in `test_project_report.py` pins the sentence, so the repair left it. It also repeats [R-28](../REQUIREMENTS.md#r-28). With [D-3](../DECISIONS.md#d-3) as the only row, the owner decides whether `docs/DECISIONS.md` goes, and where open work lives.
-- The first bullet of Discussed and not implemented is a second home for a declined idea outside any row.
-- Does [R-57](../REQUIREMENTS.md#r-57) keep that the merge itself asks no question? Old D-17 said so. `release` asks only before the ship.
-- Seven history files name retired ids in `decisions:`. Leave them, or remove the ids?
-- [R-45](../REQUIREMENTS.md#r-45) and [R-46](../REQUIREMENTS.md#r-46) hold 442 and about 790 words of unrelated facts. The owner decides whether to split them.
+- [R-3](../REQUIREMENTS.md#r-3), [R-20](../REQUIREMENTS.md#r-20), [R-42](../REQUIREMENTS.md#r-42), and [R-45](../REQUIREMENTS.md#r-45) were corrected to what the skills and the code do. [R-57](../REQUIREMENTS.md#r-57) now says that the merge asks the owner nothing, and that `release` asks only before the ship.
+- [R-36](../REQUIREMENTS.md#r-36), [R-37](../REQUIREMENTS.md#r-37), and [R-39](../REQUIREMENTS.md#r-39) keep framework detail in a reference file beside the language skill.
+- [D-3](../DECISIONS.md#d-3) says `in this list` and means the requirements list, and a test in `test_project_report.py` pins the sentence. The choice about `docs/DECISIONS.md` is the Open row [D-21](../DECISIONS.md#d-21).
+- The home of a declined idea outside any row is the Open row [D-22](../DECISIONS.md#d-22).
+- The split of [R-45](../REQUIREMENTS.md#r-45) and [R-46](../REQUIREMENTS.md#r-46) is the Open row [D-23](../DECISIONS.md#d-23).
+- Thirteen history files named retired ids in `decisions:` or in `adrs:`. Each list now names the live id that took over the facts, or is empty. This history keeps the retired ids in its text as plain text.
 
 ## Not run
 
@@ -61,4 +58,4 @@ The `cover` action never ran on real data, because the trial had no row with tes
 
 ## Release
 
-The merge into the default branch waits for the owner. The question whether a Decided row and a requirement row need to be two kinds is open.
+Not invoked: the owner merges this slice.

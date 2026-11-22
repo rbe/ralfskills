@@ -2,9 +2,9 @@
 id: H-2026-11-21-onboard-and-shared-contract
 title: One onboard skill, one shared contract, and a delivery that fits every language
 status: closed
-adrs: []
+adrs: [R-71]
 skills: [plan, develop, review, record, project-setup, github-pipeline, onboard, shell]
-decisions: [D-13]
+decisions: []
 proposals: []
 issues: []
 ---

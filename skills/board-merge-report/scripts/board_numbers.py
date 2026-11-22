@@ -162,13 +162,13 @@ def mentions(root):
     """Each link and each frontmatter list item that names an id.
 
     Each mention is (id, file, line number, kind), the kind is link or list.
-    A history file may cite an id that was retired later, so its mentions
-    do not count.
+    A frontmatter list of a history file counts, because it holds live ids.
+    A link in the text of a history file does not count, because the text
+    keeps the ids that were retired later.
     """
     found = []
     for path in sorted((root / "docs").rglob("*.md")):
-        if "history" in path.relative_to(root / "docs").parts[:-1]:
-            continue
+        is_history = "history" in path.relative_to(root / "docs").parts[:-1]
         text = path.read_text(encoding="utf-8")
         front, _ = split_front(text)
         for number, line in enumerate(text.splitlines(), 1):
@@ -178,6 +178,8 @@ def mentions(root):
                 for item in match.group(1).split(",") if match else []:
                     if WHOLE.fullmatch(item.strip().strip("'\"")):
                         found.append((item.strip().strip("'\""), path, number, "list"))
+                continue
+            if is_history:
                 continue
             for match in ID_LINK.finditer(line):
                 found.append((match.group(1), path, number, "link"))

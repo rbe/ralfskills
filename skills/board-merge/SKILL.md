@@ -26,9 +26,9 @@ The owner chooses findings from the report of `board-merge-report`. This skill d
 </steps>
 
 <rules>
-- Merge: the surviving row keeps its id and takes the unique sentences of the other row. The other id is retired with `make ids-retire ID=<id>`.
+- Merge: the surviving row keeps its id and takes the unique sentences of the other row. The other id is retired with `make ids-retire ID=<id> BY=<surviving id>`.
 - Merge: each test line `id:` that names the retired id names the surviving id. No test is deleted.
-- Merge: each mention and each frontmatter list item of the retired id becomes the surviving id before the retire. Then `make links` rewrites the links. Edit no history file.
+- Merge: each mention of the retired id in a document that is not a history file becomes the surviving id before the retire. The retire changes each frontmatter list. Then `make links` rewrites the links. In a history file, `make ids-retire` changes the frontmatter lists only. Edit no other line of a history file.
 - Merge: a Decided row that states a reason leaves one sentence of it in the surviving row.
 - Shorten and cover: edit the row only. Cover keeps the intent, the reason, and each fact that no test pins.
 - Delete history: only a closed file. Copy a flagged reason into the named row first. Remove each mention of the history id outside history files, delete the file, and retire the id.
