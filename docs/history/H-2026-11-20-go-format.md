@@ -25,7 +25,7 @@ The Podman error has a cause. In Podman 4.9.3, a container fails to start while 
 
 `make format` and `make format-fix` gave gofmt the package directories. gofmt walks a directory, so with a package in the root it read `.claude/` and listed a file in a subpackage twice. The commands now give gofmt the Go files that `go list` names.
 
-A last agent then ran on the branch with the volume change: a new Go project that ships a binary, with a feature that started at `plan`. It reports no blocker. Every Make target passed on the branch of the slice and on the default branch, and the binary gave the right output. Its one defect of a tool is the gofmt defect above. Two of its findings are not fixed here. They are the Open rows [D-10](../DECISIONS.md#d-10) and [D-11](../DECISIONS.md#d-11).
+A last agent then ran on the branch with the volume change: a new Go project that ships a binary, with a feature that started at `plan`. It reports no blocker. Every Make target passed on the branch of the slice and on the default branch, and the binary gave the right output. Its one defect of a tool is the gofmt defect above. Two of its findings are not fixed here. They are the Open rows D-10 and [D-11](../DECISIONS.md#d-11).
 
 Shell is the language skill.
 
