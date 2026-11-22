@@ -23,7 +23,7 @@ Pattern: one shared file for the contract targets, which both entry makefiles in
 
 `contract.mk` in `project-setup` holds the contract targets that were in `project.mk`. `project.mk` keeps the help target and includes `contract.mk`. [R-71](../REQUIREMENTS.md#r-71) states it.
 
-`sdlc.mk` includes `contract.mk` and `container.mk` unless the project sets `SDLC_OWN_CONTRACT = 1`. The Node and Gradle templates set it, because they write their own recipes. [D-13](../DECISIONS.md#d-13) records the choice.
+`sdlc.mk` includes `contract.mk` and `container.mk` unless the project sets `SDLC_OWN_CONTRACT = 1`. The Node and Gradle templates set it, because they write their own recipes. D-13 records the choice.
 
 `container.mk` has `image`, `image-ci`, and `publish-container`, and does not depend on the language. `image-ci` deletes the old tar before `podman save`, so a second run does not fail. The Node template has the same line.
 
