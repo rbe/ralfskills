@@ -1,6 +1,6 @@
 ---
 name: python
-description: Python. Applies the Python rules to a change. Use when python is installed and the files in hand are Python. The stage skill still applies.
+description: Python. Applies the Python rules to a change. Use when python is installed and the files in hand are Python. A framework named in CLAUDE.md is a reference file beside this skill. The stage skill still applies.
 kind: language
 files: [py]
 ---
@@ -13,8 +13,9 @@ This skill gives the Make targets and the code rules for Python files.
 
 <steps>
 1. If the project is new or `.coveragerc` is missing, read `references/tooling.md`, then run `make python-tooling`.
-2. Edit the Python files by the rules below.
-3. If a one-off Python command is necessary, run `make py ARGS='...'`.
+2. If `CLAUDE.md` names a framework, read `references/frameworks.md` and the file in `references/` that has the name of the framework.
+3. Edit the Python files by the rules below.
+4. If a one-off Python command is necessary, run `make py ARGS='...'`.
 </steps>
 
 <rules>
@@ -25,10 +26,11 @@ This skill gives the Make targets and the code rules for Python files.
 - A test file has no `if __name__ == "__main__":` block, because the diff report counts each line of a test file.
 - A public function has type hints. A change adds the hints to each public function that it touches.
 - A module has one job.
-- A framework that `CLAUDE.md` names is a project skill. It does not replace this skill.
+- A framework file does not replace this skill or the stage skill.
 </rules>
 
 <references>
 - `references/tooling.md`: read it before `make python-tooling` runs.
+- `references/frameworks.md` and a file named by a framework: read them when `CLAUDE.md` names that framework.
 - `references/makefile.md`: read it when the change touches a command variable, `PYTHON_IMAGE`, a target of the Makefile, or a `src/` layout.
 </references>
