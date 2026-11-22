@@ -30,7 +30,7 @@ The skill is copied from the skill `system-state-report` that the owner keeps ou
 - Step 4 checks against the contract and the rules of a report.
 - The purpose section says that the contract in `CLAUDE.md` applies to the report.
 
-The communication contract in `CLAUDE.md` and in `skills/project-setup/templates/CLAUDE.md` is the text of the owner's talking rules. It replaces two shorter paragraphs. The first-sentence rule and the two standards stayed. The text now has a heading and four parts: names, sentences, content, and scope. [D-14](../DECISIONS.md#d-14) records the choice. [R-51](../REQUIREMENTS.md#r-51) and [R-74](../REQUIREMENTS.md#r-74) state the contract and the skill.
+The communication contract in `CLAUDE.md` and in `skills/project-setup/templates/CLAUDE.md` is the text of the owner's talking rules. It replaces two shorter paragraphs. The first-sentence rule and the two standards stayed. The text now has a heading and four parts: names, sentences, content, and scope. D-14 records the choice. [R-51](../REQUIREMENTS.md#r-51) and [R-74](../REQUIREMENTS.md#r-74) state the contract and the skill.
 
 `CLAUDE.md` and the template name the skill. The README has a row and a line in the `apm.yml` example.
 
