@@ -4,7 +4,7 @@ This repository is the skill collection. `CLAUDE.md` is the only entry file.
 
 Stages, in order: `plan`, `develop`, `review`, `release`. Other skills: `record`, `project-report`, `project-setup`, `github-pipeline`, `onboard`, `system-state-report`, `board-merge-report`, `board-merge`. Language skills: `node`, `python`, `shell`, `jvm`, `go`. Subskills `plan` asks and `review` checks: `security`, `privacy`, `ux-ui-design`, `api-design`. A project skill is an extra name listed here.
 
-A row of `docs/REQUIREMENTS.md` is a requirement. A row of `docs/DECISIONS.md` is Open (unfinished work) or Decided (a choice in force).
+A row of `docs/REQUIREMENTS.md` is a requirement. Its status is `planned` (open work) or `in force` (a rule that holds).
 
 ## General rules
 
@@ -27,7 +27,7 @@ Board:
 
 - `record` writes every id and every board document. Invoke `record` before you create one.
 - An architecture decision record (ADR) in `docs/adr/` is an architecture or development rule. An ADR with the status `Accepted` is a rule for every change.
-- If the repository keeps `docs/REQUIREMENTS.md` and no `docs/adr/`, a row of that list replaces an ADR, and an Open row of `docs/DECISIONS.md` replaces a roadmap line. Where a step names `docs/adr/index.toon`, read `docs/requirements-index.toon` in such a repository and open each row that names a part that the change touches.
+- If the repository keeps `docs/REQUIREMENTS.md` and no `docs/adr/`, a row of that list replaces an ADR, and a planned row of that list replaces a roadmap row. Where a step names `docs/adr/index.toon`, read `docs/requirements-index.toon` in such a repository and open each row that names a part that the change touches.
 - Write one line for each `check` row of `docs/skill-index.toon`, or `checks: none installed`. For a subskill that is not installed, write `<name>: not installed`. A row without a line fails the step.
 - Run `make toon` before you read an index. Hand-editing a file that a Make target writes is a defect.
 
@@ -35,7 +35,7 @@ Gates:
 
 - The gates are `make editorconfig`, `make format`, `make lint`, `make test`, `make integration`, and `make coverage`. CI runs the same six targets.
 - A change is done when `make lint` and `make test` passed after the last edit. Report a gate that did not run as not run, and why.
-- A test names the ADR id or the decision id that it proves in a line `id:`. Stop when a test has no id.
+- A test names the ADR id or the requirement id that it proves in a line `id:`. Stop when a test has no id.
 - Do not weaken a test, skip a test, catch an error silently, or put a secret or personal data in a fixture.
 - A method does one thing or only composes other methods. Name each unit, function, method, class, and file from the domain.
 

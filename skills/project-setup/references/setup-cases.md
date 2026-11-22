@@ -24,4 +24,4 @@ Step 7 reads this section when the file exists.
 Step 8 reads this section when a test has no `id:` line.
 
 - Find the test with `make project-report` when that skill is installed.
-- Ask `record` for a Decided row that states the behaviour that the test proves, and name that row in the test. One row can serve several tests.
+- Ask `record` where the behaviour that the test proves goes, as a requirement row or an ADR, and name that id in the test. One row can serve several tests.
