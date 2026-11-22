@@ -28,9 +28,24 @@
 - If no row, ADR, or Decided row that the file names states that reason, the file holds the only copy. Flag the file, quote the reason, and name the row that receives it. The words after are the words of that one sentence.
 - A living document that links to the history id keeps a dead link. Count those in the links column. `board-merge` edits each out.
 
+## Contradiction
+
+- Two rows or files state opposite or unequal facts about one thing. A scope sentence or a list that differs counts.
+- A contradiction is not a duplicate. Do not merge the two units.
+- Read the code. The code is `skills/*/SKILL.md` and its references, `skills/*/*.mk`, templates, scripts, `Makefile`, `CLAUDE.md`, and `README.md`. In a product repository it is the source, the tests, and the makefiles.
+- If the code decides, name the row that is false, the evidence as path and line, and the corrected sentence.
+- If the code does not decide, the finding is a question to the owner. List the choices. `board-merge` does not touch it until the owner answers.
+
+## Against code
+
+- One row states something that the code does not do or does differently. A row that names a file, a target, a variable, or a skill that does not exist counts.
+- Search the code for each name. Quote the path and line, or say that the search found none.
+- If the code is right, name the evidence and the corrected sentence. The fix is a row edit.
+- If the row may be right and the code wrong, the finding is a question to the owner with the choices. The fix is then a task for `develop`, not a row edit.
+
 ## Refutation
 
 - Read both units in full.
 - Same subject but another actor, another repository kind (this collection, a product repository, both), or another stage means no merge.
 - A sentence that starts with `This applies to` names the repository kind.
-- A contradiction is not a duplicate. Report it as its own line with the two ids.
+- The same refutation applies to a contradiction. Two rows for two actors do not contradict.

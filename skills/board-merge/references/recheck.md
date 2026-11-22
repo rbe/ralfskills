@@ -23,6 +23,14 @@ Read each unit in full and run `make board-numbers IDS="<ids>"`. Stop at the fir
 - Each fact that leaves the row has an assertion in a test with that `id:`.
 - The reason, the rejected alternative, and each rule across files stay.
 
+## fix
+
+- The finding is a contradiction or an against-code finding with a corrected sentence. A finding that is a question has no `fix` until the owner answered.
+- Open the evidence, path and line, and read it. If the code now differs from the report, stop.
+- For a contradiction, the row that is false is the row that the finding names. Search the board and the code once more for a third row that states the same false fact.
+- The corrected sentence is true against the code, and it states no new fact that the code does not show.
+- If the code is wrong and the row is right, stop. That is a task for `develop`. Change no code.
+
 ## delete
 
 - The status of the file is `closed`.
