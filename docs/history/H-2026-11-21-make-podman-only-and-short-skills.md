@@ -116,7 +116,7 @@ Left alone:
 - The trial copied the skills, because APM cannot read a local path. The APM install from `rbe/ralfskills` was not run in the trial.
 - `make podman-start` and the new `PODMAN_NET_ARGS` arguments did not run on macOS or behind a proxy.
 - `block_lines` in `project_report.py` still reads the old headings "## Work" and "## Quality targets" when a tag is absent. No skill of the collection needs that now.
-- [D-5](../DECISIONS.md#d-5) says that this collection keeps no test on skill wording. The new shape tests check tags and one fixed line, and [R-28](../REQUIREMENTS.md#r-28) now says so.
+- D-5 says that this collection keeps no test on skill wording. The new shape tests check tags and one fixed line, and [R-28](../REQUIREMENTS.md#r-28) now says so.
 - [D-16](../DECISIONS.md#d-16) was open here. The third round made it Decided. `make jvm-tooling` did not run with the real Gradle wrapper and Spotless, so a Kotlin project did not get a full run.
 - `CLAUDE.md` of `gh-sweep` still has the old paragraphs. Setup mode of `project-setup` now deletes a sentence that the general rules state, and [R-60](../REQUIREMENTS.md#r-60) says so.
 

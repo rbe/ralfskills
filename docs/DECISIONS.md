@@ -5,7 +5,6 @@ One list. An Open row is work that is not finished. A Decided row is a choice in
 | Id | Status | Choice |
 | --- | --- | --- |
 | <a id="d-3"></a>D-3 | Decided | This collection keeps one requirements list and records open work and choices in force in this list. |
-| <a id="d-5"></a>D-5 | Decided | This collection keeps no test on skill wording. The unit tests cover the scripts. |
 | <a id="d-6"></a>D-6 | Decided | `project-setup` has the one template of the entry file. A product repository gets the communication contract from that template. |
 | <a id="d-8"></a>D-8 | Decided | For Vitest, `make test-changed` uses `vitest related`. That selection is the module graph of Vitest, not coverage. |
 | <a id="d-9"></a>D-9 | Decided | A test names an ADR or a decision. It does not name a roadmap line or a known issue, because those ids are retired when the work ends. |
