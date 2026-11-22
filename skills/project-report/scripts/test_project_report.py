@@ -1132,6 +1132,8 @@ class MakeAndPodmanInterfaceTest(unittest.TestCase):
         self.assertIn("`make old-board-delete`", skill)
         self.assertNotIn("ls -d", skill)
         self.assertNotIn("rmdir", skill)
+        for path in ("docs/DECISIONS.md", "docs/KNOWN_ISSUES.md"):
+            self.assertIn(path, skill)
 
     def test_the_github_cli_runs_in_podman_with_the_token_of_the_environment(self):
         """id: R-46"""
