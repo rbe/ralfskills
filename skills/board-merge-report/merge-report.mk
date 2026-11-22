@@ -1,0 +1,32 @@
+# The numbers of the board merge report. project.mk and sdlc.mk include
+# this file when the skill is installed. Python runs through $(PYTHON),
+# which is Podman on this machine.
+#
+#   make board-numbers
+#   make board-numbers IDS="R-51 R-76"
+#
+# Without IDS the target lists every requirement row, Decided decision
+# row, ADR, and history file. The columns are id, kind, status, words,
+# tests that name the id with `id:`, links to the id from other
+# documents, and frontmatter lists that name the id.
+
+ifndef BOARD_MERGE_REPORT_MK
+BOARD_MERGE_REPORT_MK := 1
+
+BOARD_MERGE_REPORT_DIR := $(dir $(lastword $(MAKEFILE_LIST)))
+
+# Alone, as `make -f <this file> board-numbers`, no makefile has
+# defined $(PYTHON) yet.
+ifndef PYTHON
+include $(BOARD_MERGE_REPORT_DIR)../project-setup/podman-python.mk
+endif
+
+.PHONY: board-numbers
+
+board-numbers: ## List words, tests, and links of each board unit. IDS= narrows it
+	$(PYTHON) "$(BOARD_MERGE_REPORT_DIR)scripts/board_numbers.py" $(IDS)
+
+# help is the default goal. This fragment does not take it.
+.DEFAULT_GOAL := help
+
+endif

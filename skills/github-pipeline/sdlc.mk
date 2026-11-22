@@ -472,6 +472,7 @@ cleanup-actions-artifacts: ## Match CI: delete artifacts at least one hour old, 
 -include .claude/skills/record/index.mk
 -include .claude/skills/project-report/report.mk
 -include .claude/skills/migrate-docs/migrate.mk
+-include .claude/skills/board-merge-report/merge-report.mk
 
 # After the fragments this file includes. A fragment must not replace it.
 .DEFAULT_GOAL := help

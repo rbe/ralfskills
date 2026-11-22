@@ -543,7 +543,7 @@ def tag_problems(lines):
 class SkillShapeTest(unittest.TestCase):
     def test_each_skill_refers_to_the_general_rules_in_one_line(self):
         """id: R-76"""
-        self.assertEqual(len(skill_files()), 20)
+        self.assertEqual(len(skill_files()), 22)
         for path in skill_files():
             text = path.read_text(encoding="utf-8")
             self.assertEqual(text.count(ONE_LINE), 1, path)

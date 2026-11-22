@@ -8,7 +8,7 @@
 # No install step. Ruff and editorconfig-checker are container images.
 SETUP_CMD = true
 BUILD_CMD = true
-UNIT_TESTS = skills/record/scripts/test_record.py skills/project-report/scripts/test_project_report.py
+UNIT_TESTS = skills/record/scripts/test_record.py skills/project-report/scripts/test_project_report.py skills/board-merge-report/scripts/test_board_numbers.py
 TEST_CMD = $(PYTHON) -m unittest $(UNIT_TESTS)
 TEST_CHANGED_CMD = $(PYTHON) skills/project-report/scripts/changed_tests.py
 PROJECT_REPORT_CMD = $(PYTHON) skills/project-report/scripts/project_report.py
@@ -29,5 +29,6 @@ include skills/project-setup/project.mk
 # target is included from the skill source. A product Makefile includes
 # project.mk, which includes the installed copy.
 include skills/record/index.mk
+include skills/board-merge-report/merge-report.mk
 
 .DEFAULT_GOAL := help

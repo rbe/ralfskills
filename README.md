@@ -15,6 +15,8 @@ Install so the files land in `.claude/skills/`. That is the APM target `claude`.
 | [record](skills/record/SKILL.md) | Ids, the board, the history file, the ADRs and their status, the ADR index, the decision log, and this collection's requirements index |
 | [onboard](skills/onboard/SKILL.md) | The order of the other skills for a project that adopts this collection. Say `report and integrate` |
 | [system-state-report](skills/system-state-report/SKILL.md) | A plain-language report on what the system does now, the decisions that shaped it, and the decisions that wait for the owner. Say `state report` |
+| [board-merge-report](skills/board-merge-report/SKILL.md) | Reports which board rows, Decided rows, ADRs, and closed history files repeat text and can merge, shrink, or go. Writes nothing. Numbers come from `make board-numbers` |
+| [board-merge](skills/board-merge/SKILL.md) | Does what the owner chose by id from that report. One commit for each finding |
 | [project-report](skills/project-report/SKILL.md) | Generated requirements map, architecture review, and development review |
 | [migrate-docs](skills/migrate-docs/SKILL.md) | The only skill that reads an old board. Other skills stop until it has deleted those files |
 | [project-setup](skills/project-setup/SKILL.md) | Writes `CLAUDE.md` from its template when the file is missing. Make is the only interface. `help` is the default goal. EditorConfig, one formatter, one linter, unit tests, one integration entry, and a diff-cover report are targets |
@@ -106,6 +108,8 @@ dependencies:
         - project-setup
         - onboard
         - system-state-report   # the plain-language report for the owner
+        - board-merge-report    # finds repeated board text
+        - board-merge           # applies the findings the owner chose
         - github-pipeline   # when the project publishes through GitHub
         - migrate-docs      # when the old board is still present
         - node              # or python, jvm, go: the language skills the project uses
