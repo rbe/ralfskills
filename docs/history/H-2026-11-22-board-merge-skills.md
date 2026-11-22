@@ -23,7 +23,7 @@ Pattern: a script that prints one line for each unit, behind `make board-numbers
 
 The script `skills/board-merge-report/scripts/board_numbers.py` prints the id, the kind, the status, the words, the tests, the links, and the frontmatter lists for each requirement row, Decided row, ADR, and history file. `merge-report.mk` defines `make board-numbers` with `IDS=` to narrow the output. The root `Makefile`, `project.mk`, and `sdlc.mk` include it. The unit tests are in `test_board_numbers.py` and the root `Makefile` runs them.
 
-Both skills are registered in `CLAUDE.md`, in its template, in the README, and in [R-16](../REQUIREMENTS.md#r-16). The rows [R-77](../REQUIREMENTS.md#r-77) and [R-78](../REQUIREMENTS.md#r-78) and [D-18](../DECISIONS.md#d-18) state the choice. The skill count in the shape test is 22. `CLAUDE.md` has 759 words and the template has 829, inside the limits of 760 and 830.
+Both skills are registered in `CLAUDE.md`, in its template, in the README, and in [R-16](../REQUIREMENTS.md#r-16). The rows [R-77](../REQUIREMENTS.md#r-77) and [R-78](../REQUIREMENTS.md#r-78) and D-18 state the choice. The skill count in the shape test is 22. `CLAUDE.md` has 759 words and the template has 829, inside the limits of 760 and 830.
 
 ## Review
 
