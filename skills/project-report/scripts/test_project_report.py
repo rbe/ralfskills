@@ -1201,6 +1201,17 @@ class MakeAndPodmanInterfaceTest(unittest.TestCase):
             if "git merge-base" in text:
                 self.assertIn(base, text, str(path))
 
+    def test_make_finds_the_default_branch_without_an_override(self):
+        """id: R-12"""
+        text = (ROOT / "skills/project-setup/tools.mk").read_text(encoding="utf-8")
+        self.assertIn("ifndef DEFAULT_BRANCH", text)
+        for source in (
+            "refs/remotes/origin/HEAD",
+            "refs/heads/main",
+            "refs/heads/master",
+        ):
+            self.assertIn(source, text)
+
     def test_the_github_targets_stop_without_a_token_and_without_a_tag(self):
         """id: R-75"""
         sdlc = (self.PIPELINE / "sdlc.mk").read_text(encoding="utf-8")

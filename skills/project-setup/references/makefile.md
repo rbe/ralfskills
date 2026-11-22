@@ -67,7 +67,7 @@ Make reads `RENDER_DOCS` and `PUBLISH_IMAGE` while it parses `project.mk`. Set t
 | `DOCS_CMD` | The renderer. Empty fails `docs` |
 | `PUBLISH_IMAGE` | `1` when an image is published. Otherwise there is no `login` target |
 | `REGISTRY` | The registry host of `login`. Default `ghcr.io` |
-| `DEFAULT_BRANCH` | The default branch, when it is not `main` |
+| `DEFAULT_BRANCH` | The default branch. Make finds it: the origin default branch, else `main`, else `master` |
 | `PYTHON_IMAGE` | The image of `$(PYTHON)`. Default `docker.io/library/python:3.13-slim` |
 | `APM_IMAGE` | The image that runs APM. It has git and Python. Default `docker.io/library/python:3.13` |
 | `APM_VERSION` | The APM version of `skills-install` and `skills-update`. Default `0.36.1` |

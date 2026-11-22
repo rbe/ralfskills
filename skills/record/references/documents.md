@@ -4,7 +4,7 @@
 
 - The scripts read a table row for a roadmap row and for a requirement row.
 - `docs/ROADMAP.md` has the columns Id, Kind, Title, and Proposal. The kind is `feature`, `defect`, or `question`. The proposal cell is a link or empty.
-- `docs/REQUIREMENTS.md` has the columns Id, Title, and Statement. A repository with no `docs/ROADMAP.md` has the columns Id, Title, Status, and Statement. The status is `planned` or `in force`. A planned row is open work, and its statement names the choices of an open question.
+- `docs/REQUIREMENTS.md` has the columns Id, Title, and Statement. A repository with no `docs/adr/` has the columns Id, Title, Status, and Statement, and no `docs/ROADMAP.md`. The status is `planned` or `in force`. A planned row is open work, and its statement names the choices of an open question.
 - The scripts read a frontmatter block for an ADR, a proposal, and a history file.
 - Write a list in the frontmatter on one line, as `skills: [a, b]`.
 - In the frontmatter and in the id cell of a table, an id is plain text. The scripts read it there.
@@ -26,11 +26,12 @@ supersedes: []
 
 - The keys are the plural of the kind.
 - A proposal and a history file use the same keys.
-- A list key holds ids only, written as `[a, b]` on one line. An empty list is `[]`. A list is never missing its brackets, never text, and never a bare id. A script can then read each list as a list of ids.
+- `decisions` and `issues` are read-only legacy keys of a file written before the roadmap table. A script that reads `roadmap` also reads these two. A new file does not use them.
+- A list key other than `skills` holds ids only, written as `[a, b]` on one line. An empty list is `[]`. A list is never missing its brackets, never text, and never a bare id. A script can then read each list as a list of ids.
 - Field rule: a list holds ids only, and each id is live or on the retired list. `make ids` fails on any other item. A document is not rewritten when an id retires later, a history file included.
 - The id of a requirement row goes in `adrs`, where the repository keeps no `docs/adr/`. The id of a roadmap row goes in `roadmap`, and a proposal id in `proposals`.
 - A text or an explanation does not go in a list. It goes in the body.
-- When an id retires and other rows took over its content, `make ids-retire ID=<id> INTO="<id> <id>"` writes the map line in `docs/ids.yaml`. A script follows the line from a retired id to the live ids.
+- When an id retires and other rows took over its content, `make ids-retire ID=<id> INTO="<id> <id>"` writes the map line in `docs/ids.yaml`. Without `INTO=`, a map line that names the retired id loses that id. A script follows the line from a retired id to the live ids.
 - The text of a history file keeps a retired id as plain text.
 
 ## What `make links` writes

@@ -11,7 +11,10 @@ PROJECT_TOOLS_MK := 1
 EDITORCONFIG_IMAGE ?= ghcr.io/editorconfig-checker/editorconfig-checker:4.0.2
 RUFF_IMAGE ?= ghcr.io/astral-sh/ruff:0.15.2
 # The branch a slice is compared with. coverage and test-changed read it.
-DEFAULT_BRANCH ?= main
+# Make finds it: the origin default branch, else main, else master.
+ifndef DEFAULT_BRANCH
+DEFAULT_BRANCH := $(or $(patsubst origin/%,%,$(shell git symbolic-ref --quiet --short refs/remotes/origin/HEAD 2>/dev/null)),$(if $(shell git rev-parse -q --verify refs/heads/main 2>/dev/null),main,$(if $(shell git rev-parse -q --verify refs/heads/master 2>/dev/null),master,main)))
+endif
 COVERAGE_VERSION ?= 7.17.3
 DIFF_COVER_VERSION ?= 11.0.2
 

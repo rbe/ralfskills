@@ -27,14 +27,14 @@ The report is successful if the reader understands each sentence on the first re
    1. Summary. Maximum 5 sentences: what the system does now, the largest difference from what was asked, and the number of decisions that wait for the human.
    2. What the system does now. A list of behaviours that a person can observe, in the form "When [actor] does [action], the system does [result]." Do not list files or modules.
    3. Differences from what was asked. Each item: what was asked, with the source; what exists; the effect for the user.
-   4. Decisions that were made. A table: the decision; who made it (human, agent, or agent without a question to the human); the rejected alternative; the reason; whether it is easy to reverse; the board row. Put the decisions that an agent made without a question first. Write `none` as the board row of each decision that has no row in `docs/REQUIREMENTS.md` and no ADR.
+   4. Choices that were made. A table: the choice; who made it (human, agent, or agent without a question to the human); the rejected alternative; the reason; whether it is easy to reverse; the board row (a requirement row, an ADR, or a roadmap row). Put the choices that an agent made without a question first. Write `none` as the board row of each choice that has no such row.
    5. Not verified. What you could not run or read, and what only a chat claims.
    6. Risks and defects. Only those that you can point to, each with the location and the effect.
    7. Decisions for you. Each item is a question that the human answers with a selection. Give the options, the effect of each option, and your recommendation with one reason.
    8. Glossary. The table from step 2.
 4. Read `references/cold-reader.md` and run the cold-reader check.
 5. Save the report as `reports/state-YYYY-MM-DD.md`. `make links` reads only `docs/`, so write each id in the report as a link by hand.
-6. For each decision with the board row `none` that must hold, ask `record` where it goes. A decision that need not hold gets no row.
+6. For each choice with the board row `none` that must hold, ask `record` where it goes. A decision that need not hold gets no row. For each defect of section 6 and each question of section 7, ask `record` for a roadmap row of the kind `defect` or `question`.
 7. In the chat, give the summary, the list "Decisions for you", and the rows that `record` added. Do not repeat the full report.
 </steps>
 

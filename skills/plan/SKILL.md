@@ -19,6 +19,7 @@ The general rules in `CLAUDE.md` apply.
 3. Ask the owner until the slice is one sentence with an out-of-scope line.
    Architectural patterns are part of these questions.
    Before the slice closes, ask what the result looks like: the output or the interface, the empty case, and the error case. `develop` cannot ask the owner later.
+   A question that the owner has not answered is a roadmap row of the kind `question`. It is not in the Plan section.
    If a proposal has no answers, do steps 2 to 4 for it in full now. The proposal keeps its text.
 4. Name the boundary and the pattern for this slice in one sentence: who owns state, and what may call what.
    If the boundary keeps the slice out of a package, name each existing function of that package that the slice needs. Say whether the slice moves it, exports it, or repeats it.
@@ -36,7 +37,7 @@ The general rules in `CLAUDE.md` apply.
    Ask `record` to write the Plan section: the questions and answers, the boundary and the pattern, the lines of step 2, and each ADR id.
    Each answer that a test must prove becomes a requirement row, or an ADR as step 6 says. `develop` names those ids in the tests.
    Develop, Review, and Release read `Not invoked yet.`
-10. If the owner chooses to implement later: ask `record` for a proposal id and write `docs/proposals/<id>.md`. Ask `record` for the roadmap row that names the proposal. If the repository has no `docs/ROADMAP.md`, the row is a planned row of `docs/REQUIREMENTS.md`. Create no history file.
+10. If the owner chooses to implement later: ask `record` for a proposal id and write `docs/proposals/<id>.md`. Ask `record` for the roadmap row that names the proposal. If the repository keeps `docs/REQUIREMENTS.md` and no `docs/adr/`, the row is a planned row of `docs/REQUIREMENTS.md`. Create no history file.
 </steps>
 
 <rules>

@@ -24,7 +24,6 @@ This skill owns the Make contract: the Makefile, the standard targets, `CLAUDE.m
 8. Make each item of `<checks>` true, in order. Stop at the first item that cannot be made true.
    - Write a missing `.editorconfig` from `templates/editorconfig`.
    - Set `FORMAT_CMD`, `FORMAT_FIX_CMD`, `LINT_CMD`, and `INTEGRATION_CMD` as step 3 says. Leave an integration test out of `TEST_CMD`.
-   - Set `DEFAULT_BRANCH` if that branch is not `main`.
    - If a test has no id, read `references/setup-cases.md`, "A test with no id".
 9. If each required command variable is set, or the Makefile defines that target, run `make setup`. Otherwise leave the run for later and name the empty variable.
 10. Commit every file that this mode wrote, and each of these that exists: the manifest and its lockfile, `.claude/skills/`, `apm.yml`, and `apm.lock.yaml`. Push.

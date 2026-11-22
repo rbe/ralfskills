@@ -11,7 +11,7 @@ The agent writes each document by hand from a template in `templates/` beside th
 
 <mode name="write">
 <steps>
-1. Run `make ids`. If it exits non-zero, an id is a duplicate: stop and do not write the document. Without the include of `project.mk` or `sdlc.mk`, run `make -f .claude/skills/record/index.mk <target>`. `PYTHON_IMAGE=<image>` on that line replaces the default image.
+1. Run `make ids`. If it exits non-zero, an id is a duplicate: stop and do not write the document. In step 3 of `migrate-docs`, a failure that names an old label does not stop you. Without the include of `project.mk` or `sdlc.mk`, run `make -f .claude/skills/record/index.mk <target>`. `PYTHON_IMAGE=<image>` on that line replaces the default image.
 2. For a new item, take the next id of its kind. Read `references/id-kinds.md` for the form of each kind.
 3. If the document does not exist, copy its template: `ROADMAP.md`, `adr.md`, `proposal.md`, or `history.md`. Keep the layout. Before you write frontmatter or a table row for the first time in a task, read `references/documents.md`.
 4. If a choice must hold, read `references/adr.md` and write it where it says. In a repository that keeps `docs/REQUIREMENTS.md` and no `docs/adr/`, the home is a row of that list. If no home fits, ask the user.
@@ -37,7 +37,9 @@ The agent writes each document by hand from a template in `templates/` beside th
 - Write an id as plain text. After a document under `docs/` changes, run `make links`. It makes each id a link.
 - A frontmatter list of ids follows `references/documents.md`: ids only, one form, and each id live or retired.
 - A history file follows `references/history.md`: it holds facts only. Open work is a roadmap row, or a planned row of `docs/REQUIREMENTS.md`.
-- A defect and an open question are roadmap rows. A repository with no `docs/ROADMAP.md` keeps them as planned rows of `docs/REQUIREMENTS.md`. A question row states the choices.
+- A defect and an open question are roadmap rows. A repository that keeps `docs/REQUIREMENTS.md` and no `docs/adr/` keeps them as planned rows of that list. A question row states the choices.
+- A defect that the owner reports gets a roadmap row of the kind `defect` through `record`, then starts at `develop`. A defect with no known expected behaviour starts at `plan`.
+- A question that the owner has not answered is a roadmap row of the kind `question`. It is never in a history file.
 - To retire an id, run `make ids-retire ID=<id>`, then `make links`. A retired id is never issued again. `make ids-retire` creates `docs/ids.yaml` at the first retire.
 - One task has one history file. A deferred slice is a roadmap row with a proposal and has no history file.
 - `onboard`, `migrate-docs`, and setup mode of `project-setup` open no history file, and their commits go on the default branch. An agent on another task opens a history file only when an id names it.

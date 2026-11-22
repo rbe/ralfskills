@@ -8,7 +8,7 @@
 
 Not every choice is a rule. When a choice must hold, `record` decides where it goes, in this order:
 
-1. A small requirement: a row of `docs/REQUIREMENTS.md`, where the repository keeps that list. A repository with no `docs/adr/` has only this home.
+1. A small requirement: a row of `docs/REQUIREMENTS.md`, where the repository keeps that list. A repository with no `docs/adr/` has only this home. A product with `docs/adr/` keeps no such list, so it has homes 2 and 3. Do not create the list in a product.
 2. A sentence in an ADR that already fits.
 3. A new ADR.
 
