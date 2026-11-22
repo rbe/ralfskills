@@ -27,7 +27,7 @@ _setup:
 | `HELP_LEAD` | The first line of `make help` |
 | `SDLC_OWN_CONTRACT` | Set to 1 when the project writes its own recipes for the contract targets and the image targets. `sdlc.mk` then includes neither `contract.mk` of `project-setup` nor `container.mk` |
 | `GH_BASE_IMAGE`, `GH_VERSION` | The base image and the release of the GitHub CLI image |
-| `OWNER`, `NAME` | The GitHub owner and the repository name. `ci-status`, `pull-request`, and `pull-request-merge` pass them as `-R owner/name`, because the image has no Git |
+| `OWNER`, `NAME` | The GitHub owner and the repository name. `ci-status` passes them as `-R owner/name`, and `pull-request` and `pull-request-merge` put them in the REST route, because the image has no Git |
 
 ## Recipe helpers
 
@@ -48,8 +48,8 @@ _setup:
 | `publish-tags` | Prints the version. Prints `latest` only when the ref is the default branch or `GITHUB_REF` is not set |
 | `gh-image` | Builds the image of the GitHub CLI, one time |
 | `ci-status` | Prints the result of the CI run for `HEAD`, or for `SHA=<sha>`. Fails when the run failed, did not finish, or does not exist. `WAIT=1` waits for the end |
-| `pull-request` | Opens a pull request from the current branch to `DEFAULT_BRANCH`. `TITLE` and `BODY` are optional. Prints the open one when it exists |
-| `pull-request-merge` | Merges the pull request of the current branch when its checks passed. `WAIT=1` waits for the checks |
+| `pull-request` | Opens a pull request from the current branch to `DEFAULT_BRANCH`. `TITLE` and `BODY` are optional. Prints the open one when it exists. Uses `gh api` REST routes only |
+| `pull-request-merge` | Merges the pull request of the current branch when all check runs of its head commit passed. No check run, or one that did not pass, stops the merge. `WAIT=1` waits for the checks. Uses `gh api` REST routes only |
 | `cleanup-container-versions` | On the default branch, keeps this run and the next-lower run on the same `MAJOR.MINOR.PATCH` line. A missing package is an empty list. Does not delete `latest` or a tag that is not `MAJOR.MINOR.PATCH-<run>`. Off the default branch, deletes nothing |
 | `cleanup-github-releases` | On the default branch, keeps this release and the next-lower run. Does not delete a name that is not `MAJOR.MINOR.PATCH-<run>`. Off the default branch, deletes nothing |
 | `cleanup-actions-artifacts` | Deletes the artifacts of this repository that are older than one hour, except `report`, `docs`, and the artifacts of this run |

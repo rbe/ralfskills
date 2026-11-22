@@ -49,8 +49,9 @@
 #   GH_IMAGE         the local name of that image
 #
 # The CI result and pull request targets run the GitHub CLI in that
-# image. The image has no Git, so a recipe reads Git on the host and
-# passes -R owner/name, --head, and --base to gh. owner/name is GH_REPO,
+# image. The image has no Git, so a recipe reads Git on the host. The
+# pull request targets call `gh api` with REST routes only, because the
+# GraphQL API is not open in every network. owner/name is GH_REPO,
 # which is OWNER/NAME. A command-line variable sets one run:
 #   SHA              ci-status reads this commit. Default: HEAD.
 #   WAIT=1           ci-status waits for the run to end.
@@ -222,25 +223,36 @@ pull-request: ## Open a pull request from this branch to the default branch. TIT
 	$(SDLC_GH_REPO); \
 	$(SDLC_BRANCH); \
 	$(THIS_MAKE) --no-print-directory gh-image; \
-	open=$$($(GH) pr list -R "$$repo" --head "$$branch" --base "$(DEFAULT_BRANCH)" --state open --json url --jq '.[0].url // empty'); \
+	open=$$($(GH) api "repos/$$repo/pulls?head=$${repo%%/*}:$$branch&base=$(DEFAULT_BRANCH)&state=open" --jq '.[0].html_url // empty'); \
 	if [ -n "$$open" ]; then echo "$$open"; exit 0; fi; \
 	title="$${TITLE:-}"; \
 	if [ -z "$$title" ]; then title=$$(git log -1 --format=%s); fi; \
 	body="$${BODY:-}"; \
 	if [ -z "$$body" ]; then body=$$(git log --format='- %s' "origin/$(DEFAULT_BRANCH)..HEAD" 2>/dev/null || true); fi; \
-	$(GH) pr create -R "$$repo" --head "$$branch" --base "$(DEFAULT_BRANCH)" --title "$$title" --body "$$body"
+	$(GH) api -X POST "repos/$$repo/pulls" -f title="$$title" -f head="$$branch" -f base="$(DEFAULT_BRANCH)" -f body="$$body" --jq .html_url
 
 pull-request-merge: ## Merge the pull request of this branch when its checks passed. WAIT=1 waits for the checks
 	@set -eu; \
 	$(SDLC_GH_REPO); \
 	$(SDLC_BRANCH); \
 	$(THIS_MAKE) --no-print-directory gh-image; \
-	number=$$($(GH) pr list -R "$$repo" --head "$$branch" --base "$(DEFAULT_BRANCH)" --state open --json number --jq '.[0].number // empty'); \
+	tab=$$(printf '\t'); tries=0; \
+	row=$$($(GH) api "repos/$$repo/pulls?head=$${repo%%/*}:$$branch&base=$(DEFAULT_BRANCH)&state=open" --jq '.[0] | select(. != null) | [(.number | tostring), .head.sha] | @tsv'); \
+	number=$$(printf '%s\n' "$$row" | awk -F "$$tab" '{ print $$1 }'); \
+	sha=$$(printf '%s\n' "$$row" | awk -F "$$tab" '{ print $$2 }'); \
 	if [ -z "$$number" ]; then echo "pull-request-merge: no open pull request from $$branch. Run make pull-request first." >&2; exit 1; fi; \
-	watch=""; \
-	if [ "$${WAIT:-}" = 1 ]; then watch="--watch"; fi; \
-	$(GH) pr checks "$$number" -R "$$repo" $$watch || { echo "pull-request-merge: the checks of pull request $$number did not pass. Nothing merged." >&2; exit 1; }; \
-	$(GH) pr merge "$$number" -R "$$repo" --merge
+	while :; do \
+	  raw=$$($(GH) api --paginate "repos/$$repo/commits/$$sha/check-runs?per_page=100" --jq '[(.check_runs | length), ([.check_runs[] | select(.status != "completed")] | length), ([.check_runs[] | select(.status == "completed") | select((.conclusion == "success" or .conclusion == "skipped" or .conclusion == "neutral") | not)] | length)] | @tsv'); \
+	  counts=$$(printf '%s\n' "$$raw" | awk -F "$$tab" '{ t += $$1; p += $$2; f += $$3 } END { print t + 0, p + 0, f + 0 }'); \
+	  set -- $$counts; total=$$1; pending=$$2; failed=$$3; \
+	  if [ "$$failed" -gt 0 ] || [ "$$pending" -eq 0 ] || [ "$${WAIT:-}" != 1 ]; then break; fi; \
+	  tries=$$((tries + 1)); \
+	  if [ "$$tries" -ge "$(CI_WAIT_TRIES)" ]; then break; fi; \
+	  sleep "$(CI_WAIT_SECONDS)"; \
+	done; \
+	if [ "$$total" -eq 0 ]; then echo "pull-request-merge: pull request $$number has no checks. Nothing merged." >&2; exit 1; fi; \
+	if [ "$$failed" -gt 0 ] || [ "$$pending" -gt 0 ]; then echo "pull-request-merge: the checks of pull request $$number did not pass. Nothing merged." >&2; exit 1; fi; \
+	$(GH) api -X PUT "repos/$$repo/pulls/$$number/merge" -f merge_method=merge -f sha="$$sha" --jq .message
 
 version: ## Print MAJOR.MINOR.PATCH-run. PRINT=tag prints the vX.Y.Z tag
 	@set -eu; \

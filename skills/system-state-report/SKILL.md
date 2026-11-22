@@ -27,14 +27,14 @@ The report is successful if the reader understands each sentence on the first re
    1. Summary. Maximum 5 sentences: what the system does now, the largest difference from what was asked, and the number of decisions that wait for the human.
    2. What the system does now. A list of behaviours that a person can observe, in the form "When [actor] does [action], the system does [result]." Do not list files or modules.
    3. Differences from what was asked. Each item: what was asked, with the source; what exists; the effect for the user.
-   4. Decisions that were made. A table: the decision; who made it (human, agent, or agent without a question to the human); the rejected alternative; the reason; whether it is easy to reverse. Put the decisions that an agent made without a question first. Mark each decision that has no row in `docs/DECISIONS.md` and no ADR.
+   4. Decisions that were made. A table: the decision; who made it (human, agent, or agent without a question to the human); the rejected alternative; the reason; whether it is easy to reverse; the board row. Put the decisions that an agent made without a question first. Write `none` as the board row of each decision that has no row in `docs/DECISIONS.md` and no ADR.
    5. Not verified. What you could not run or read, and what only a chat claims.
    6. Risks and defects. Only those that you can point to, each with the location and the effect.
    7. Decisions for you. Each item is a question that the human answers with a selection. Give the options, the effect of each option, and your recommendation with one reason.
    8. Glossary. The table from step 2.
 4. Read `references/cold-reader.md` and run the cold-reader check.
-5. Save the report as `reports/state-YYYY-MM-DD.md`.
-6. Ask `record` to add each decision that step 3 marked as missing from the board. A row that `record` adds has the status Decided.
+5. Save the report as `reports/state-YYYY-MM-DD.md`. `make links` reads only `docs/`, so write each id in the report as a link by hand.
+6. Ask `record` to add each decision with the board row `none`. A row that `record` adds has the status Decided.
 7. In the chat, give the summary, the list "Decisions for you", and the rows that `record` added. Do not repeat the full report.
 </steps>
 

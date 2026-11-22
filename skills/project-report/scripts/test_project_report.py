@@ -1122,7 +1122,7 @@ class MakeAndPodmanInterfaceTest(unittest.TestCase):
         self.assertIn("-e GH_TOKEN -e GITHUB_TOKEN", gh)
         self.assertTrue(gh.endswith("$(GH_IMAGE)"))
         self.assertIn("\ngh-image: ## ", sdlc)
-        self.assertEqual(sdlc.count("$(GH) api"), 8)
+        self.assertEqual(sdlc.count("$(GH) api"), 13)
         self.assertEqual(host_calls(self.PIPELINE / "sdlc.mk"), [])
         for target in (
             "cleanup-container-versions",
@@ -1205,14 +1205,19 @@ class MakeAndPodmanInterfaceTest(unittest.TestCase):
         self.assertIn('if [ "$$result" != success ]; then exit 1; fi', status)
         opened = sdlc.split("\npull-request: ## ")[1].split("\n\n")[0]
         self.assertIn("$(SDLC_BRANCH)", opened)
-        self.assertIn(
-            '$(GH) pr create -R "$$repo" --head "$$branch" --base "$(DEFAULT_BRANCH)"',
-            opened,
-        )
+        self.assertIn('$(GH) api "repos/$$repo/pulls?head=', opened)
+        self.assertIn('$(GH) api -X POST "repos/$$repo/pulls"', opened)
+        self.assertLess(opened.index("pulls?head="), opened.index("-X POST"))
+        self.assertLess(opened.index("exit 0"), opened.index("-X POST"))
         merge = sdlc.split("\npull-request-merge: ## ")[1].split("\n\n")[0]
-        self.assertIn('$(GH) pr checks "$$number" -R "$$repo"', merge)
-        self.assertLess(merge.index("pr checks"), merge.index("pr merge"))
-        self.assertIn('$(GH) pr merge "$$number" -R "$$repo" --merge', merge)
+        self.assertIn('"repos/$$repo/commits/$$sha/check-runs', merge)
+        self.assertIn('"$$total" -eq 0', merge)
+        self.assertIn('$(GH) api -X PUT "repos/$$repo/pulls/$$number/merge"', merge)
+        self.assertIn("-f merge_method=merge", merge)
+        self.assertLess(merge.index("check-runs"), merge.index("-X PUT"))
+        for target in ("pull-request", "pull-request-merge"):
+            recipe = sdlc.split("\n" + target + ": ## ")[1].split("\n\n")[0]
+            self.assertNotIn("$(GH) pr ", recipe)
         branch = sdlc.split("define SDLC_BRANCH\n")[1].split("\nendef")[0]
         self.assertIn('"$(DEFAULT_BRANCH)"', branch)
         self.assertEqual(host_calls(self.PIPELINE / "sdlc.mk"), [])
