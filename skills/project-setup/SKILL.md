@@ -25,7 +25,7 @@ This skill owns the Make contract: the Makefile, the standard targets, `CLAUDE.m
    - If the repository renders docs, set `RENDER_DOCS` and `DOCS_CMD`. If an image is published, set `PUBLISH_IMAGE`.
 4. If the Makefile came from a template in this run, or a file that the tooling target writes is missing, run the tooling target that the language skill names. The target creates the manifest, the config files, `.editorconfig`, and its `.gitignore` lines when they are missing, and it runs `make format-fix`. A file that is already in the project stays, so the target is safe to run again. A Python project with no dependency has no manifest.
 5. Add each missing line to `.gitignore`: `build/`, `apm_modules/`, `docs/adr/index.toon`, `docs/skill-index.toon`, and the lines that the tooling reference of the language skill names.
-6. Run `make toon`. Step 7 fills the brackets of the template from `docs/skill-index.toon`.
+6. Run `make toon`. In a project with no ADR it writes a header-only `docs/adr/index.toon`. Step 7 fills the brackets of the template from `docs/skill-index.toon`.
 7. Write `CLAUDE.md`.
    - If the file is missing, copy `templates/CLAUDE.md` and fill each bracket from the project and from `docs/skill-index.toon`. The answer of step 1 is the ship sentence.
    - If the file exists, add each paragraph of the template that is missing. Keep its other text, except under the last bullet of this step.
@@ -35,12 +35,13 @@ This skill owns the Make contract: the Makefile, the standard targets, `CLAUDE.m
    - If `.editorconfig` is missing, write it from `templates/editorconfig`.
    - Set `FORMAT_CMD`, `FORMAT_FIX_CMD`, `LINT_CMD`, and `INTEGRATION_CMD` as step 3 says. Leave an integration test out of `TEST_CMD`.
    - Set `DEFAULT_BRANCH` if that branch is not `main`.
-   - If an existing test has no id, ask `record` for a Decided row that states the behaviour that the test proves, and name that row in the test. One row can serve several tests.
+   - If an existing test has no id, find it with `make project-report` when that skill is installed. Ask `record` for a Decided row that states the behaviour that the test proves, and name that row in the test. One row can serve several tests.
 9. If each required command variable is set, or the Makefile defines that target, run `make setup`. Otherwise leave the run for later and name the empty variable.
 10. Commit every file that this mode wrote, and each of these that exists: the manifest and its lockfile, `.claude/skills/`, `apm.yml`, and `apm.lock.yaml`. Push when the project has a remote `origin`. The Makefile includes files from `.claude/skills/`, so a clone needs them.
 </steps>
 <rules>
 - Do not define `setup`, `build`, or `test` again after the include.
+- If the Makefile lacks the include of `project.mk` or `sdlc.mk`, run `make -f .claude/skills/<skill>/<file>.mk <target>`.
 - Do not add `sdlc.mk` or a workflow. Version tags, GHCR, and cleanup are `github-pipeline`.
 - If a `project.mk` is at the repository root, leave its bytes and name it in the report.
 </rules>

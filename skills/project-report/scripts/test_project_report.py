@@ -451,6 +451,13 @@ class GeneralRulesTest(unittest.TestCase):
         collection, template = general_rules()
         self.assertEqual(collection, template)
 
+    def test_the_entry_file_and_its_template_stay_within_their_word_limits(self):
+        """id: R-76"""
+        limits = {"CLAUDE.md": 705, "skills/project-setup/templates/CLAUDE.md": 780}
+        for name, limit in limits.items():
+            text = (ROOT / name).read_text(encoding="utf-8")
+            self.assertLessEqual(len(text.split()), limit, name)
+
     def test_the_general_rules_name_the_interface_and_the_start_of_a_task(self):
         """id: R-75"""
         for text in general_rules():
@@ -829,7 +836,9 @@ class ProjectReportTest(unittest.TestCase):
         )
         self.assertIn("`make project-report` writes `build/project-report.md`", report)
         for text in general_rules():
-            self.assertIn("Hand-editing it is a defect.", text)
+            self.assertIn(
+                "Hand-editing a file that a Make target writes is a defect.", text
+            )
         contract = (ROOT / "skills" / "project-setup" / "contract.mk").read_text(
             encoding="utf-8"
         )
@@ -1015,6 +1024,8 @@ class MakeAndPodmanInterfaceTest(unittest.TestCase):
             self.assertNotIn("brew", text.lower())
         doctor_mk = (self.SETUP / "doctor.mk").read_text(encoding="utf-8")
         self.assertIn("\nsetup: doctor\n", doctor_mk)
+        index_mk = (ROOT / "skills/record/index.mk").read_text(encoding="utf-8")
+        self.assertIn("ifdef DOCTOR_MK\ntoon: doctor\nendif", index_mk)
         for name in ("project.mk", "../github-pipeline/sdlc.mk"):
             text = (self.SETUP / name).read_text(encoding="utf-8")
             self.assertLess(text.index("doctor.mk"), text.index("contract.mk"), name)
@@ -1133,6 +1144,34 @@ class MakeAndPodmanInterfaceTest(unittest.TestCase):
             for run in runs:
                 self.assertRegex(run, r"^make [a-z-]+$")
             self.assertIn("GH_TOKEN: ${{ github.token }}", workflow)
+
+    def test_a_failed_project_report_leaves_no_report_file(self):
+        """id: R-75"""
+        for name in ("project-report/report.mk", "project-setup/contract.mk"):
+            text = (ROOT / "skills" / name).read_text(encoding="utf-8")
+            self.assertIn("> build/project-report.md.tmp ||", text, name)
+            self.assertIn(
+                "mv build/project-report.md.tmp build/project-report.md", text
+            )
+
+    def test_the_diff_base_falls_back_to_the_local_default_branch(self):
+        """id: R-12"""
+        base = "git merge-base HEAD $(DEFAULT_BRANCH) 2>/dev/null || git rev-parse"
+        paths = list(ROOT.glob("skills/*/templates/Makefile.*"))
+        paths.append(ROOT / "skills/project-setup/test-changed.mk")
+        for path in paths:
+            text = path.read_text(encoding="utf-8")
+            if "git merge-base" in text:
+                self.assertIn(base, text, str(path))
+
+    def test_the_github_targets_stop_without_a_token_and_without_a_tag(self):
+        """id: R-75"""
+        sdlc = (self.PIPELINE / "sdlc.mk").read_text(encoding="utf-8")
+        define = sdlc.split("define SDLC_GH_REPO\n")[1].split("\nendef")[0]
+        self.assertIn("GH_TOKEN:-}$${GITHUB_TOKEN:-}", define)
+        tags = sdlc.split("\npublish-tags: ## ")[1].split("\n\n")[0]
+        self.assertIn("tag=$$($(THIS_MAKE) -s --no-print-directory version);", tags)
+        self.assertNotIn('"$$($(THIS_MAKE)', tags)
 
     def test_the_ci_result_and_the_pull_request_run_in_the_github_cli_image(self):
         """id: R-75"""

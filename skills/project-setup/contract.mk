@@ -106,7 +106,9 @@ ifeq ($(strip $(PROJECT_REPORT_CMD)),)
 	@exit 1
 else
 	mkdir -p build
-	$(PROJECT_REPORT_CMD) > build/project-report.md
+	rm -f build/project-report.md
+	$(PROJECT_REPORT_CMD) > build/project-report.md.tmp || { rm -f build/project-report.md.tmp; exit 1; }
+	mv build/project-report.md.tmp build/project-report.md
 endif
 endif
 

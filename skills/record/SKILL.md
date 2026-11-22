@@ -27,7 +27,7 @@ The agent writes each document by hand from a template in `templates/` beside th
 <steps>
 1. If the Plan, the Develop, or the Review section of the history file is still `Not invoked yet.`, stop.
 2. Set the history status to `closed`.
-3. Delete the roadmap line that cites this history id.
+3. Delete the roadmap line that cites this history id. After `make links` the line is a link, so match the id in the link text. Read `docs/ROADMAP.md` again and stop if a line still names the id.
 4. If the slice started from a proposal, set the proposal status to `done`.
 5. If the slice fixed a known issue, delete that row and retire its id. If a test still names that id, stop: the test must name a rule, as the Tests rules say. Write that Decided row when there is none.
 6. Leave each ADR and each Decided row. They stay in force.
@@ -54,6 +54,7 @@ Ids:
 History:
 - One task has one history file.
 - A deferred slice is a proposal and has no history file.
+- `onboard`, `migrate-docs`, and setup mode of `project-setup` open no history file, and their commits go on the default branch.
 - If a proposal is picked up, set `proposals:` in the new history file to that id, set the proposal status to `started`, and write both ids in the roadmap line.
 - Reject a history file that is missing the heading Plan, Develop, Review, or Release.
 - Frontmatter lists of a history file: `skills` lists each skill the slice used, which are the stages, the language skills, and the subskills. `decisions`, `adrs`, and `issues` list the ids the slice wrote, fixed, or proves with a test. `proposals` lists only the proposal the slice started from. A proposal that the slice wrote for a later part is named in the Plan section.
@@ -67,7 +68,7 @@ Tests:
 - A roadmap line and a known issue are work, not rules, and their ids are retired. A test does not name them.
 - A test for a fixed known issue names the ADR or the Decided row that states the fixed behaviour.
 - The test name states what the system does when the requirement holds. The test does not build a path to the document.
-- In a Python test the line is the docstring: `"""id: D-1"""`. In a JavaScript, TypeScript, Java, Groovy, Kotlin, or Go test file the line is a comment: `// id: D-1`. One file may have one line for each id it proves.
+- In a Python test the line is the docstring of the test function, not of the class: `"""id: D-1"""`. In a JavaScript, TypeScript, Java, Groovy, Kotlin, or Go test file the line is a comment: `// id: D-1`. One file may have one line for each id it proves.
 </rules>
 
 <references>

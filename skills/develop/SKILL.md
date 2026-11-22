@@ -11,7 +11,7 @@ The general rules in `CLAUDE.md` apply.
 
 <steps>
 1. Read the history file of the task.
-   If there is none, create the branch of the slice and ask `record` for a history file.
+   If there is none, create the branch of the slice with `git checkout -b <slug>` and ask `record` for a history file.
    The Plan section is then one sentence that says why `plan` was not invoked.
    If the slice starts from a proposal, the Plan section cites the proposal id.
 2. Read `docs/skill-index.toon`. Invoke each `language` row whose `files` or `names` match the files in hand.
@@ -23,13 +23,13 @@ The general rules in `CLAUDE.md` apply.
 5. Write the change, and write a unit test for each behaviour change.
    Stop when one target runs both unit tests and integration tests.
 6. Give each test its `id:` line. The rules of `record` under "Tests" state which id the line names and the form of the line in each language.
-   If a test for a fixed known issue has no ADR and no Decided row to name, ask `record` to write the Decided row.
+   If a test has no ADR and no Decided row to name, ask `record` to write the Decided row.
 7. Compare the change with the general rules on tests, fixtures, methods, and names. Stop when the change breaks one.
 8. Run `make coverage`, then `make test-changed`.
    `make coverage` writes the coverage map, and `test-changed` selects the tests from that map. A green `test-changed` does not replace `make test`.
    Stop when the coverage map is missing.
 9. Run `make lint` and `make test`. Stop when either target fails.
-10. If a file changed after the last run of `make coverage`, run `make coverage` again.
+10. If a source or test file changed after the last run of `make coverage`, run `make coverage` again.
     Stop when `build/coverage/diff.md` is missing.
     If the change has only test files or documents, the report has no line. Write that in the Develop section.
 11. Ask `record` to write the Develop section.

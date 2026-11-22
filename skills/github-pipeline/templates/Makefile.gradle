@@ -64,7 +64,7 @@ coverage: ## diff-cover report of the lines this change touched
 	mkdir -p build/coverage; \
 	$(GRADLE) test jacocoTestReport; \
 	$(PYTHON) .claude/skills/project-report/scripts/jacoco_cover_map.py; \
-	base=$$(git merge-base HEAD origin/$(DEFAULT_BRANCH) 2>/dev/null || git rev-parse -q --verify HEAD 2>/dev/null || git hash-object -t tree /dev/null); \
+	base=$$(git merge-base HEAD origin/$(DEFAULT_BRANCH) 2>/dev/null || git merge-base HEAD $(DEFAULT_BRANCH) 2>/dev/null || git rev-parse -q --verify HEAD 2>/dev/null || git hash-object -t tree /dev/null); \
 	git add -N .; \
 	git diff "$$base" > build/coverage/change.diff; \
 	report=$$(find build -name jacocoTestReport.xml | head -n 1); \

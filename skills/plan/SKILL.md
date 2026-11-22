@@ -15,7 +15,7 @@ The general rules in `CLAUDE.md` apply.
    If the index names an ADR that this slice can change, read that ADR.
 2. For each row of `docs/skill-index.toon` with the `kind` `check`, in file order: read that skill and ask its questions.
    If the request is too vague for these questions, do step 3 first. Ask them when the slice is one sentence.
-   Keep one line for each row. If there is no `check` row, the line is `checks: none installed`. A row without a line fails this step.
+   Keep one line for each row with the answers, as `security: no listener, no secret.` If there is no `check` row, the line is `checks: none installed`. A row without a line fails this step.
 3. Ask the owner until the slice is one sentence with an out-of-scope line.
    Architectural patterns are part of these questions.
    Before the slice closes, ask what the result looks like: the output or the interface, the empty case, and the error case. `develop` cannot ask the owner later.
@@ -26,12 +26,12 @@ The general rules in `CLAUDE.md` apply.
 5. Evaluate architecture, scalability, and code quality against the constraints of this system. Prefer the smallest design that stays operable and maintainable.
    When a choice is expensive to reverse, name the options, recommend one, and wait. Otherwise implement it in small modules.
 6. If the owner answers a choice that is expensive to reverse, ask `record` for an ADR id. `record` writes `docs/adr/<id>.md` with the status `Accepted`.
-   A storage format, a protocol, and the interface of a library that other code imports are such choices.
+   A storage format, a protocol, and the interface of a library are such choices. The project is a library when the entry file says it ships as a library package.
    For a library interface, the ADR is the public names and their signatures. What a function does is Decided rows.
    A choice that is cheap to reverse is a Decided row.
 7. If the Makefile is missing, or if the slice adds or overrides a target, invoke `project-setup`.
 8. If the slice needs a language and no `language` row of `docs/skill-index.toon` matches the files, stop. The index lists only installed skills.
-9. If the owner chooses to implement now: create the branch of the slice and ask `record` for a history file.
+9. If the owner chooses to implement now: create the branch of the slice with `git checkout -b <slug>` and ask `record` for a history file.
    Ask `record` to write the Plan section: the questions and answers, the boundary and the pattern, the lines of step 2, and each ADR id.
    Each answer that a test must prove becomes a Decided row, or an ADR as step 6 says. `develop` names those ids in the tests.
    Develop, Review, and Release read `Not invoked yet.`

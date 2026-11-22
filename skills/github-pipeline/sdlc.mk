@@ -158,7 +158,8 @@ define SDLC_GH_REPO
 repo="$(GH_REPO)"; \
 case "$$repo" in \
   ""|/*|*/) echo "Set OWNER and NAME, the GitHub owner and the repository name." >&2; exit 1 ;; \
-esac
+esac; \
+if [ -z "$${GH_TOKEN:-}$${GITHUB_TOKEN:-}" ]; then echo "Set GH_TOKEN or GITHUB_TOKEN. gh reads no other login." >&2; exit 1; fi
 endef
 
 # Sets branch to the current branch. Stops on a detached HEAD and on the default branch.
@@ -171,7 +172,8 @@ endef
 
 publish-tags: ## Print tags to push. latest only on the default branch
 	@set -eu; \
-	printf '%s\n' "$$($(THIS_MAKE) -s --no-print-directory version)"; \
+	tag=$$($(THIS_MAKE) -s --no-print-directory version); \
+	printf '%s\n' "$$tag"; \
 	$(SDLC_ON_DEFAULT); \
 	if [ "$$on_default" -eq 1 ]; then printf '%s\n' latest; fi
 

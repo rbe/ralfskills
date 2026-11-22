@@ -27,6 +27,7 @@ The general rules in `CLAUDE.md` apply.
 <rules>
 - The first line of a commit message is one sentence that says what the system now does.
 - A library with no package ships with the merge.
+- If the repository has no remote `origin`, skip each push.
 - The owner creates a `v*` tag. This skill creates none.
 - You may delete the branch of the slice after the merge.
 - `record` stores a divergence where `github-pipeline` says to write divergences. If the divergence is not a pipeline divergence, `record` stores it as an ADR with the section `## Divergence`.

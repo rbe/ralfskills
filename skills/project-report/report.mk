@@ -27,7 +27,9 @@ endif
 # Generated. Hand-editing build/project-report.md is a defect.
 project-report: ## Write the requirements map and the reviews
 	mkdir -p build
-	$(PROJECT_REPORT_CMD) > build/project-report.md
+	rm -f build/project-report.md
+	$(PROJECT_REPORT_CMD) > build/project-report.md.tmp || { rm -f build/project-report.md.tmp; exit 1; }
+	mv build/project-report.md.tmp build/project-report.md
 
 # help is the default goal. This fragment does not take it.
 .DEFAULT_GOAL := help
