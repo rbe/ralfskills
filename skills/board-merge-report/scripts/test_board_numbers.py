@@ -85,6 +85,21 @@ class BoardNumbersTest(unittest.TestCase):
             sample(root)
             self.assertNotIn("R-3", by_id(board_numbers.numbers(root)))
 
+    def test_a_list_with_no_status_column_is_in_force(self):
+        """id: R-77"""
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write(
+                root,
+                "docs/REQUIREMENTS.md",
+                "| Id | Title | Statement |\n| --- | --- | --- |\n"
+                "| R-1 | One | Keep it short. |\n",
+            )
+            rows = by_id(board_numbers.numbers(root))
+            self.assertEqual(rows["R-1"]["status"], "in force")
+            self.assertEqual(rows["R-1"]["words"], 4)
+            self.assertIsNone(board_numbers.status_index(root / "docs" / "none.md"))
+
     def test_the_words_of_a_row_leave_out_the_id_the_anchor_and_the_link_target(self):
         """id: R-77"""
         with tempfile.TemporaryDirectory() as tmp:
