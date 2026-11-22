@@ -8,14 +8,14 @@ Install so the files land in `.claude/skills/`. That is the APM target `claude`.
 
 | Skill | What it covers |
 | --- | --- |
-| [plan](skills/plan/SKILL.md) | Grill. Ask one question at a time. Write a history file to start now, or a proposal to implement later |
+| [plan](skills/plan/SKILL.md) | Grill. Ask one question at a time. Write a history file to start now, or a roadmap row with a proposal to implement later |
 | [develop](skills/develop/SKILL.md) | Implement the slice with the installed language skill |
 | [review](skills/review/SKILL.md) | Gates and the installed subskills, after the change |
 | [release](skills/release/SKILL.md) | Commit, push, merge when CI passed, and close the task. Invokes `github-pipeline` when delivery changes |
-| [record](skills/record/SKILL.md) | Ids, the board, the history file, the ADRs and their status, the ADR index, the decision log, and this collection's requirements index |
+| [record](skills/record/SKILL.md) | Ids, the board, the history file, the ADRs and their status, the ADR index, and this collection's requirements index |
 | [onboard](skills/onboard/SKILL.md) | The order of the other skills for a project that adopts this collection. Say `report and integrate` |
 | [system-state-report](skills/system-state-report/SKILL.md) | A plain-language report on what the system does now, the decisions that shaped it, and the decisions that wait for the owner. Say `state report` |
-| [board-merge-report](skills/board-merge-report/SKILL.md) | Reports which board rows, Decided rows, ADRs, and closed history files repeat text and can merge, shrink, or go. Writes nothing. Numbers come from `make board-numbers` |
+| [board-merge-report](skills/board-merge-report/SKILL.md) | Reports which board rows, ADRs, and closed history files repeat text and can merge, shrink, or go. Writes nothing. Numbers come from `make board-numbers` |
 | [board-merge](skills/board-merge/SKILL.md) | Does what the owner chose by id from that report. One commit for each finding |
 | [project-report](skills/project-report/SKILL.md) | Generated requirements map, architecture review, and development review |
 | [migrate-docs](skills/migrate-docs/SKILL.md) | The only skill that reads an old board. Other skills stop until it has deleted those files |
@@ -37,13 +37,23 @@ The `name` in each skill's frontmatter matches its directory. A project installs
 
 The rules that hold for every skill stand once, in the `<general_rules>` block of `CLAUDE.md`: the interface, the start of a task, the board, and the gates. Each `SKILL.md` starts with the line ``The general rules in `CLAUDE.md` apply.`` and states only what the skill adds. The body is XML tags: `purpose`, `steps`, `rules`, `output`, and `references`, with `mode` for a skill that has modes, and `questions` and `checks` for a subskill. A table, a sample, or a rule for one condition is in `references/` beside the skill. The agent reads such a file only when a step names it.
 
-`make toon` writes the ADR index and the skill index for a product repository. In this collection it writes `docs/requirements-index.toon` and the skill index, and it does not create `docs/adr/`. `make decision-log` writes `build/decision-log.md` from the ADRs and the decisions. `project.mk` and `sdlc.mk` include these targets from `record` when the skill is installed, and `make setup` runs `make toon` after `make doctor`. Every Python command, including a one-off `make py ARGS='...'`, runs in Podman on the machine where Make runs. Set `PYTHON_IMAGE` before the include to pick the version. The host does not need Python.
+`make toon` writes the ADR index and the skill index for a product repository. In this collection it writes `docs/requirements-index.toon` and the skill index, and it does not create `docs/adr/`. `project.mk` and `sdlc.mk` include these targets from `record` when the skill is installed, and `make setup` runs `make toon` after `make doctor`. Every Python command, including a one-off `make py ARGS='...'`, runs in Podman on the machine where Make runs. Set `PYTHON_IMAGE` before the include to pick the version. The host does not need Python.
 
 ## The cycle
 
-A request goes through `plan`, `develop`, `review`, and `release`. A new or vague request starts at `plan`. A fix that names a source file, a failing test, or a known issue starts at `develop`. `release` commits the slice on one branch, pushes it, merges it into the default branch when CI passed, and asks `record` to close the task. With `github-pipeline` installed, that merge publishes.
+A request goes through `plan`, `develop`, `review`, and `release`. A new or vague request starts at `plan`. A fix that names a source file, a failing test, or a roadmap defect starts at `develop`. `release` commits the slice on one branch, pushes it, merges it into the default branch when CI passed, and asks `record` to close the task. With `github-pipeline` installed, that merge publishes.
 
-`record` keeps the decisions. A choice that is expensive to reverse becomes an ADR in `docs/adr/`. A small choice is an entry in `docs/DECISIONS.md`. `develop` and `review` open each accepted ADR that names a skill the slice uses, so an agent follows the rules of this one project. `make decision-log` writes `build/decision-log.md`, the same decisions as one document for a person. Each id in a document is a link to its item, written by `make links`.
+`record` writes every board document. Each document has one job:
+
+| Document | Holds |
+| --- | --- |
+| `docs/ROADMAP.md` | The things to do, one row each: id, kind (feature, defect, or question), title, and proposal. A row is not done. `record` deletes it and retires its id when the slice closes |
+| `docs/proposals/<id>.md` | The detailed plan of one roadmap row |
+| `docs/adr/` and `docs/REQUIREMENTS.md` | The rules in force. A product repository keeps ADRs and may keep requirement rows. This collection keeps only `docs/REQUIREMENTS.md`, where a row is `planned` (open work) or `in force` |
+| `docs/history/<id>.md` | The report of one slice. It is complete at any time and holds nothing that waits for a decision or for work |
+| Code and tests | The current state. A test names the rule it proves with `id:` |
+
+A choice that must hold becomes a requirement row, a sentence in an ADR, or a new ADR, as `record` decides. `develop` and `review` open each accepted ADR that names a skill the slice uses, so an agent follows the rules of this one project. Each id in a document is a link to its item, written by `make links`.
 
 ## Start
 
@@ -63,10 +73,10 @@ The host needs GNU Make 3.81 or newer, Git, and Podman. It needs no other tool: 
 
 1. It checks that Make, Git, and Podman run on the machine, with `make -f .claude/skills/project-setup/doctor.mk doctor`. Once the Makefile has the include, `make doctor` is the same check, and `make setup` runs it first.
 2. It reads the project: the language, the old board, the remote, and the tests. It asks you only what the files do not tell, such as how the project ships.
-3. It runs `migrate-docs` when `docs/BUGS.md`, `docs/WAVES.md`, `docs/FEATURES.md`, or their directories, or `AGENTS.md` exist, and commits the new board. `make old-board` tests those six paths and fails when one exists.
+3. It runs `migrate-docs` when `docs/BUGS.md`, `docs/WAVES.md`, `docs/FEATURES.md`, `docs/DECISIONS.md`, `docs/KNOWN_ISSUES.md`, or their directories, or `AGENTS.md` exist, and commits the new board. `make old-board` tests those eight paths and fails when one exists.
 4. It runs `project-setup` in report mode, then in setup mode. Setup mode asks how the project ships, copies the Makefile template of the language, and runs the tooling target of that language: `make node-tooling`, `make python-tooling`, `make jvm-tooling`, or `make go-tooling`. It writes `CLAUDE.md`, `.editorconfig`, and `.gitignore`, and commits with `.claude/skills/`, `apm.yml`, and `apm.lock.yaml`.
 5. When the project publishes through GitHub, it runs `github-pipeline`: one workflow, a `Containerfile`, and the targets of the pipeline.
-6. It records each rule the project already follows as an ADR or a Decided row, and gives each existing test the `id:` of the row it proves.
+6. It records each rule the project already follows as an ADR or a requirement row, and gives each existing test the `id:` of the row it proves.
 7. It runs every gate. It stops when one fails.
 
 Then the first slice starts with `plan`. From here on, a person and the agent type only `make <target>` and Git commands.
@@ -87,7 +97,7 @@ APM 0.36.1 does not overwrite a skill file that a person changed in `.claude/ski
 
 ## How APM loads them
 
-The `apm.yml` of a project needs `name` and `version`. APM refuses the file without them. `apm install` reads every `skills/<name>/` directory and copies it to `.claude/skills/<name>/`, including makefiles, `references/`, `scripts/`, and `templates/` inside the skills. That was tested with APM 0.36.1: nine skills installed into a sample project, and `make toon`, `make ids`, `make project-report`, and `make decision-log` ran there. This collection itself has no root `apm.yml`. APM does not need one in a skill collection.
+The `apm.yml` of a project needs `name` and `version`. APM refuses the file without them. `apm install` reads every `skills/<name>/` directory and copies it to `.claude/skills/<name>/`, including makefiles, `references/`, `scripts/`, and `templates/` inside the skills. That was tested with APM 0.36.1: nine skills installed into a sample project, and `make toon`, `make ids`, and `make project-report` ran there. This collection itself has no root `apm.yml`. APM does not need one in a skill collection.
 
 ```yaml
 name: my-project
@@ -117,7 +127,7 @@ dependencies:
         - security
 ```
 
-A Make-only repository leaves `github-pipeline` out. A repository that still has `docs/BUGS.md`, `docs/WAVES.md`, `docs/FEATURES.md`, `docs/bugs/`, `docs/waves/`, or `docs/features/` adds `migrate-docs` and runs it first.
+A Make-only repository leaves `github-pipeline` out. A repository that still has `docs/BUGS.md`, `docs/WAVES.md`, `docs/FEATURES.md`, `docs/DECISIONS.md`, `docs/KNOWN_ISSUES.md`, `docs/bugs/`, `docs/waves/`, or `docs/features/` adds `migrate-docs` and runs it first.
 
 `apm install` does not write `CLAUDE.md`. `apm compile` for the target `claude` keeps a `CLAUDE.md` that a person wrote and prints a warning. That was tested with APM 0.36.1. `project-setup` owns the entry file. APM adds `apm_modules/` to `.gitignore`. It also creates `.apm-local/`, which has its own `.gitignore`.
 

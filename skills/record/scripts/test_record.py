@@ -532,7 +532,7 @@ class LinkTest(unittest.TestCase):
         tree(
             root,
             {
-                "docs/ROADMAP.md": "# Decisions\n\n| Id | Kind | Title |\n| --- | --- | --- |\n"
+                "docs/ROADMAP.md": "# Roadmap\n\n| Id | Kind | Title |\n| --- | --- | --- |\n"
                 "| W-9 | feature | W-9 and R-1 and W-1. |\n",
                 "docs/REQUIREMENTS.md": "| Id | Title | Statement |\n| --- | --- | --- |\n"
                 "| R-1 | One | See W-9. |\n",

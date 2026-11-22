@@ -1,6 +1,6 @@
 # Requirements
 
-Each requirement is one row this skill set must fulfill. The list is enough to reimplement the skill set. The index lists the id and the title. A sentence that begins with `This applies to` says where the row holds: this collection, a product repository, or both.
+Each row is a rule that holds or work to do. The status `in force` is a rule that this skill set fulfills. The status `planned` is open work, or an open question whose statement names the choices. The rows in force are enough to reimplement the skill set. The index lists the id, the title, and the status. A sentence that begins with `This applies to` says where the row holds: this collection, a product repository, or both.
 
 ## Collection shape
 
