@@ -595,8 +595,16 @@ class ProjectReportTest(unittest.TestCase):
         )
         write(
             root,
-            "docs/DECISIONS.md",
-            "---\nid: D-1\ntitle: Keep the host make\nstatus: decided\n---\n\nKeep the host make.\n",
+            "docs/REQUIREMENTS.md",
+            "| Id | Title | Status | Statement |\n| --- | --- | --- | --- |\n"
+            "| R-1 | Keep the host make | in force | The host runs make only. |\n"
+            "| R-2 | Name the port | planned | Which port. |\n",
+        )
+        write(
+            root,
+            "docs/ROADMAP.md",
+            "| Id | Kind | Title | Proposal |\n| --- | --- | --- | --- |\n"
+            "| W-1 | feature | Add a port. | |\n",
         )
         write(
             root,
@@ -630,11 +638,20 @@ class ProjectReportTest(unittest.TestCase):
             gap = text.split("### Ids with no test", 1)[1].split(
                 "### Tests with no id", 1
             )[0]
-            self.assertIn("[D-1](../docs/DECISIONS.md#d-1) (decision)", gap)
+            self.assertIn("[R-1](../docs/REQUIREMENTS.md#r-1) (requirement)", gap)
+            self.assertNotIn("R-2", gap)
+            self.assertNotIn("W-1", gap)
+            roadmap = text.split("### Roadmap", 1)[1].split("### Checks", 1)[0]
+            self.assertIn(
+                "[W-1](../docs/ROADMAP.md#w-1), feature, roadmap. Add a port.", roadmap
+            )
+            self.assertIn(
+                "[R-2](../docs/REQUIREMENTS.md#r-2), planned. Name the port.", text
+            )
             self.assertNotIn("ADR-0001](../docs/adr/ADR-0001.md) (adr)", gap)
             self.assertIn("Hand-editing this file is a defect.", text)
 
-    def test_a_decision_table_row_is_a_requirement_a_test_can_name(self):
+    def test_a_requirement_row_beside_the_adrs_is_a_requirement_a_test_can_name(self):
         """id: R-67"""
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
@@ -645,23 +662,23 @@ class ProjectReportTest(unittest.TestCase):
             )
             write(
                 root,
-                "docs/DECISIONS.md",
-                "| Id | Status | Choice |\n| --- | --- | --- |\n"
-                "| D-2 | Decided | divide raises on zero. |\n",
+                "docs/REQUIREMENTS.md",
+                "| Id | Title | Status | Statement |\n| --- | --- | --- | --- |\n"
+                "| R-2 | Divide | in force | divide raises on zero. |\n",
             )
             write(
                 root,
                 "tests/test_core.py",
-                'def test_divide_raises_on_zero():\n    """id: D-2"""\n    assert True\n',
+                'def test_divide_raises_on_zero():\n    """id: R-2"""\n    assert True\n',
             )
             text, errors = project_report.build(root)
             self.assertEqual(errors, [])
             self.assertIn(
-                "| [D-2](../docs/DECISIONS.md#d-2) | decision | Decided | tests.test_core.test_divide_raises_on_zero |",
+                "| [R-2](../docs/REQUIREMENTS.md#r-2) | requirement | in force | tests.test_core.test_divide_raises_on_zero |",
                 text,
             )
 
-    def test_a_test_does_not_name_a_known_issue_or_a_roadmap_line(self):
+    def test_a_test_does_not_name_a_roadmap_row_or_a_planned_row(self):
         """id: R-1"""
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
@@ -672,37 +689,34 @@ class ProjectReportTest(unittest.TestCase):
             )
             write(
                 root,
-                "docs/KNOWN_ISSUES.md",
-                "| Id | Defect |\n| --- | --- |\n| K-1 | divide returns 0 on zero. |\n",
+                "docs/ROADMAP.md",
+                "| Id | Kind | Title | Proposal |\n| --- | --- | --- | --- |\n"
+                "| W-1 | defect | divide returns 0 on zero. | |\n",
             )
             write(
                 root,
-                "docs/ROADMAP.md",
-                "# Roadmap\n\nOne line for each slice in progress.\n\n- H-2026-11-20-divide\n",
+                "docs/REQUIREMENTS.md",
+                "| Id | Title | Status | Statement |\n| --- | --- | --- | --- |\n"
+                "| R-5 | Divide | planned | divide must raise. |\n",
             )
             write(
                 root,
                 "tests/test_core.py",
-                'def test_one():\n    """id: K-1"""\n    assert True\n\n\n'
-                'def test_two():\n    """id: H-2026-11-20-divide"""\n    assert True\n',
+                'def test_one():\n    """id: W-1"""\n    assert True\n\n\n'
+                'def test_two():\n    """id: R-5"""\n    assert True\n',
             )
             text, errors = project_report.build(root)
             self.assertEqual(len(errors), 2)
-            self.assertIn("names K-1, which is not a requirement", errors[0])
+            self.assertIn("names W-1, which is not a requirement", errors[0])
+            self.assertIn("names R-5, which is not a requirement", errors[1])
             proof_map = text.split("## Architecture review", 1)[0]
-            self.assertNotIn("| K-1 |", proof_map)
-            self.assertNotIn("| H-2026-11-20-divide |", proof_map)
+            self.assertNotIn("| W-1 |", proof_map)
+            self.assertNotIn("| R-5 |", proof_map)
             self.assertIn(
-                "[K-1](../docs/KNOWN_ISSUES.md#k-1), open, issue. divide returns 0 on zero.",
+                "[W-1](../docs/ROADMAP.md#w-1), defect, roadmap. divide returns 0 on zero.",
                 text,
             )
             self.assertNotIn("zero.. Proved", text)
-            self.assertNotIn(
-                "[K-1](../docs/KNOWN_ISSUES.md#k-1), open, issue. divide returns 0 on zero. Proved",
-                text,
-            )
-            self.assertIn("H-2026-11-20-divide", text)
-            self.assertNotIn("One line for each slice in progress", text)
 
     def test_a_superseded_adr_is_not_an_id_with_no_test(self):
         """id: R-56"""
@@ -752,7 +766,7 @@ class ProjectReportTest(unittest.TestCase):
             self.assertIn("The id is a row in `docs/REQUIREMENTS.md`.", text)
             self.assertNotIn("### ADRs", text)
 
-    def test_an_adr_file_keeps_the_product_report(self):
+    def test_an_adr_file_keeps_the_product_report_and_reads_the_requirement_rows(self):
         """id: R-3"""
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
@@ -760,7 +774,7 @@ class ProjectReportTest(unittest.TestCase):
             write(
                 root,
                 "docs/REQUIREMENTS.md",
-                "| Id | Statement |\n| --- | --- |\n| R-9 | Other. |\n",
+                "| Id | Title | Statement |\n| --- | --- | --- |\n| R-9 | Other | Other. |\n",
             )
             text, errors = project_report.build(root)
             self.assertEqual(errors, [])
@@ -768,7 +782,9 @@ class ProjectReportTest(unittest.TestCase):
                 "| [ADR-0001](../docs/adr/ADR-0001.md) | adr | Accepted |", text
             )
             self.assertIn("### ADRs", text)
-            self.assertNotIn("R-9", text)
+            self.assertIn(
+                "| [R-9](../docs/REQUIREMENTS.md#r-9) | requirement | in force |", text
+            )
 
     def test_the_reviews_quote_the_stage_checks(self):
         """id: R-3"""
@@ -783,7 +799,8 @@ class ProjectReportTest(unittest.TestCase):
             self.assertIn("Listen on localhost", architecture)
             self.assertIn("Name who owns state.", architecture)
             self.assertIn("review: not installed", architecture)
-            self.assertIn("Keep the host make", development)
+            self.assertIn("Add a port.", development)
+            self.assertIn("Name the port", development)
             self.assertIn("Run `make lint` and `make test`.", development)
             self.assertIn("project-setup: not installed", development)
 
@@ -862,16 +879,13 @@ class ProjectReportTest(unittest.TestCase):
         development = text.split("## Development review", 1)[1]
         self.assertIn("who owns state", architecture)
         self.assertIn("one integration entry", development)
-        self.assertIn("### Decisions", development)
-        self.assertIn(
-            "[D-3](../docs/DECISIONS.md#d-3), Decided. This collection keeps one requirements list and records open work and choices in force in this list.",
-            development,
-        )
-        self.assertNotIn("list..", development)
+        self.assertIn("### Planned requirements", development)
+        self.assertIn("[R-79](../docs/REQUIREMENTS.md#r-79), planned.", development)
+        self.assertNotIn("### Decisions", development)
 
 
 class ReportLinkTest(unittest.TestCase):
-    def test_the_map_links_a_decision_an_adr_and_a_requirement(self):
+    def test_the_map_links_an_adr_and_a_requirement_row(self):
         """id: R-69"""
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
@@ -882,19 +896,22 @@ class ReportLinkTest(unittest.TestCase):
             )
             write(
                 root,
-                "docs/DECISIONS.md",
-                "| Id | Status | Choice |\n| --- | --- | --- |\n"
-                '| <a id="d-2"></a>D-2 | Decided | See ADR-0001 and `D-2`. |\n',
+                "docs/REQUIREMENTS.md",
+                "| Id | Title | Status | Statement |\n| --- | --- | --- | --- |\n"
+                '| <a id="r-2"></a>R-2 | See ADR-0001 and `R-2`. | planned | One. |\n',
             )
             text, _errors = project_report.build(root)
-            self.assertIn("| [D-2](../docs/DECISIONS.md#d-2) | decision |", text)
             self.assertIn("| [ADR-0001](../docs/adr/ADR-0001.md) | adr |", text)
-            self.assertIn("See [ADR-0001](../docs/adr/ADR-0001.md) and `D-2`.", text)
+            self.assertIn(
+                "[R-2](../docs/REQUIREMENTS.md#r-2), planned. See [ADR-0001](../docs/adr/ADR-0001.md) and `R-2`.",
+                text,
+            )
             (root / "docs" / "adr" / "ADR-0001.md").unlink()
             write(
                 root,
                 "docs/REQUIREMENTS.md",
-                '| Id | Statement |\n| --- | --- |\n| <a id="r-12"></a>R-12 | One. |\n',
+                "| Id | Title | Statement |\n| --- | --- | --- |\n"
+                '| <a id="r-12"></a>R-12 | One. | Two. |\n',
             )
             text, _errors = project_report.build(root)
             self.assertIn(
@@ -902,7 +919,7 @@ class ReportLinkTest(unittest.TestCase):
             )
             self.assertIn("- [R-12](../docs/REQUIREMENTS.md#r-12). One.", text)
 
-    def test_the_roadmap_links_a_history_id_and_a_proposal_id(self):
+    def test_a_roadmap_row_links_to_its_row(self):
         """id: R-69"""
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
@@ -914,13 +931,11 @@ class ReportLinkTest(unittest.TestCase):
             write(
                 root,
                 "docs/ROADMAP.md",
-                "- H-2026-11-20-divide, then P-1\n",
+                "| Id | Kind | Title | Proposal |\n| --- | --- | --- | --- |\n"
+                '| <a id="w-3"></a>W-3 | feature | Divide. | |\n',
             )
             text, _errors = project_report.build(root)
-            self.assertIn(
-                "[H-2026-11-20-divide](../docs/history/H-2026-11-20-divide.md)", text
-            )
-            self.assertIn("[P-1](../docs/proposals/P-1.md)", text)
+            self.assertIn("[W-3](../docs/ROADMAP.md#w-3), feature, roadmap.", text)
 
     def test_an_anchored_id_cell_is_read_as_the_bare_id(self):
         """id: R-69"""
@@ -928,12 +943,14 @@ class ReportLinkTest(unittest.TestCase):
             root = Path(tmp)
             write(
                 root,
-                "docs/DECISIONS.md",
-                '| Id | Status | Choice |\n| --- | --- | --- |\n| <a id="d-5"></a>D-5 | Open | Later. |\n',
+                "docs/ROADMAP.md",
+                "| Id | Kind | Title | Proposal |\n| --- | --- | --- | --- |\n"
+                '| <a id="w-5"></a>W-5 | question | Later. | |\n',
             )
-            rows = requirements.decision_rows(root)
-            self.assertEqual([row.id for row in rows], ["D-5"])
-            self.assertEqual(requirements.strip_anchor('<a id="d-5"></a>D-5'), "D-5")
+            rows = requirements.roadmap_rows(root)
+            self.assertEqual([row.id for row in rows], ["W-5"])
+            self.assertEqual(rows[0].status, "question")
+            self.assertEqual(requirements.strip_anchor('<a id="w-5"></a>W-5'), "W-5")
 
 
 HOST_TOOL = re.compile(

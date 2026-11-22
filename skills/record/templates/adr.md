@@ -4,9 +4,8 @@ title: [the rule in a few words]
 status: Accepted
 adrs: []
 skills: [the skills this rule governs]
-decisions: []
+roadmap: []
 proposals: []
-issues: []
 supersedes: []
 ---
 

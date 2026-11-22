@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """Count the words, the tests, and the links of each board unit.
 
-A unit is a requirement row, a Decided decision row, an ADR, or a history
-file. The numbers are the base of the merge report. The agent does not count.
+A unit is an in force requirement row, an ADR, or a history file. A planned
+row is out of scope. The numbers are the base of the merge report. The agent
+does not count.
 """
 
 import re
@@ -100,17 +101,29 @@ def unit(ident, kind, status, words, path, line=0):
     }
 
 
+def status_index(path):
+    """The place of the column Status among the cells after the id, or None."""
+    if not path.is_file():
+        return None
+    for line in path.read_text(encoding="utf-8").splitlines():
+        cells = [part.strip().lower() for part in line.strip().strip("|").split("|")]
+        if cells[0] == "id":
+            return cells.index("status") - 1 if "status" in cells else None
+    return None
+
+
 def row_units(root):
     found = []
     path = root / "docs" / "REQUIREMENTS.md"
+    at = status_index(path)
     for number, ident, cells in table_rows(path):
-        words = word_count(" ".join(cells))
-        found.append(unit(ident, "requirement", "in force", words, path, number))
-    path = root / "docs" / "DECISIONS.md"
-    for number, ident, cells in table_rows(path):
-        if len(cells) >= 2 and cells[0] == "Decided":
-            words = word_count(" ".join(cells[1:]))
-            found.append(unit(ident, "decision", "Decided", words, path, number))
+        status = cells[at] if at is not None else "in force"
+        if status == "planned":
+            continue
+        rest = [cell for index, cell in enumerate(cells) if index != at]
+        found.append(
+            unit(ident, "requirement", status, word_count(" ".join(rest)), path, number)
+        )
     return found
 
 

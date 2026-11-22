@@ -5,8 +5,9 @@ import re
 import sys
 from pathlib import Path
 
-COLUMNS = ("id", "title")
+COLUMNS = ("id", "title", "status")
 ID_CELL = re.compile(r"^[A-Z]+-\d+$")
+IN_FORCE = "in force"
 
 
 def repo_root(start: Path) -> Path:
@@ -26,19 +27,30 @@ def strip_anchor(cell: str) -> str:
     return links.strip_anchor(cell)
 
 
-def rows(path: Path) -> list[tuple[str, str]]:
+def rows(path: Path) -> list[tuple[str, str, str]]:
+    """Each row as id, title, and status.
+
+    A table with a column Status gives the status. A row of a table with no
+    such column is in force.
+    """
     found = []
     if not path.is_file():
         return found
+    status_at = None
     for line in path.read_text(encoding="utf-8").splitlines():
         stripped = line.strip()
         if not stripped.startswith("|"):
             continue
         cells = [part.strip() for part in stripped.strip("|").split("|")]
         ident = strip_anchor(cells[0]) if cells else ""
+        if ident == "Id":
+            lowered = [cell.lower() for cell in cells]
+            status_at = lowered.index("status") if "status" in lowered else None
+            continue
         if len(cells) < 2 or ID_CELL.match(ident) is None:
             continue
-        found.append((ident, cells[1]))
+        status = cells[status_at] if status_at and status_at < len(cells) else ""
+        found.append((ident, cells[1], status or IN_FORCE))
     return found
 
 
@@ -48,10 +60,10 @@ def cell(value: str) -> str:
     return value
 
 
-def render(found: list[tuple[str, str]]) -> str:
+def render(found: list[tuple[str, str, str]]) -> str:
     lines = [f"requirements[{len(found)}]{{{','.join(COLUMNS)}}}:"]
-    for ident, title in found:
-        lines.append("  " + ",".join((cell(ident), cell(title))))
+    for row in found:
+        lines.append("  " + ",".join(cell(value) for value in row))
     return "\n".join(lines) + "\n"
 
 

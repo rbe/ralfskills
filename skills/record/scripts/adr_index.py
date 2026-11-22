@@ -4,7 +4,7 @@
 import sys
 from pathlib import Path
 
-COLUMNS = ("id", "status", "title", "adrs", "skills", "decisions")
+COLUMNS = ("id", "status", "title", "adrs", "skills", "roadmap")
 
 
 def repo_root(start):
@@ -73,7 +73,7 @@ def rows(adr_dir):
             continue
         found.append(
             {
-                key: data.get(key, [] if key in {"adrs", "skills", "decisions"} else "")
+                key: data.get(key, [] if key in {"adrs", "skills", "roadmap"} else "")
                 for key in COLUMNS
             }
         )

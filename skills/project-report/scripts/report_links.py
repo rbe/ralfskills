@@ -7,7 +7,7 @@ ID = r"(?:ADR-\d{4}|H-\d{4}-\d{2}-\d{2}-[a-z0-9]+(?:-[a-z0-9]+)*|[A-Z]-\d+)"
 TOKEN = re.compile(rf"(?<![A-Za-z0-9-]){ID}(?![A-Za-z0-9-])")
 LINKED_ID = re.compile(rf"\[({ID})\]\([^)\s]*\)")
 CODE = re.compile(r"(`+)(?:.+?)(?<!`)\1(?!`)")
-TABLES = {"R": "REQUIREMENTS.md", "D": "DECISIONS.md", "K": "KNOWN_ISSUES.md"}
+TABLES = {"R": "REQUIREMENTS.md", "W": "ROADMAP.md"}
 FILES = {"ADR": "adr", "H": "history", "P": "proposals"}
 
 

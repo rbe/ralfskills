@@ -23,22 +23,18 @@ def load(name, path):
 board_numbers = load("board_numbers", HERE / "board_numbers.py")
 
 REQUIREMENTS = (
-    "| Id | Title | Statement |\n| --- | --- | --- |\n"
-    '| <a id="r-1"></a>R-1 | One | Keep the list short. See [R-2](#r-2). |\n'
-    '| <a id="r-2"></a>R-2 | Two | Keep the list short again. |\n'
-)
-DECISIONS = (
-    "| Id | Status | Choice |\n| --- | --- | --- |\n"
-    '| <a id="d-1"></a>D-1 | Decided | Keep the list short, as [R-1](REQUIREMENTS.md#r-1) says. |\n'
-    '| <a id="d-2"></a>D-2 | Open | Work that is not finished. |\n'
+    "| Id | Title | Status | Statement |\n| --- | --- | --- | --- |\n"
+    '| <a id="r-1"></a>R-1 | One | in force | Keep the list short. See [R-2](#r-2). |\n'
+    '| <a id="r-2"></a>R-2 | Two | in force | Keep the list short again. |\n'
+    '| <a id="r-3"></a>R-3 | Three | planned | Work that is not finished. |\n'
 )
 ADR = (
-    "---\nid: ADR-0001\ntitle: One\nstatus: Accepted\ndecisions: [D-1]\n---\n\n"
+    "---\nid: ADR-0001\ntitle: One\nstatus: Accepted\nadrs: [R-2]\n---\n\n"
     "## Rule\n\nOne two three.\n"
 )
 HISTORY = (
     "---\nid: H-2026-11-22-slug\ntitle: Slug\nstatus: closed\n"
-    "decisions: [D-1]\nissues: []\n---\n\n# Slug\n\n## Plan\n\nOne sentence here.\n"
+    "adrs: [R-2]\nroadmap: []\n---\n\n# Slug\n\n## Plan\n\nOne sentence here.\n"
 )
 
 
@@ -51,7 +47,6 @@ def write(root, relative, text):
 
 def sample(root):
     write(root, "docs/REQUIREMENTS.md", REQUIREMENTS)
-    write(root, "docs/DECISIONS.md", DECISIONS)
     write(root, "docs/adr/ADR-0001.md", ADR)
     write(root, "docs/history/H-2026-11-22-slug.md", HISTORY)
     write(
@@ -59,7 +54,7 @@ def sample(root):
         "tests/test_sample.py",
         'def test_one():\n    """id: R-1"""\n\n\ndef test_two():\n    """id: R-1"""\n',
     )
-    write(root, "web/app.test.ts", "// id: D-1\n")
+    write(root, "web/app.test.ts", "// id: R-2\n")
     write(root, "docs/ignored_test.py", '"""id: R-2"""\n')
 
 
@@ -76,19 +71,19 @@ class BoardNumbersTest(unittest.TestCase):
             rows = by_id(board_numbers.numbers(root))
             self.assertEqual(
                 sorted(rows),
-                ["ADR-0001", "D-1", "H-2026-11-22-slug", "R-1", "R-2"],
+                ["ADR-0001", "H-2026-11-22-slug", "R-1", "R-2"],
             )
             self.assertEqual(rows["R-1"]["kind"], "requirement")
-            self.assertEqual(rows["D-1"]["status"], "Decided")
+            self.assertEqual(rows["R-2"]["status"], "in force")
             self.assertEqual(rows["ADR-0001"]["status"], "Accepted")
             self.assertEqual(rows["H-2026-11-22-slug"]["status"], "closed")
 
-    def test_an_open_decision_row_is_out_of_scope(self):
+    def test_a_planned_row_is_out_of_scope(self):
         """id: R-77"""
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             sample(root)
-            self.assertNotIn("D-2", by_id(board_numbers.numbers(root)))
+            self.assertNotIn("R-3", by_id(board_numbers.numbers(root)))
 
     def test_the_words_of_a_row_leave_out_the_id_the_anchor_and_the_link_target(self):
         """id: R-77"""
@@ -97,7 +92,7 @@ class BoardNumbersTest(unittest.TestCase):
             sample(root)
             rows = by_id(board_numbers.numbers(root))
             self.assertEqual(rows["R-1"]["words"], 7)
-            self.assertEqual(rows["D-1"]["words"], 7)
+            self.assertEqual(rows["R-2"]["words"], 6)
             self.assertEqual(rows["ADR-0001"]["words"], 5)
 
     def test_a_test_counts_for_each_id_line_in_a_test_file_outside_docs(self):
@@ -107,8 +102,7 @@ class BoardNumbersTest(unittest.TestCase):
             sample(root)
             rows = by_id(board_numbers.numbers(root))
             self.assertEqual(rows["R-1"]["tests"], 2)
-            self.assertEqual(rows["D-1"]["tests"], 1)
-            self.assertEqual(rows["R-2"]["tests"], 0)
+            self.assertEqual(rows["R-2"]["tests"], 1)
 
     def test_a_link_counts_only_when_it_comes_from_another_row_or_file(self):
         """id: R-77"""
@@ -116,9 +110,8 @@ class BoardNumbersTest(unittest.TestCase):
             root = Path(tmp)
             sample(root)
             rows = by_id(board_numbers.numbers(root))
-            self.assertEqual(rows["R-1"]["links"], 1)
+            self.assertEqual(rows["R-1"]["links"], 0)
             self.assertEqual(rows["R-2"]["links"], 1)
-            self.assertEqual(rows["D-1"]["links"], 0)
 
     def test_a_frontmatter_list_that_names_an_id_is_counted_apart(self):
         """id: R-77"""
@@ -126,7 +119,7 @@ class BoardNumbersTest(unittest.TestCase):
             root = Path(tmp)
             sample(root)
             rows = by_id(board_numbers.numbers(root))
-            self.assertEqual(rows["D-1"]["lists"], 2)
+            self.assertEqual(rows["R-2"]["lists"], 2)
             self.assertEqual(rows["R-1"]["lists"], 0)
 
     def test_a_history_list_is_counted_and_a_history_link_is_not(self):
@@ -138,10 +131,10 @@ class BoardNumbersTest(unittest.TestCase):
                 root,
                 "docs/history/H-2026-11-23-other.md",
                 "---\nid: H-2026-11-23-other\nstatus: closed\n"
-                "decisions: [D-1]\n---\n\nSee [R-2](../REQUIREMENTS.md#r-2).\n",
+                "adrs: [R-2]\n---\n\nSee [R-2](../REQUIREMENTS.md#r-2).\n",
             )
             rows = by_id(board_numbers.numbers(root))
-            self.assertEqual(rows["D-1"]["lists"], 3)
+            self.assertEqual(rows["R-2"]["lists"], 3)
             self.assertEqual(rows["R-2"]["links"], 1)
 
     def test_the_output_has_a_header_one_line_for_each_unit_and_a_total(self):
@@ -152,10 +145,10 @@ class BoardNumbersTest(unittest.TestCase):
             text = board_numbers.render(board_numbers.numbers(root))
             lines = text.splitlines()
             self.assertEqual(
-                lines[0], "board[5]{id,kind,status,words,tests,links,lists}:"
+                lines[0], "board[4]{id,kind,status,words,tests,links,lists}:"
             )
-            self.assertIn("  R-1,requirement,in force,7,2,1,0", lines)
-            self.assertEqual(lines[-1], "total: 5 units, 32 words")
+            self.assertIn("  R-1,requirement,in force,7,2,0,0", lines)
+            self.assertEqual(lines[-1], "total: 4 units, 25 words")
 
     def test_a_named_id_narrows_the_rows_and_an_unknown_id_is_an_error(self):
         """id: R-77"""

@@ -1,6 +1,6 @@
 # Roadmap
 
-One line for each slice in progress. The line cites the history id and, when there is one, the proposal id. The line is deleted when the task closes. A line cites an id. It is not a second id.
+The things to do. A row is a feature, a defect, or a question, and is not done. `record` deletes the row and retires its id when the slice closes. The proposal cell is a link or empty.
 
-<!-- Add one line for each slice below this comment, as: - H-2026-11-20-slugify -->
-<!-- A slice that started from a proposal has both ids, as: - H-2026-11-20-slugify P-1 -->
+| Id | Kind | Title | Proposal |
+| --- | --- | --- | --- |

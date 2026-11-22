@@ -5,8 +5,8 @@
 #   make board-numbers
 #   make board-numbers IDS="R-51 R-76"
 #
-# Without IDS the target lists every requirement row, Decided decision
-# row, ADR, and history file. The columns are id, kind, status, words,
+# Without IDS the target lists every in force requirement row, ADR, and
+# history file. The columns are id, kind, status, words,
 # tests that name the id with `id:`, links to the id from other
 # documents, and frontmatter lists that name the id.
 

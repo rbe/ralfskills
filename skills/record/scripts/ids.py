@@ -8,11 +8,13 @@ from pathlib import Path
 ID_LINE = re.compile(r"^id:\s*[\"']?([^\"'#\s]+)")
 ROW_ID = re.compile(r'^\|\s*(?:<a id="[^"]*"></a>)?\s*([A-Z]+-\d+)\s*\|')
 RETIRED_ITEM = re.compile(r"^-\s*[\"']?([^\"'#\s]+)")
-TABLE_FILES = ("REQUIREMENTS.md", "DECISIONS.md", "KNOWN_ISSUES.md")
+TABLE_FILES = ("REQUIREMENTS.md", "ROADMAP.md")
 ID_FORM = re.compile(
     r"ADR-\d{4}|H-\d{4}-\d{2}-\d{2}-[a-z0-9]+(?:-[a-z0-9]+)*|[A-Z]-\d+"
 )
-LIST_KEY = re.compile(r"^(adrs|decisions|issues|proposals|supersedes):(.*)$")
+# `decisions` and `issues` are the keys of a history file written before
+# the roadmap table. A new file writes `roadmap`. The check is the same.
+LIST_KEY = re.compile(r"^(adrs|decisions|issues|roadmap|proposals|supersedes):(.*)$")
 MERGED_LINE = re.compile(r"^\s+([^\s:]+):\s*(.*)$")
 
 

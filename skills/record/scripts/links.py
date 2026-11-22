@@ -2,7 +2,7 @@
 """Make every document id in running text a link.
 
 An id is defined by a table row in docs/REQUIREMENTS.md,
-docs/DECISIONS.md, or docs/KNOWN_ISSUES.md, or by `id:` in the
+docs/ROADMAP.md, or by `id:` in the
 frontmatter of a Markdown file. A table row gets an anchor. Every other
 mention of the id in running text links to the definition.
 """
@@ -25,7 +25,7 @@ SPANS = re.compile(
     r"|\[[^\]]*\]\[[^\]]*\]"
     r"|<[A-Za-z/][^>\n]*>"
 )
-TABLE_FILES = ("REQUIREMENTS.md", "DECISIONS.md", "KNOWN_ISSUES.md")
+TABLE_FILES = ("REQUIREMENTS.md", "ROADMAP.md")
 
 
 def repo_root(start: Path) -> Path:
