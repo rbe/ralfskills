@@ -47,4 +47,4 @@ No finding. Left alone: no unit test covers `doctor.mk`, because the unit tests 
 
 ## Release
 
-The branch is committed. The merge into the default branch waits for the owner.
+The branch is committed. This slice does not merge it.

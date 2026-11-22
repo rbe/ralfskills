@@ -47,4 +47,4 @@ No finding. Left alone: the fourth trial round on sample projects. It stopped on
 
 ## Release
 
-The branch is pushed. The owner decides on the merge.
+The branch is pushed. This slice does not merge it.

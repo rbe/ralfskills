@@ -2,9 +2,9 @@
 id: H-2026-11-20-ship-and-run
 title: Setup asks how the project ships first, and a Go program runs with make run
 status: closed
-adrs: [R-60, R-68]
+adrs: []
 skills: [develop, review, record, project-setup, go, shell]
-decisions: []
+decisions: [D-10, D-11]
 proposals: []
 issues: []
 ---

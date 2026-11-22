@@ -13,15 +13,7 @@ ID_FORM = re.compile(
     r"ADR-\d{4}|H-\d{4}-\d{2}-\d{2}-[a-z0-9]+(?:-[a-z0-9]+)*|[A-Z]-\d+"
 )
 LIST_KEY = re.compile(r"^(adrs|decisions|issues|proposals|supersedes):(.*)$")
-# The key of a frontmatter list that holds the ids of one kind. A requirement
-# row takes the place of an ADR where the repository keeps no docs/adr/.
-KIND_KEY = {
-    "ADR": "adrs",
-    "R": "adrs",
-    "D": "decisions",
-    "K": "issues",
-    "P": "proposals",
-}
+MERGED_LINE = re.compile(r"^\s+([^\s:]+):\s*(.*)$")
 
 
 def repo_root(start):
@@ -96,6 +88,42 @@ def retired_ids(path):
     return retired
 
 
+def merged_ids(path):
+    """The map of ids.yaml as (retired id, surviving ids) pairs, in file order.
+
+    The map is the key `merged:` and one line `  D-5: [R-28]` for each pair.
+    """
+    if not path.is_file():
+        return []
+    pairs = []
+    in_map = False
+    for line in path.read_text(encoding="utf-8").splitlines():
+        if line.startswith("merged:"):
+            in_map = True
+            continue
+        if not in_map:
+            continue
+        match = MERGED_LINE.match(line)
+        if match:
+            items = list_items(match.group(2).strip())
+            pairs.append((match.group(1), items if items is not None else []))
+        elif line.strip() and not line.strip().startswith("#"):
+            in_map = False
+    return pairs
+
+
+def write_ids(path, retired, merged):
+    """Write ids.yaml: the retired list, and the map when a merge made one."""
+    lines = ["retired:", *[f"- {item}" for item in retired]]
+    if not retired:
+        lines = ["retired: []"]
+    if merged:
+        lines.append("merged:")
+        lines.extend(f"  {key}: [{', '.join(items)}]" for key, items in merged)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+
 def front_lists(lines):
     """Each list key of the frontmatter as (line index, key, text after the colon)."""
     if not lines or lines[0].strip() != "---":
@@ -117,8 +145,8 @@ def list_items(text):
     return [item.strip().strip("'\"") for item in text[1:-1].split(",") if item.strip()]
 
 
-def list_errors(docs, retired):
-    """A frontmatter list holds live ids only, written as [a, b], and [] when empty."""
+def list_errors(docs, live, retired):
+    """A frontmatter list is [a, b], and [] when empty. Each item is a live or a retired id."""
     errors = []
     for path in sorted(docs.rglob("*.md")):
         lines = path.read_text(encoding="utf-8").splitlines()
@@ -131,42 +159,37 @@ def list_errors(docs, retired):
             for item in items:
                 if not ID_FORM.fullmatch(item):
                     errors.append(f"{place} {key} holds {item}, which is not an id")
-                elif item in retired:
-                    errors.append(f"{place} {key} names the retired id {item}")
+                elif item not in live and item not in retired:
+                    errors.append(
+                        f"{place} {key} names {item}, which is neither live nor retired"
+                    )
     return errors
 
 
-def replace_in_lists(docs, ident, successors):
-    """Take ident out of each frontmatter list. Add each successor to the list of its kind."""
-    for path in sorted(docs.rglob("*.md")):
-        lines = path.read_text(encoding="utf-8").splitlines(keepends=True)
-        lists = {
-            key: (index, list_items(text) or [])
-            for index, key, text in front_lists([line.rstrip("\n") for line in lines])
-        }
-        if not any(ident in items for _, items in lists.values()):
-            continue
-        changed = set()
-        for key, (index, items) in list(lists.items()):
-            if ident in items:
-                lists[key] = (index, [item for item in items if item != ident])
-                changed.add(key)
-        for successor in successors:
-            key = KIND_KEY.get(successor.split("-", 1)[0])
-            if key in lists and successor not in lists[key][1]:
-                lists[key] = (lists[key][0], [*lists[key][1], successor])
-                changed.add(key)
-        for key in changed:
-            index, items = lists[key]
-            lines[index] = f"{key}: [{', '.join(items)}]\n"
-        path.write_text("".join(lines), encoding="utf-8")
+def merged_errors(live, retired, pairs):
+    """Each retired id of the map is on the retired list. Each surviving id is live."""
+    errors = []
+    seen = set()
+    for key, items in pairs:
+        if key in seen:
+            errors.append(f"merged names {key} twice")
+        seen.add(key)
+        if key not in retired:
+            errors.append(f"merged names {key}, which is not on the retired list")
+        if not items:
+            errors.append(f"merged: {key} has no surviving id")
+        for item in items:
+            if item not in live:
+                errors.append(f"merged: {key} names {item}, which is not a live id")
+    return errors
 
 
 def check(root):
     docs = root / "docs"
     live = live_ids(docs)
     retired = retired_ids(docs / "ids.yaml")
-    errors = list_errors(docs, retired)
+    errors = list_errors(docs, live, retired)
+    errors += merged_errors(live, retired, merged_ids(docs / "ids.yaml"))
     for ident, places in sorted(live.items()):
         if len(places) > 1:
             errors.append(f"{ident} is used {len(places)} times: {', '.join(places)}")
@@ -182,35 +205,31 @@ def check(root):
     return errors
 
 
-def retire(root, ident, successors=()):
-    """Retire an id. Each frontmatter list that named it names the successors."""
+def retire(root, ident, into=()):
+    """Retire an id. When a merge retires it, the map names the ids that took its content.
+
+    A document is not rewritten. A map entry that named ident now names the ids of into.
+    """
     live = live_ids(root / "docs")
     if ident in live:
         return [f"{ident} is still in use: {', '.join(live[ident])}"]
-    missing = [item for item in successors if item not in live]
+    missing = [item for item in into if item not in live]
     if missing:
         return [f"{item} is not a live id" for item in missing]
     path = root / "docs" / "ids.yaml"
-    retired = retired_ids(path) if path.is_file() else []
+    retired = retired_ids(path)
     if ident in retired:
         return [f"{ident} is already retired"]
-    path.parent.mkdir(parents=True, exist_ok=True)
-    if not path.is_file():
-        path.write_text("retired:\n", encoding="utf-8")
-    text = path.read_text(encoding="utf-8")
-    if "retired:" not in text:
-        text = "retired:\n" + text
-    if text.rstrip().endswith("retired:") or "retired: []" in text:
-        text = text.replace("retired: []", "retired:")
-        if not text.endswith("\n"):
-            text += "\n"
-        text += f"- {ident}\n"
-    else:
-        if not text.endswith("\n"):
-            text += "\n"
-        text += f"- {ident}\n"
-    path.write_text(text, encoding="utf-8")
-    replace_in_lists(root / "docs", ident, successors)
+    merged = []
+    for key, items in merged_ids(path):
+        if ident in items:
+            items = [item for item in items if item != ident]
+            items += [item for item in into if item not in items]
+        if items:
+            merged.append((key, items))
+    if into:
+        merged.append((ident, list(into)))
+    write_ids(path, [*retired, ident], merged)
     return []
 
 

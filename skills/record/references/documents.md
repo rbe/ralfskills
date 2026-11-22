@@ -7,6 +7,7 @@
 - Write a list in the frontmatter on one line, as `skills: [a, b]`.
 - In the frontmatter and in the id cell of a table, an id is plain text. The scripts read it there.
 - `docs/ids.yaml` holds the retired ids. Before the first retire it does not exist. An empty list is `retired: []`. A list with entries is `retired:` and one `- K-1` line per id.
+- When a merge retired an id, `docs/ids.yaml` also has the key `merged:` and one line `  D-5: [R-28, R-60]` for each such id. The ids in the brackets are live. A retired id that no row took over has no line.
 
 ## Frontmatter
 
@@ -25,10 +26,11 @@ supersedes: []
 - The keys are the plural of the kind.
 - A decision, a proposal, and a history file use the same keys.
 - A list key holds ids only, written as `[a, b]` on one line. An empty list is `[]`. A list is never missing its brackets, never text, and never a bare id. A script can then read each list as a list of ids.
-- A list holds live ids only, in every document, a history file included. `make ids` fails on a retired id in a list.
+- Field rule: a list holds ids only, and each id is live or on the retired list. `make ids` fails on any other item. A document is not rewritten when an id retires later, a history file included.
 - The id of a requirement row goes in `adrs`, where the repository keeps no `docs/adr/`. A decision id goes in `decisions`, a known issue id in `issues`, and a proposal id in `proposals`.
-- When an id retires and other rows took over its facts, `make ids-retire ID=<id> BY="<id> <id>"` takes the id out of each list and adds the surviving ids to the list of their kind. Without `BY=` it only takes the id out.
-- The text of a history file keeps a retired id as plain text. `make ids-retire` does not change the text.
+- A text or an explanation does not go in a list. It goes in the body.
+- When an id retires and other rows took over its content, `make ids-retire ID=<id> INTO="<id> <id>"` writes the map line in `docs/ids.yaml`. A script follows the line from a retired id to the live ids.
+- The text of a history file keeps a retired id as plain text.
 
 ## What `make links` writes
 

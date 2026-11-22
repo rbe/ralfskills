@@ -2,9 +2,9 @@
 id: H-2026-11-20-go-format
 title: gofmt reads the Go files of the project, and the Go caches belong to the project
 status: closed
-adrs: [R-60, R-68]
+adrs: []
 skills: [develop, review, record, go, shell]
-decisions: []
+decisions: [D-10, D-11]
 proposals: []
 issues: []
 ---
@@ -47,4 +47,4 @@ No finding. Left alone: the six minor findings of the last agent. No agent ran a
 
 ## Release
 
-The branch is pushed. The owner decides on the merge.
+The branch is pushed. This slice does not merge it.

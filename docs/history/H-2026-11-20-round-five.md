@@ -47,4 +47,4 @@ No finding. Left alone: the names of the Go cache volumes are the same for every
 
 ## Release
 
-The branch is pushed. The owner decides on the merge.
+The branch is pushed. This slice does not merge it.

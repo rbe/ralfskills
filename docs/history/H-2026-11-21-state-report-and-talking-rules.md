@@ -2,9 +2,9 @@
 id: H-2026-11-21-state-report-and-talking-rules
 title: The skill system-state-report and the talking rules of the owner
 status: closed
-adrs: [R-51, R-74]
+adrs: []
 skills: [develop, review, record, project-setup, system-state-report]
-decisions: []
+decisions: [D-14]
 proposals: []
 issues: []
 ---
@@ -44,4 +44,4 @@ Left alone: nobody ran the skill. The rules in `CLAUDE.md` were not tried by a s
 
 ## Release
 
-The branch is committed. The merge into the default branch waits for the owner.
+The branch is committed. This slice does not merge it.

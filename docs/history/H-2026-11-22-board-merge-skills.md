@@ -4,7 +4,7 @@ title: The skills board-merge-report and board-merge
 status: closed
 adrs: [R-77, R-78]
 skills: [develop, review, record, project-setup, board-merge-report, board-merge, python, shell]
-decisions: []
+decisions: [D-18]
 proposals: []
 issues: []
 ---
@@ -41,16 +41,15 @@ Duplicates and broken sentences removed. [R-40](../REQUIREMENTS.md#r-40) points 
 
 Words. `docs/REQUIREMENTS.md` and `docs/DECISIONS.md` had 13633 words at `1859147` and have 13071 now. The repair itself changed 13124 to 13071. `make board-numbers` counts 28456 words for 102 units, history files included, and this paragraph is part of that count.
 
-## Points that the repair left
+## Rows corrected after the trial
 
-The owner settled the points below after the trial. Each unsettled point is an Open row in `docs/DECISIONS.md`.
+The owner settled these points after the trial. This section states the results.
 
 - [R-3](../REQUIREMENTS.md#r-3), [R-20](../REQUIREMENTS.md#r-20), [R-42](../REQUIREMENTS.md#r-42), and [R-45](../REQUIREMENTS.md#r-45) were corrected to what the skills and the code do. [R-57](../REQUIREMENTS.md#r-57) now says that the merge asks the owner nothing, and that `release` asks only before the ship.
 - [R-36](../REQUIREMENTS.md#r-36), [R-37](../REQUIREMENTS.md#r-37), and [R-39](../REQUIREMENTS.md#r-39) keep framework detail in a reference file beside the language skill.
-- [D-3](../DECISIONS.md#d-3) says `in this list` and means the requirements list, and a test in `test_project_report.py` pins the sentence. The choice about `docs/DECISIONS.md` is the Open row [D-21](../DECISIONS.md#d-21).
-- The home of a declined idea outside any row is the Open row [D-22](../DECISIONS.md#d-22).
-- The split of [R-45](../REQUIREMENTS.md#r-45) and [R-46](../REQUIREMENTS.md#r-46) is the Open row [D-23](../DECISIONS.md#d-23).
-- Thirteen history files named retired ids in `decisions:` or in `adrs:`. Each list now names the live id that took over the facts, or is empty. This history keeps the retired ids in its text as plain text.
+- [D-3](../DECISIONS.md#d-3) says `in this list` and means the requirements list. A test in `test_project_report.py` pins the sentence.
+- Thirteen history files name ids that were retired later. Their lists and their text are as they were written. `docs/ids.yaml` has the key `merged:`, which maps each id that a merge retired to the live ids that took its content. `make ids` checks that each id in a list is live or retired, and that each map line names a retired id and live ids. `make ids-retire` takes `INTO=` and rewrites no document.
+- The work that these points left is in Open rows of `docs/DECISIONS.md`: [D-19](../DECISIONS.md#d-19) moves the Node and Gradle templates of `github-pipeline` to command variables. [D-20](../DECISIONS.md#d-20) adds the requirement-row branch to `plan` and `record`. [D-21](../DECISIONS.md#d-21) decides whether `docs/DECISIONS.md` stays. [D-22](../DECISIONS.md#d-22) decides where a declined idea lives. [D-23](../DECISIONS.md#d-23) decides whether to split [R-45](../REQUIREMENTS.md#r-45) and [R-46](../REQUIREMENTS.md#r-46). [D-24](../DECISIONS.md#d-24) makes `make board-numbers` follow the map.
 
 ## Not run
 

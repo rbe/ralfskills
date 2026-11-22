@@ -2,9 +2,9 @@
 id: H-2026-11-20-delivery-cycle
 title: Complete the cycle, the decision records, and the requirements list
 status: closed
-adrs: [R-60, R-51]
+adrs: []
 skills: [plan, develop, review, release, record, project-report, project-setup, github-pipeline, security, privacy, python, shell]
-decisions: []
+decisions: [D-6]
 proposals: []
 issues: []
 ---

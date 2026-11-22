@@ -2,9 +2,9 @@
 id: H-2026-11-20-trial-findings
 title: Fix what two trial projects found
 status: closed
-adrs: [R-1]
+adrs: []
 skills: [plan, develop, review, release, record, project-report, project-setup, github-pipeline, node, python, shell, security, migrate-docs]
-decisions: []
+decisions: [D-9]
 proposals: []
 issues: []
 ---

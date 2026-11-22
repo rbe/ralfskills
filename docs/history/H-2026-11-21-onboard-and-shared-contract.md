@@ -2,9 +2,9 @@
 id: H-2026-11-21-onboard-and-shared-contract
 title: One onboard skill, one shared contract, and a delivery that fits every language
 status: closed
-adrs: [R-71]
+adrs: []
 skills: [plan, develop, review, record, project-setup, github-pipeline, onboard, shell]
-decisions: []
+decisions: [D-13]
 proposals: []
 issues: []
 ---
@@ -51,4 +51,4 @@ No finding. Left alone: no fresh agent ran `report and integrate` with `onboard`
 
 ## Release
 
-Committed on the working branch. The merge into the default branch waits for the owner.
+Committed on the working branch. This slice does not merge it.

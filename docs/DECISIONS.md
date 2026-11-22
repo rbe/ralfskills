@@ -10,3 +10,4 @@ One list. An Open row is work that is not finished. A Decided row is a choice in
 | <a id="d-21"></a>D-21 | Open | Decide whether `docs/DECISIONS.md` stays, whether a Decided row and a requirement row are two kinds, and fix the words `in this list` of [D-3](#d-3). |
 | <a id="d-22"></a>D-22 | Open | Decide where a declined idea lives, because the first bullet of Discussed and not implemented in `docs/REQUIREMENTS.md` is a second home outside any row. |
 | <a id="d-23"></a>D-23 | Open | Decide whether to split [R-45](REQUIREMENTS.md#r-45) and [R-46](REQUIREMENTS.md#r-46), which are long and hold unrelated facts. |
+| <a id="d-24"></a>D-24 | Open | Make `make board-numbers` count a history list that names a retired id for the surviving id, through the `merged:` map of `docs/ids.yaml`. |

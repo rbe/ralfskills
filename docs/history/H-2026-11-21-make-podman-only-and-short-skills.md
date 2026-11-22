@@ -2,9 +2,9 @@
 id: H-2026-11-21-make-podman-only-and-short-skills
 title: Make and Podman as the only interface, general rules, and short skills
 status: closed
-adrs: [R-75, R-76, R-66, R-57, R-60, R-54]
+adrs: []
 skills: [develop, review, record, project-setup, github-pipeline, release, python, shell]
-decisions: []
+decisions: [D-15, D-16, D-17]
 proposals: []
 issues: []
 ---
@@ -72,7 +72,7 @@ Word counts (`wc -w`), before and after this round: `CLAUDE.md` 700 and 759, the
 
 ## Review
 
-Three reviewers read the finished slice: one for the interface, one as an agent with no context, and one for words and prompting. They gave 38 findings. A last agent checked each finding against the files. 37 findings led to a change. The finding about the host `tar` is a question for the owner, under what was left alone. These are the changes that alter what an agent or a target does:
+Three reviewers read the finished slice: one for the interface, one as an agent with no context, and one for words and prompting. They gave 38 findings. A last agent checked each finding against the files. 37 findings led to a change. The finding about the host `tar` led to no change, because [R-75](../REQUIREMENTS.md#r-75) lists `tar` among the tools of POSIX `sh` that a recipe may call. These are the changes that alter what an agent or a target does:
 
 - `doctor.mk` makes `doctor` the first prerequisite of `setup`. Before, `make setup` ran `toon` in Podman before `doctor`. `make setup` ran here and printed the `doctor` lines first. The unit test for [R-73](../REQUIREMENTS.md#r-73) now checks the prerequisite and the order of the includes, in place of the recipe line that it checked before.
 - `report.mk` includes `podman-python.mk` when it runs alone. `make -f skills/project-report/report.mk project-report` ran here in Podman.
@@ -163,4 +163,4 @@ Trial after the third cut. An agent that knew only the files built a Python proj
 
 ## Release
 
-The orchestrator commits the branch. The merge into the default branch waits for the owner.
+The orchestrator commits the branch. This slice does not merge it.

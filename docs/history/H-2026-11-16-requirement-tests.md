@@ -2,7 +2,7 @@
 id: H-2026-11-16-requirement-tests
 title: Tests name requirements
 status: closed
-adrs: []
+adrs: [ADR-0001, ADR-0002, ADR-0003]
 skills: [develop, review, project-setup, project-report, record, python, shell]
 decisions: []
 proposals: []

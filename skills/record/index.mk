@@ -6,7 +6,7 @@
 #   make ids
 #   make links
 #   make links-check
-#   make ids-retire ID=D-5 BY="R-28 R-60"
+#   make ids-retire ID=D-5 INTO="R-28 R-60"
 #   make ids-retire ID=H-2026-11-15-old
 #   make decision-log
 #
@@ -30,13 +30,13 @@ endif
 toon: ## Write the ADR or requirements index, and the skill index
 	$(PYTHON) "$(RECORD_DIR)scripts/toon.py"
 
-ids: ## Reject a repeated document id
+ids: ## Reject a repeated id, and a list that names an id that does not resolve
 	$(PYTHON) "$(RECORD_DIR)scripts/ids.py"
 
-ids-retire: ## Retire an id. Set ID=, and BY= for the ids that take its place
+ids-retire: ## Retire an id. Set ID=, and INTO= for the ids that took its content
 	@set -eu; \
 	if [ -z "$(ID)" ]; then printf '%s\n' "ids-retire: set ID=<id>" >&2; exit 1; fi
-	$(PYTHON) "$(RECORD_DIR)scripts/ids.py" retire "$(ID)" $(BY)
+	$(PYTHON) "$(RECORD_DIR)scripts/ids.py" retire "$(ID)" $(INTO)
 
 links: ## Write a link for each id in the documents under docs/
 	$(PYTHON) "$(RECORD_DIR)scripts/links.py"

@@ -2,9 +2,9 @@
 id: H-2026-11-20-adr-rules
 title: Require the ADR rules and remove the wording tests
 status: closed
-adrs: [R-28]
+adrs: []
 skills: [plan, develop, review, record, project-report, python]
-decisions: []
+decisions: [D-5]
 proposals: []
 issues: []
 ---

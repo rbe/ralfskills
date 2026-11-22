@@ -62,50 +62,87 @@ class IdsTest(unittest.TestCase):
         )
         self.assertEqual(ids.check(self.root), [])
 
-    def test_a_list_that_names_a_retired_id_fails(self):
+    def test_a_list_may_name_a_retired_id(self):
         """id: R-13"""
         self.write("docs/ids.yaml", "retired:\n- D-5\n")
         self.write(
             "docs/history/H-1.md",
             "---\nid: H-1\nadrs: []\ndecisions: [D-5]\n---\n",
         )
+        self.assertEqual(ids.check(self.root), [])
+
+    def test_a_list_that_names_an_unknown_id_fails(self):
+        """id: R-13"""
+        self.write(
+            "docs/history/H-1.md",
+            "---\nid: H-1\nadrs: []\ndecisions: [D-5]\n---\n",
+        )
         errors = ids.check(self.root)
-        self.assertTrue(any("retired id D-5" in error for error in errors))
+        self.assertTrue(
+            any("D-5, which is neither live nor retired" in error for error in errors)
+        )
 
     def test_a_list_that_is_text_or_has_no_brackets_fails(self):
         """id: R-13"""
         self.write(
             "docs/history/H-1.md",
-            "---\nid: H-1\nadrs: none\ndecisions: [D-5, text]\n---\n",
+            "---\nid: H-1\nadrs: none\ndecisions: [D-5, text]\nissues:\n---\n",
         )
         errors = ids.check(self.root)
         self.assertTrue(any("adrs is not a list" in error for error in errors))
+        self.assertTrue(any("issues is not a list" in error for error in errors))
         self.assertTrue(any("text, which is not an id" in error for error in errors))
 
-    def test_retire_moves_a_list_item_to_the_list_of_the_surviving_id(self):
+    def test_retire_with_into_writes_the_map_and_leaves_the_documents(self):
         """id: R-13"""
         row = '| <a id="r-28"></a>R-28 | Title | One sentence. |\n'
         self.write(
             "docs/REQUIREMENTS.md", "| Id | T | S |\n| --- | --- | --- |\n" + row
         )
-        history = self.write(
-            "docs/history/H-1.md",
-            "---\nid: H-1\nadrs: []\ndecisions: [D-5, D-6]\nissues: []\n---\n\nBody D-5.\n",
-        )
-        errors = ids.retire(self.root, "D-5", ["R-28"])
-        self.assertEqual(errors, [])
-        text = history.read_text(encoding="utf-8")
-        self.assertIn("adrs: [R-28]\ndecisions: [D-6]\nissues: []\n", text)
-        self.assertIn("Body D-5.", text)
-        self.assertEqual(ids.check(self.root), [])
+        text = "---\nid: H-1\nadrs: []\ndecisions: [D-5, D-6]\n---\n\nBody D-5.\n"
+        history = self.write("docs/history/H-1.md", text)
+        self.assertEqual(ids.retire(self.root, "D-5", ["R-28"]), [])
+        self.assertEqual(history.read_text(encoding="utf-8"), text)
+        path = self.root / "docs" / "ids.yaml"
+        self.assertEqual(ids.retired_ids(path), ["D-5"])
+        self.assertEqual(ids.merged_ids(path), [("D-5", ["R-28"])])
+        self.assertIn("merged:\n  D-5: [R-28]\n", path.read_text(encoding="utf-8"))
 
-    def test_retire_without_a_surviving_id_empties_the_list(self):
+    def test_retire_without_into_writes_no_map_entry(self):
         """id: R-13"""
-        history = self.write(
-            "docs/history/H-1.md", "---\nid: H-1\ndecisions: [D-5]\n---\n"
-        )
         self.assertEqual(ids.retire(self.root, "D-5"), [])
-        self.assertIn("decisions: []", history.read_text(encoding="utf-8"))
+        path = self.root / "docs" / "ids.yaml"
+        self.assertEqual(ids.retired_ids(path), ["D-5"])
+        self.assertEqual(ids.merged_ids(path), [])
+        self.assertNotIn("merged", path.read_text(encoding="utf-8"))
+
+    def test_retire_of_a_surviving_id_hands_the_map_entry_on(self):
+        """id: R-13"""
+        rows = "".join(
+            f'| <a id="r-{n}"></a>R-{n} | Title | One sentence. |\n' for n in (2, 3)
+        )
+        self.write(
+            "docs/REQUIREMENTS.md", "| Id | T | S |\n| --- | --- | --- |\n" + rows
+        )
+        self.write("docs/ids.yaml", "retired:\n- D-5\nmerged:\n  D-5: [R-9]\n")
+        self.assertEqual(ids.retire(self.root, "R-9", ["R-2", "R-3"]), [])
+        path = self.root / "docs" / "ids.yaml"
+        self.assertEqual(
+            ids.merged_ids(path), [("D-5", ["R-2", "R-3"]), ("R-9", ["R-2", "R-3"])]
+        )
+
+    def test_the_map_names_a_retired_key_and_a_live_surviving_id(self):
+        """id: R-13"""
+        self.write(
+            "docs/ids.yaml", "retired:\n- D-5\nmerged:\n  D-5: [R-9]\n  D-6: [R-2]\n"
+        )
+        errors = ids.check(self.root)
+        self.assertTrue(
+            any("D-5 names R-9, which is not a live id" in e for e in errors)
+        )
+        self.assertTrue(
+            any("D-6, which is not on the retired list" in e for e in errors)
+        )
 
     def test_retire_rejects_a_surviving_id_that_is_not_live(self):
         """id: R-13"""
