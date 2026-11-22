@@ -2,6 +2,8 @@
 
 ## `make toon`
 
+`make toon` writes `docs/requirements-index.toon` and `docs/skill-index.toon` in the skill collection, and `docs/adr/index.toon` and the skill index in a product repository.
+
 | File | Columns | What it lists |
 | --- | --- | --- |
 | `docs/adr/index.toon` | `id`, `status`, `title`, `adrs`, `skills`, `decisions` | ADR frontmatter. `plan` opens one ADR when the id matches |
@@ -9,6 +11,7 @@
 | `docs/skill-index.toon` | `name`, `kind`, `order`, `files`, `names` | Installed skills whose frontmatter `kind` is `language` or `check` |
 
 - A repository that keeps `docs/REQUIREMENTS.md` and no `docs/adr/` gets `docs/requirements-index.toon` and the skill index. `make toon` does not create `docs/adr/` there.
+- A product repository with no ADR still gets an `docs/adr/index.toon` that holds only the header.
 - If a repository has an ADR file and `docs/REQUIREMENTS.md`, `make toon` writes the ADR index.
 - `project.mk` and `sdlc.mk` include `.claude/skills/record/index.mk`. A Makefile that includes one of them has the targets `toon`, `ids`, `ids-retire`, `links`, `links-check`, and `decision-log`.
 - `make setup` runs `toon` first when that include is present.

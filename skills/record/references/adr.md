@@ -15,7 +15,6 @@
 
 - `record` owns the status.
 - A new ADR names the ADR it replaces in `supersedes`. `record` then sets the status of the replaced ADR to `Superseded`.
-- `plan`, `develop`, and `review` follow only an accepted ADR.
 - The project report does not list a superseded ADR as an id with no test.
 
 ## `skills`

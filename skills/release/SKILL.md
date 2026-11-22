@@ -13,10 +13,10 @@ The general rules in `CLAUDE.md` apply.
 1. If the change touches the workflow, the version, publish, the image, cleanup, or retention, invoke `github-pipeline`.
 2. Invoke `project-setup` only if that same change adds or overrides a Make target.
 3. If this task does not ship, ask `record` to write the Release section `Not invoked: this slice does not ship.` and to close the task. Commit the board documents with the change, push the branch, and stop.
-4. Read the Review section of the history file. Stop if `make lint` or `make test` failed or did not run. Stop if a finding is neither fixed nor a known-issue id.
+4. Read the Review section of the history file. Stop if the section does not report `make lint` and `make test` as passed. Stop if a finding is neither fixed nor a known-issue id.
 5. If the request did not ask for a ship, ask the owner before the ship. Stop if the owner says no.
 6. Commit the change on the one branch of the slice. Push the branch.
-7. If the repository has `.github/workflows` and `github-pipeline` is installed, run `make ci-status WAIT=1` for the commit of that push. If the repository has no workflow, run the six gates on this machine. Stop if the target or a gate fails.
+7. If the repository has `.github/workflows` and `github-pipeline` is installed, run `make ci-status WAIT=1` for the commit of that push. If the repository has no workflow, run the gate targets of the general rules. Stop if the target or a gate fails.
 8. Ask `record` to write the Release section: what ships, and the Make target or the merge that ships it. Then ask `record` to close the task.
 9. Commit the board documents on the same branch and push. The first line of that commit says that the task is closed.
 10. If the owner said that the owner merges, stop here. The pushed branch is closed on the board and ready for the merge.

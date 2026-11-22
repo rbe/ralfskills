@@ -14,7 +14,7 @@ This skill gives the rules for a Make recipe and for a shell command.
 
 <rules>
 - Write POSIX `sh`. If the change needs a bash feature, first ask `record` to write a Decided row that names bash, and name bash in `CLAUDE.md`.
-- The formatter is shfmt. The linter is shellcheck. Both read `.sh` files.
+- The formatter is shfmt. The linter is shellcheck. Both read `.sh` files. No template runs them. A project with `.sh` files sets `FORMAT_CMD` and `LINT_CMD` to run them in a Podman image.
 - If the only shell of the project is in Make recipes, add no shell formatter and no shell linter.
 - Apply the recipe rules of `project-setup`.
 - If a recipe can fail, start it with `set -eu`.

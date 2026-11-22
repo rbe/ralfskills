@@ -9,10 +9,10 @@ The repository fails this contract when:
 - `setup`, `build`, or `test` is missing, `docs` is missing while the repository renders docs, `login` is missing while an image is published, or one of those targets is not `.PHONY`
 - `doctor`, `skills-install`, `skills-update`, or `old-board` is missing
 - `SETUP_CMD`, `BUILD_CMD`, or `TEST_CMD` is empty, or `DOCS_CMD` is empty while the repository renders docs
-- a person, an agent, or a workflow step runs Gradle, npm, Podman, python, or tar directly instead of `make setup`, `make build`, `make test`, `make docs`, or `make login`
+- a person, an agent, or a workflow step runs Gradle, npm, Podman, python, or tar directly, except the one `podman run` line of the README, instead of `make setup`, `make build`, `make test`, `make docs`, or `make login`
 - the Makefile does not include `.claude/skills/project-setup/project.mk` before any target, unless it includes `.claude/skills/github-pipeline/sdlc.mk` instead, or a root `project.mk` is still the include
 - the Makefile uses `.ONESHELL` or a Make 4 function, or the standard targets call out to a shell script
-- a recipe calls a host tool other than `git` and `podman`, or `setup` installs a tool on the host. A tool of POSIX `sh` is not such a tool
+- a recipe calls a host tool that the Podman rule in `SKILL.md` does not allow, or `setup` installs a tool on the host
 - `.editorconfig` is missing, or `editorconfig` does not run editorconfig-checker
 - `format` or `lint` is missing, a second formatter or a second linter is a target, or either target runs a linter or formatter written for this project
 - `integration` is missing or is not the only integration entry

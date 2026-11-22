@@ -13,7 +13,7 @@ The general rules in `CLAUDE.md` apply.
 1. Read `docs/skill-index.toon`. For each row whose `kind` is `check`, in file order, read that skill and run its checks. Write one line for each row. If a check does not apply to this change, the line says why. If there is no `check` row, write `checks: none installed`. A row without a line fails this step.
 2. Read `docs/adr/index.toon`. Open each ADR whose status is `Accepted` and whose `skills` names a skill that this slice uses. A change that breaks one of these ADRs is a finding.
 3. Run `make lint` and `make test`.
-4. Check each test of the change against the test-id rule in `record`. If a test has no id or has an id in a path, stop.
+4. Check each test of the change against the test-id rule in `record`. If a test has an id in a path, stop.
 5. Check the change against each rule under "Gates" in the general rules, and compare the code with the pattern that `plan` named. A break of a rule is a finding. Code that ignores the pattern is a finding. Write the method rule, the name rule, and the pattern as one check.
 6. Run `make project-report` as steps 1 and 2 of `project-report` say. Stop also if a person edited `build/project-report.md`.
 7. Read the list of ids with no test in `build/project-report.md`. If an ADR or a Decided row states behaviour of the code and has no test, write a finding. If the ADR or the row is a rule about how to work, write it under what was left alone.

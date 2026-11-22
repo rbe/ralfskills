@@ -1022,6 +1022,18 @@ class MakeAndPodmanInterfaceTest(unittest.TestCase):
                 text.index("doctor.mk"), text.index("record/index.mk"), name
             )
 
+    def test_the_podman_machine_starts_behind_a_target(self):
+        """id: R-75"""
+        doctor_mk = (self.SETUP / "doctor.mk").read_text(encoding="utf-8")
+        recipe = "\n".join(recipe_lines(self.SETUP / "doctor.mk"))
+        self.assertIn("\npodman-start: ##", doctor_mk)
+        self.assertIn("podman machine start", recipe)
+        self.assertNotIn(
+            "podman machine",
+            re.sub(r"(?m)^#.*$", "", doctor_mk).split("podman-start:")[0],
+        )
+        self.assertIn("make podman-start", doctor_mk)
+
     def test_apm_runs_in_a_pinned_image_behind_a_target(self):
         """id: R-16"""
         tools = (self.SETUP / "tools.mk").read_text(encoding="utf-8")

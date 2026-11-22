@@ -11,7 +11,7 @@ setup ──┬── build ──┬── publish-container ──┐
         └── docs ───────────────────────────┘
 ```
 
-- `test` runs beside `build`. The `test` job runs the six gates of the general rules.
+- `test` runs beside `build`. The `test` job runs `make test`.
 - `report` has `if: ${{ !cancelled() }}` and is the last job.
 - `setup` runs `make cleanup-actions-artifacts` before it uploads.
 
@@ -51,6 +51,6 @@ To publish a new version, the owner does these steps:
 
 1. Tag the default branch with `vX.Y.Z`.
 2. Push the tag.
-3. Start `publish-container` from the Actions tab.
+3. Start `publish-container` on the Actions page of GitHub. The owner clicks it there. No command is typed.
 
 A tag push does not publish. If it did, one commit would be published two times, and the cleanup would delete the real former version.

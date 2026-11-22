@@ -11,9 +11,9 @@ This skill owns the Make contract: the Makefile, the standard targets, `CLAUDE.m
 
 <mode name="setup">
 <steps>
-1. Ask the owner how the project ships: as a binary, as a container image, as a library package, or with the merge only. Copy no template before the answer.
+1. Ask the owner how the project ships: as a binary, as a container image, as a library package, or with the merge only. A project that ships nothing answers with the merge only. Copy no template before the answer.
 2. Write the Makefile.
-   - If the project has no Makefile, ask which installed language skill the project uses. Copy the Makefile template of that skill: `templates/Makefile.python` in `python`, `templates/Makefile.node` in `node`, `templates/Makefile.gradle` in `jvm`, or `templates/Makefile.golang` in `go`. Copy the other files that the comment at the top of the template names.
+   - If the project has no Makefile, ask which installed language skill the project uses. Write the Makefile from the template of that skill with the file tool: `templates/Makefile.python` in `python`, `templates/Makefile.node` in `node`, `templates/Makefile.gradle` in `jvm`, or `templates/Makefile.golang` in `go`. Write the other files that the comment at the top of the template names the same way.
    - For an existing Makefile, add only the lines of the template that it lacks.
    - The Makefile sets the variables, then includes `.claude/skills/project-setup/project.mk` before any target. If the Makefile includes `.claude/skills/github-pipeline/sdlc.mk`, leave this include out. That file provides `help` and the same targets.
 3. Fill the command variables. Read `references/makefile.md` for the variables.
@@ -37,7 +37,7 @@ This skill owns the Make contract: the Makefile, the standard targets, `CLAUDE.m
    - Set `DEFAULT_BRANCH` if that branch is not `main`.
    - If an existing test has no id, ask `record` for a Decided row that states the behaviour that the test proves, and name that row in the test. One row can serve several tests.
 9. If each required command variable is set, or the Makefile defines that target, run `make setup`. Otherwise leave the run for later and name the empty variable.
-10. Commit every file that this mode wrote, the manifest and its lockfile, `.claude/skills/`, `apm.yml`, and `apm.lock.yaml`, and push. The Makefile includes files from `.claude/skills/`, so a clone needs them.
+10. Commit every file that this mode wrote, and each of these that exists: the manifest and its lockfile, `.claude/skills/`, `apm.yml`, and `apm.lock.yaml`. Push when the project has a remote `origin`. The Makefile includes files from `.claude/skills/`, so a clone needs them.
 </steps>
 <rules>
 - Do not define `setup`, `build`, or `test` again after the include.
@@ -77,7 +77,7 @@ This skill owns the Make contract: the Makefile, the standard targets, `CLAUDE.m
 - A target is filled in when its command variable has a non-empty value, or when the Makefile of the project gives that target a recipe. `true` is a filled-in value.
 - A target that the project adds after the include is the project's. A target repeated there with a recipe replaces the included recipe.
 - The project includes the installed `project.mk`. Do not keep a copy at the repository root or elsewhere.
-- Podman: `make build`, `make test`, and `make run` call Podman. Docker is not a second engine. A recipe calls no host tool other than `git` and `podman`. The tools of POSIX `sh`, such as `sed`, `awk`, `grep`, `find`, and `tar`, are allowed. `setup` runs `make doctor`, then `SETUP_CMD`, and installs no tool on the host.
+- Podman: `make build` and `make test` call Podman. `make run` exists only where a language template defines it. Docker is not a second engine. A recipe calls `git`, `podman`, and the tools of POSIX `sh`, such as `sed`, `awk`, `grep`, `find`, and `tar`. The agent types none of them. `setup` runs `make doctor`, then `SETUP_CMD`.
 - XDG paths: config, data, state, and cache use `XDG_CONFIG_HOME`, `XDG_DATA_HOME`, `XDG_STATE_HOME`, and `XDG_CACHE_HOME` on macOS and Linux. If a variable is unset, the paths are `~/.config`, `~/.local/share`, `~/.local/state`, and `~/.cache`.
 - Shipment: `github-pipeline` says what a shipment may contain. A Make-only repository that ships a binary ships the binary, and example data only from `examples/` when the path and the name say that it is an example.
 - Make 3.81 recipes: the system `make` stays GNU Make 3.81, also on macOS. Use no `.ONESHELL` and no Make 4 function (`$(file ...)`, `$(guile ...)`, `!=`). Each recipe line is one POSIX shell, joined with backslashes. The recipe is the command; add no shell-script wrapper.

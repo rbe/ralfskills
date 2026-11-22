@@ -6,7 +6,7 @@
 - The scripts read a frontmatter block for an ADR, a proposal, and a history file.
 - Write a list in the frontmatter on one line, as `skills: [a, b]`.
 - In the frontmatter and in the id cell of a table, an id is plain text. The scripts read it there.
-- `docs/ids.yaml` holds the retired ids. Before the first retire it does not exist. An empty list is `retired: []`.
+- `docs/ids.yaml` holds the retired ids. Before the first retire it does not exist. An empty list is `retired: []`. A list with entries is `retired:` and one `- K-1` line per id.
 
 ## Frontmatter
 

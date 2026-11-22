@@ -17,7 +17,7 @@ The report is successful if the reader understands each sentence on the first re
    - The board: `docs/DECISIONS.md`, `docs/KNOWN_ISSUES.md`, `docs/REQUIREMENTS.md`, the ADRs in `docs/adr/`, and the history files in `docs/history/`, each when it exists.
    - `build/project-report.md`, after you run `make project-report`, when `project-report` is installed.
    - The current chat, and the transcripts or notes that the user supplies.
-   - The result of `make test`, and of the Make target that starts the system. Run each only if it changes no data and no external system. Record the real result.
+   - The result of `make test`, and of the target that `CLAUDE.md` names for starting the system, if it names one. Run each only if it changes no data and no external system. Record the real result.
 2. Build the glossary before you write the report.
    - List the things that the report must name: components, data, actors, processes.
    - Select one name for each thing. Prefer the word of the user, then the identifier in the code, then a plain descriptive phrase.
@@ -49,10 +49,9 @@ The report is successful if the reader understands each sentence on the first re
 - Each statement in sections 2 to 6 has a source and a status. If a statement has no source, delete it.
 - A source is `path/to/file:line`, a commit hash, a test name, or a chat passage with a date or a short quote.
 - A status is one of three words. "ran": you executed it in this session and saw the result. "read": you read it in the code and did not execute it. "said": only a chat or a commit message states it. Do not change "read" or "said" into "ran".
-- The communication contract in `CLAUDE.md` applies to the report. The rules below add to it.
 - A sentence that tells the reader to do something has at most 20 words.
 - Use present tense for the current state. Use past tense only for events.
-- The glossary defines each abbreviation. Use no other abbreviation.
+- Use no abbreviation that the glossary does not define.
 - Do not use these judging words: robust, clean, seamless, simple, powerful, improved, optimized, comprehensive.
 - A noun chain has at most 3 nouns. In German, break a long compound with a hyphen or rewrite it.
 - Use a list for parallel items, a table for a comparison, and sentences for cause and effect.

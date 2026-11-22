@@ -7,7 +7,7 @@
 #   make    GNU Make 3.81 or newer
 #   git     runs
 #   podman  `podman info` works. On macOS a stopped Podman machine fails
-#           that command: start it with `podman machine start`
+#           that command: start it with `make podman-start`
 #   origin  a remote named origin, when the project has a workflow
 #
 # Make, Git, and Podman are the only tools the host needs. Every other
@@ -21,7 +21,7 @@
 ifndef DOCTOR_MK
 DOCTOR_MK := 1
 
-.PHONY: doctor
+.PHONY: doctor podman-start
 
 doctor: ## Check that this machine has the tools the targets need
 	@set -u; \
@@ -40,13 +40,13 @@ doctor: ## Check that this machine has the tools the targets need
 	if git --version >/dev/null 2>&1; then ok "$$(git --version)"; \
 	else bad "git does not run" "Install Git. On macOS: xcode-select --install"; fi; \
 	if ! command -v podman >/dev/null 2>&1; then \
-	  if [ "$$os" = "Darwin" ]; then hint="Install Podman from podman.io, then run podman machine init and podman machine start."; \
+	  if [ "$$os" = "Darwin" ]; then hint="Install Podman from podman.io, then run make podman-start."; \
 	  else hint="Install Podman with the package manager of this system."; fi; \
 	  bad "podman is not on PATH" "$$hint"; \
 	elif podman info >/dev/null 2>&1; then \
 	  ok "podman runs"; \
 	else \
-	  if [ "$$os" = "Darwin" ]; then hint="Run podman machine start. When no machine exists, run podman machine init first."; \
+	  if [ "$$os" = "Darwin" ]; then hint="Run make podman-start."; \
 	  else hint="Run podman info and read the error."; fi; \
 	  bad "podman info fails" "$$hint"; \
 	fi; \
@@ -56,6 +56,12 @@ doctor: ## Check that this machine has the tools the targets need
 	fi; \
 	if [ "$$failed" -ne 0 ]; then printf '%s\n' "doctor: fix the FAIL lines, then run make doctor again." >&2; exit 1; fi; \
 	printf '%s\n' "doctor: ready"
+
+podman-start: ## Start the Podman machine on macOS, and create it first when none exists
+	@set -eu; \
+	if [ "$$(uname -s)" != "Darwin" ]; then printf '%s\n' "podman-start: this system needs no Podman machine."; exit 0; fi; \
+	if podman info >/dev/null 2>&1; then printf '%s\n' "podman-start: the Podman machine runs."; exit 0; fi; \
+	podman machine start || { podman machine init && podman machine start; }
 
 # This file is included before contract.mk and before the index.mk of
 # record, so doctor runs before toon and before the recipe of setup.

@@ -21,10 +21,11 @@ EDITORCONFIG = podman run --rm -v "$(CURDIR)":/check:Z $(EDITORCONFIG_IMAGE)
 # installs no system package.
 DIFF_COVER_IMAGE ?= docker.io/library/python:3.13
 
-DIFF_COVER = podman run --rm -e HOME=/tmp -e PYTHONDONTWRITEBYTECODE=1 -e REPORT -v "$(CURDIR)":/work:Z -w /work $(DIFF_COVER_IMAGE) sh -c 'set -eu; git config --global --add safe.directory /work; pip install --disable-pip-version-check --root-user-action=ignore -q --target /tmp/py "diff-cover==$(DIFF_COVER_VERSION)"; PYTHONPATH=/tmp/py python3 -m diff_cover.diff_cover_tool "$$REPORT" --diff-file build/coverage/change.diff --format markdown:build/coverage/diff.md --fail-under=0'
+DIFF_COVER = podman run --rm -e HOME=/tmp -e PYTHONDONTWRITEBYTECODE=1 -e REPORT $(PODMAN_NET_ARGS) -v "$(CURDIR)":/work:Z -w /work $(DIFF_COVER_IMAGE) sh -c 'set -eu; git config --global --add safe.directory /work; pip install --disable-pip-version-check --root-user-action=ignore -q --target /tmp/py "diff-cover==$(DIFF_COVER_VERSION)"; PYTHONPATH=/tmp/py python3 -m diff_cover.diff_cover_tool "$$REPORT" --diff-file build/coverage/change.diff --format markdown:build/coverage/diff.md --fail-under=0'
 
 # Extra podman arguments of a container that reads the network: the
-# APM run of skills.mk and the GitHub CLI of sdlc.mk. Behind a proxy
+# APM run of skills.mk, the GitHub CLI of sdlc.mk, and the pip runs of
+# diff-cover and of the coverage recipe. Behind a proxy
 # with its own CA, mount the CA file here.
 PODMAN_NET_ARGS ?=
 

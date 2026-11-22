@@ -11,7 +11,7 @@ The agent writes each document by hand from a template in `templates/` beside th
 
 <mode name="write">
 <steps>
-1. Run `make ids`. If it exits non-zero, an id is a duplicate: stop and do not write the document. Before the Makefile includes `project.mk` or `sdlc.mk`, the file is `index.mk`, and `PYTHON_IMAGE=<image>` on that command line replaces the default image.
+1. Run `make ids`. If it exits non-zero, an id is a duplicate: stop and do not write the document. Before the Makefile includes `project.mk` or `sdlc.mk`, run `make -f .claude/skills/record/index.mk <target>`, with `PYTHON_IMAGE=<image>` on that line to replace the default image.
 2. For a new item, take the next id of its kind from the rules below.
 3. If the document does not exist, copy its template: `ROADMAP.md`, `KNOWN_ISSUES.md`, `DECISIONS.md`, `adr.md`, `proposal.md`, or `history.md`. Keep the layout. Before you write frontmatter or a table row for the first time in a task, read `references/documents.md`.
 4. If the document is an ADR, read `references/adr.md` and follow it.

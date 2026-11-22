@@ -4,7 +4,7 @@
 
 `CLAUDE.md` is the only entry file. The skills are installed under `.claude/skills/` with APM.
 
-Stages, in order: `plan`, `develop`, `review`, `release`. A new or vague request starts at `plan`. A request that names a source file, a failing test, or a known issue starts at `develop`. Other skills: `record`, `project-report`, `project-setup`[, `github-pipeline`, `system-state-report`: keep each only when installed].
+Stages, in order: `plan`, `develop`, `review`, `release`. A new or vague request starts at `plan`. A request that names a source file, a failing test, or a known issue starts at `develop`. Other skills: `record`, `project-report`, `project-setup`[, `onboard`, `migrate-docs`, `github-pipeline`, `system-state-report` (say `state report`): keep each only when installed].
 
 Language skills: [the installed ones of `node`, `python`, `shell`, `jvm`, `go`]. Subskills `plan` asks and `review` checks: [the installed ones of `security`, `privacy`, `ux-ui-design`, `api-design`]. A project skill is an extra name listed here. [Name each project skill and framework here, or write none.]
 
@@ -37,7 +37,7 @@ Board:
 
 Gates:
 
-- The gates are `make editorconfig`, `make format`, `make lint`, `make test`, `make integration`, and `make coverage`.
+- The gates are `make editorconfig`, `make format`, `make lint`, `make test`, `make integration`, and `make coverage`. CI runs the same six targets.
 - A change is done when `make lint` and `make test` passed after the last edit. Report a gate that did not run as not run, with the reason.
 - A test names the ADR id or the decision id that it proves in a line `id:`. Stop when a test has no id.
 - Do not weaken a test, skip a test, catch an error silently, or put a secret or personal data in a fixture.

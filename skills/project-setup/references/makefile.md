@@ -24,6 +24,7 @@ Make reads `RENDER_DOCS` and `PUBLISH_IMAGE` while it parses `project.mk`. Set t
 | Target | When | What it does |
 | --- | --- | --- |
 | `doctor` | Always | Checks that this machine has Make, Git, and Podman |
+| `podman-start` | Always | Starts the Podman machine on macOS, and creates it when none exists |
 | `setup` | Always | Runs `doctor` first, then `toon` when `record` is installed, then `SETUP_CMD`. A failed `doctor` stops `setup` |
 | `build` | Always | Produces the artifact. The Gradle build runs here |
 | `test` | Always | Runs the unit tests |
@@ -71,7 +72,7 @@ Make reads `RENDER_DOCS` and `PUBLISH_IMAGE` while it parses `project.mk`. Set t
 | `APM_IMAGE` | The image that runs APM. It has git and Python. Default `docker.io/library/python:3.13` |
 | `APM_VERSION` | The APM version of `skills-install` and `skills-update`. Default `0.36.1` |
 | `DIFF_COVER_IMAGE` | The image that runs diff-cover. It has git and Python. Default `docker.io/library/python:3.13` |
-| `PODMAN_NET_ARGS` | Extra `podman` arguments of a container that reads the network, such as a CA mount behind a proxy |
+| `PODMAN_NET_ARGS` | Extra `podman` arguments of a container that reads the network (APM, the GitHub CLI, and the `pip` runs of diff-cover and coverage), such as a CA mount behind a proxy |
 
 The language skill names the tool of `FORMAT_CMD`, `LINT_CMD`, `COVERAGE_CMD`, and `TEST_CHANGED_CMD`. `project-report` ships the test selection for Python, Node, and the JVM.
 
@@ -96,7 +97,7 @@ The `sdlc.mk` of `github-pipeline` includes the same `contract.mk`, `doctor.mk`,
 
 ## `make doctor`
 
-`doctor` checks GNU Make 3.81 or newer, Git, `podman info`, and, when the project has a workflow, the remote `origin`. Each check prints `ok` or `FAIL` with the fix. A `FAIL` stops the target with exit 1. On macOS a stopped Podman machine fails `podman info`, and the fix line says `podman machine start`. The `setup` of the Node and Gradle templates of `github-pipeline` also runs `make doctor` first.
+`doctor` checks GNU Make 3.81 or newer, Git, `podman info`, and, when the project has a workflow, the remote `origin`. Each check prints `ok` or `FAIL` with the fix. A `FAIL` stops the target with exit 1. On macOS a stopped Podman machine fails `podman info`, and the fix line says `make podman-start`. The `setup` of the Node and Gradle templates of `github-pipeline` also runs `make doctor` first.
 
 ## `make coverage` and `make test-changed`
 

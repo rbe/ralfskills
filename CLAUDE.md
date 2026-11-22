@@ -6,7 +6,7 @@ Stages, in order: `plan`, `develop`, `review`, `release`. Other skills: `record`
 
 Language skills: `node`, `python`, `shell`, `jvm`, `go`. Subskills `plan` asks and `review` checks: `security`, `privacy`, `ux-ui-design`, `api-design`. A project skill is an extra name listed here.
 
-Here, a row of `docs/REQUIREMENTS.md` is a requirement. A row of `docs/DECISIONS.md` is Open (work not finished) or Decided (a choice in force). This collection keeps no `docs/ROADMAP.md` and no `docs/adr/`.
+Here, a row of `docs/REQUIREMENTS.md` is a requirement. A row of `docs/DECISIONS.md` is Open (work not finished) or Decided (a choice in force). This collection keeps no `docs/ROADMAP.md` and no `docs/adr/`. `make toon` writes `docs/requirements-index.toon` and `docs/skill-index.toon` here.
 
 ## General rules
 
@@ -35,7 +35,7 @@ Board:
 
 Gates:
 
-- The gates are `make editorconfig`, `make format`, `make lint`, `make test`, `make integration`, and `make coverage`.
+- The gates are `make editorconfig`, `make format`, `make lint`, `make test`, `make integration`, and `make coverage`. CI runs the same six targets.
 - A change is done when `make lint` and `make test` passed after the last edit. Report a gate that did not run as not run, with the reason.
 - A test names the ADR id or the decision id that it proves in a line `id:`. Stop when a test has no id.
 - Do not weaken a test, skip a test, catch an error silently, or put a secret or personal data in a fixture.

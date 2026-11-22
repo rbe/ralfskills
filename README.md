@@ -53,7 +53,7 @@ The host needs GNU Make 3.81 or newer, Git, and Podman. It needs no other tool: 
    podman run --rm -v "$PWD":/work:Z -w /work docker.io/library/python:3.13 sh -c 'pip install -q --root-user-action=ignore apm-cli==0.36.1 && apm install'
    ```
 
-   Behind a proxy with its own CA, add `-v <CA file>:/ca.crt:ro -e GIT_SSL_CAINFO=/ca.crt -e SSL_CERT_FILE=/ca.crt` to the `podman run` arguments. For a private repository, add `-e GITHUB_APM_PAT`. `PODMAN_NET_ARGS` holds the same arguments for the Make targets.
+   Behind a proxy with its own CA, add `-v <CA file>:/ca.crt:ro -e GIT_SSL_CAINFO=/ca.crt -e SSL_CERT_FILE=/ca.crt` to the `podman run` arguments. For a private repository, add `-e GITHUB_APM_PAT`. These flags change only that one line. `PODMAN_NET_ARGS` holds the same arguments for the Make targets.
 
 2. Tell the agent: `report and integrate`. The [onboard](skills/onboard/SKILL.md) skill carries the order, for a new project and for an existing one.
 
@@ -78,10 +78,10 @@ To take a newer version:
 1. Change `ref` to the new tag. Skip this step when the project has no `ref`.
 2. Run `make skills-update`. `make skills-update DRY_RUN=1` shows the plan and changes nothing. The target runs `apm update --yes` in Podman, so it asks no question. `APM_VERSION` and `APM_IMAGE` in `tools.mk` of `project-setup` pin APM. `apm install --update` is deprecated in APM 0.36.1.
 3. Run `make toon` and `make links`, because a new skill can add rows to the indexes and the links.
-4. Run the gates: `make editorconfig`, `make format`, `make lint`, `make test`, and `make ci` when the project has a workflow.
+4. Run the gates of `CLAUDE.md`, and `make ci` when the project has a workflow.
 5. Commit `.claude/skills/`, `apm.yml`, and `apm.lock.yaml` together, on the default branch.
 
-APM 0.36.1 does not overwrite a skill file that a person changed in `.claude/skills/`. If such a file exists, `make skills-update` fails and names the file. Restore the file with Git, then run the target again. Keep project rules in a project skill or in `CLAUDE.md`, not in an installed file. A new Makefile template does not change the `Makefile` of the project. Run `project-setup` in report mode to see what a new version adds.
+APM 0.36.1 does not overwrite a skill file that a person changed in `.claude/skills/`. If such a file exists, `make skills-update` fails and names the file. Restore the file with `git restore <file>`, then run the target again. Keep project rules in a project skill or in `CLAUDE.md`, not in an installed file. A new Makefile template does not change the `Makefile` of the project. Run `project-setup` in report mode to see what a new version adds.
 
 ## How APM loads them
 
