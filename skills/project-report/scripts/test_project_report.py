@@ -411,8 +411,8 @@ class ChangedTestsTest(unittest.TestCase):
         ci_targets = [line for line in sdlc.splitlines() if line.startswith("SDLC_CI")]
         self.assertEqual(len(ci_targets), 1)
         self.assertNotIn("test-changed", ci_targets[0])
-        for text in general_rules():
-            self.assertIn("A green `test-changed` does not replace `make test`.", text)
+        develop = (ROOT / "skills" / "develop" / "SKILL.md").read_text(encoding="utf-8")
+        self.assertIn("A green `test-changed` does not replace `make test`.", develop)
         for name in ("ci.node.yml", "ci.gradle.yml"):
             workflow = (
                 ROOT / "skills" / "github-pipeline" / "templates" / name
@@ -460,6 +460,20 @@ class GeneralRulesTest(unittest.TestCase):
             self.assertIn("the only skill is `migrate-docs`", text)
             self.assertIn("`record` writes every id and every board document.", text)
             self.assertIn("Run `make toon` before you read an index.", text)
+
+    def test_a_requirements_repository_reads_the_requirements_index(self):
+        """id: R-54"""
+        for text in general_rules():
+            self.assertIn(
+                "Where a step names `docs/adr/index.toon`, read "
+                "`docs/requirements-index.toon` in such a repository",
+                text,
+            )
+        for name in ("develop", "review"):
+            skill = (ROOT / "skills" / name / "SKILL.md").read_text(encoding="utf-8")
+            self.assertIn("`docs/adr/index.toon`", skill)
+            self.assertNotIn("skip this step", skill)
+            self.assertNotIn("If the repository keeps `docs/adr/`", skill)
 
 
 ONE_LINE = "The general rules in `CLAUDE.md` apply."
@@ -810,8 +824,11 @@ class ProjectReportTest(unittest.TestCase):
         for name in ("review", "project-setup", "project-report"):
             text = (ROOT / "skills" / name / "SKILL.md").read_text(encoding="utf-8")
             self.assertIn("`make project-report`", text)
+        report = (ROOT / "skills" / "project-report" / "SKILL.md").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("`make project-report` writes `build/project-report.md`", report)
         for text in general_rules():
-            self.assertIn("`make project-report` writes", text)
             self.assertIn("Hand-editing it is a defect.", text)
         contract = (ROOT / "skills" / "project-setup" / "contract.mk").read_text(
             encoding="utf-8"
@@ -1104,6 +1121,41 @@ class MakeAndPodmanInterfaceTest(unittest.TestCase):
             for run in runs:
                 self.assertRegex(run, r"^make [a-z-]+$")
             self.assertIn("GH_TOKEN: ${{ github.token }}", workflow)
+
+    def test_the_ci_result_and_the_pull_request_run_in_the_github_cli_image(self):
+        """id: R-75"""
+        sdlc = (self.PIPELINE / "sdlc.mk").read_text(encoding="utf-8")
+        for target in ("ci-status", "pull-request", "pull-request-merge"):
+            self.assertRegex(sdlc, rf"(?m)^{target}: ## \S")
+            recipe = sdlc.split("\n" + target + ": ## ")[1].split("\n\n")[0]
+            self.assertIn("$(THIS_MAKE) --no-print-directory gh-image", recipe)
+            self.assertIn("$(SDLC_GH_REPO)", recipe)
+            self.assertNotIn("git remote", recipe)
+        define = sdlc.split("define SDLC_GH_REPO\n")[1].split("\nendef")[0]
+        self.assertIn('repo="$(GH_REPO)"', define)
+        self.assertRegex(sdlc, r"(?m)^GH_REPO \?= \$\(OWNER\)/\$\(NAME\)$")
+        status = sdlc.split("\nci-status: ## ")[1].split("\n\n")[0]
+        self.assertIn('$(GH) run list -R "$$repo" --commit "$$sha"', status)
+        self.assertIn('"$${WAIT:-}" != 1', status)
+        self.assertIn('if [ "$$result" != success ]; then exit 1; fi', status)
+        opened = sdlc.split("\npull-request: ## ")[1].split("\n\n")[0]
+        self.assertIn("$(SDLC_BRANCH)", opened)
+        self.assertIn(
+            '$(GH) pr create -R "$$repo" --head "$$branch" --base "$(DEFAULT_BRANCH)"',
+            opened,
+        )
+        merge = sdlc.split("\npull-request-merge: ## ")[1].split("\n\n")[0]
+        self.assertIn('$(GH) pr checks "$$number" -R "$$repo"', merge)
+        self.assertLess(merge.index("pr checks"), merge.index("pr merge"))
+        self.assertIn('$(GH) pr merge "$$number" -R "$$repo" --merge', merge)
+        branch = sdlc.split("define SDLC_BRANCH\n")[1].split("\nendef")[0]
+        self.assertIn('"$(DEFAULT_BRANCH)"', branch)
+        self.assertEqual(host_calls(self.PIPELINE / "sdlc.mk"), [])
+        listing = (self.PIPELINE / "references" / "makefile.md").read_text(
+            encoding="utf-8"
+        )
+        for target in ("ci-status", "pull-request", "pull-request-merge"):
+            self.assertIn(f"| `{target}` |", listing)
 
 
 if __name__ == "__main__":

@@ -59,7 +59,7 @@ This skill owns the Make contract: the Makefile, the standard targets, `CLAUDE.m
 
 <checks>
 1. `editorconfig` runs editorconfig-checker, and `.editorconfig` exists.
-2. `format` and `format-fix` run the one formatter that the language skill names. The formatter does not format `.claude/`, `apm_modules/`, `build/`, or `docs/`, because the scripts of `record` read the board line by line.
+2. `format` and `format-fix` run the one formatter that the language skill names, and `format-fix` rewrites the files. Do not write a formatter or add a second one. The formatter does not format `.claude/`, `apm_modules/`, `build/`, or `docs/`, because the scripts of `record` read the board line by line.
 3. `lint` runs the one linter that the language skill names.
 4. `test` runs the unit tests and no integration test.
 5. `integration` is the one integration entry. No second integration target exists.
@@ -70,6 +70,7 @@ This skill owns the Make contract: the Makefile, the standard targets, `CLAUDE.m
 </checks>
 
 <rules>
+- Run one mode. Report mode reads the project and writes nothing. Setup mode writes only what is missing or off the contract, and it leaves a target that the project already filled in. If a request asks for both modes, run report mode first.
 - `help` is the default goal. A project Makefile sets `.DEFAULT_GOAL` to no other target. A `##` comment on the target line is the text that `help` prints.
 - The standard targets are `doctor`, `setup`, `build`, `test`, `editorconfig`, `format`, `format-fix`, `lint`, `integration`, `coverage`, `test-changed`, `old-board`, `skills-install`, `skills-update`, and `apm`. `project-report` exists when that skill is installed. `docs` exists only when the repository renders docs. `login` exists only when an image is published.
 - A target does the same thing on a laptop and in CI. A command that only makes sense on a laptop gets its own name, such as `dev` or `verify`.

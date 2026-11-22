@@ -12,7 +12,7 @@ The repository fails this contract when:
 - a person, an agent, or a workflow step runs Gradle, npm, Podman, python, or tar directly instead of `make setup`, `make build`, `make test`, `make docs`, or `make login`
 - the Makefile does not include `.claude/skills/project-setup/project.mk` before any target, unless it includes `.claude/skills/github-pipeline/sdlc.mk` instead, or a root `project.mk` is still the include
 - the Makefile uses `.ONESHELL` or a Make 4 function, or the standard targets call out to a shell script
-- a recipe calls a host tool other than `git` and `podman`, or `setup` installs a tool on the host. The tools of POSIX `sh`, such as `sed`, `awk`, `grep`, `find`, and `tar`, are not such a tool
+- a recipe calls a host tool other than `git` and `podman`, or `setup` installs a tool on the host. A tool of POSIX `sh` is not such a tool
 - `.editorconfig` is missing, or `editorconfig` does not run editorconfig-checker
 - `format` or `lint` is missing, a second formatter or a second linter is a target, or either target runs a linter or formatter written for this project
 - `integration` is missing or is not the only integration entry

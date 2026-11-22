@@ -41,6 +41,7 @@ This skill owns the GitHub delivery contract and `sdlc.mk`, the makefile that im
 </mode>
 
 <rules>
+- Run one mode. Report mode reads the project and writes nothing. Setup mode writes only what is missing or off the contract. If a request asks for both modes, run report mode first.
 - Each job id of the workflow is a Make target. `setup`, `build`, `test`, and `docs` come from the `project-setup` contract. `publish-container`, `publish-github`, and `report` come from this skill. `login` is a target that the publish job runs, not a job.
 - The project Makefile includes the installed `sdlc.mk` before any target. Do not copy `sdlc.mk` to the repository root, do not edit a file of this skill, and do not include `project.mk` beside it.
 - The workflow is one file, `.github/workflows/ci.yml`, named `CI`. A step is `actions/checkout`, an artifact upload or download, or `run: make <target>`.

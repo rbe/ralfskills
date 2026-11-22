@@ -47,6 +47,18 @@
 #   GH_VERSION       the GitHub CLI release in the image
 #   GH_BASE_IMAGE    the base of that image
 #   GH_IMAGE         the local name of that image
+#
+# The CI result and pull request targets run the GitHub CLI in that
+# image. The image has no Git, so a recipe reads Git on the host and
+# passes -R owner/name, --head, and --base to gh. owner/name is GH_REPO,
+# which is OWNER/NAME. A command-line variable sets one run:
+#   SHA              ci-status reads this commit. Default: HEAD.
+#   WAIT=1           ci-status waits for the run to end.
+#                    pull-request-merge waits for the checks to end.
+#   TITLE, BODY      the pull request text. Default: the last commit
+#                    subject and the subjects of the commits on the branch.
+#   CI_WAIT_SECONDS  seconds between two polls of ci-status. Default 15.
+#   CI_WAIT_TRIES    polls before ci-status stops waiting. Default 240.
 
 ifndef SDLC_MK
 SDLC_MK := 1
@@ -84,6 +96,9 @@ HELP_LEAD ?= The Makefile is the interface. A laptop and CI run the same targets
 GH_VERSION ?= 2.89.0
 GH_BASE_IMAGE ?= docker.io/library/alpine:3.22
 GH_IMAGE ?= localhost/sdlc-gh:$(GH_VERSION)
+GH_REPO ?= $(OWNER)/$(NAME)
+CI_WAIT_SECONDS ?= 15
+CI_WAIT_TRIES ?= 240
 GH = podman run --rm -e GH_TOKEN -e GITHUB_TOKEN -e GH_HOST -e GITHUB_RUN_ID -e SDLC_ARTIFACT_AGE -e SDLC_KEEP_ARTIFACTS $(PODMAN_NET_ARGS) -v "$(CURDIR)":/work:Z -w /work $(GH_IMAGE)
 
 # Nearest ancestor tag whose name starts with v and a digit. Empty when
@@ -99,6 +114,7 @@ THIS_MAKE := $(MAKE)
 # directory cannot satisfy the build target.
 .PHONY: help version ci report setup build test docs publish-tags \
 	publish-container publish-github image run stop clean gh-image \
+	ci-status pull-request pull-request-merge \
 	cleanup-container-versions cleanup-github-releases cleanup-actions-artifacts
 
 # $(call SDLC_LOG,job,goal)
@@ -137,6 +153,22 @@ elif [ -n "$$def" ] && [ "$$ref" = "refs/heads/$$def" ]; then on_default=1; \
 else on_default=0; fi
 endef
 
+# Sets repo to owner/name. Stops when OWNER or NAME is empty.
+define SDLC_GH_REPO
+repo="$(GH_REPO)"; \
+case "$$repo" in \
+  ""|/*|*/) echo "Set OWNER and NAME, the GitHub owner and the repository name." >&2; exit 1 ;; \
+esac
+endef
+
+# Sets branch to the current branch. Stops on a detached HEAD and on the default branch.
+define SDLC_BRANCH
+branch=$$(git rev-parse --abbrev-ref HEAD); \
+if [ "$$branch" = HEAD ] || [ "$$branch" = "$(DEFAULT_BRANCH)" ]; then \
+  echo "Check out the branch of the slice. The branch is '$$branch', and the default branch is $(DEFAULT_BRANCH)." >&2; exit 1; \
+fi
+endef
+
 publish-tags: ## Print tags to push. latest only on the default branch
 	@set -eu; \
 	printf '%s\n' "$$($(THIS_MAKE) -s --no-print-directory version)"; \
@@ -159,6 +191,54 @@ gh-image: ## Build the image of the GitHub CLI, once
 	  'RUN set -eu; case "$$(uname -m)" in x86_64) arch=amd64 ;; aarch64|arm64) arch=arm64 ;; *) echo "gh-image: no GitHub CLI for $$(uname -m)" >&2; exit 1 ;; esac; name="gh_$${GH_VERSION}_linux_$${arch}"; wget -q -O /tmp/gh.tar.gz "https://github.com/cli/cli/releases/download/v$${GH_VERSION}/$${name}.tar.gz"; tar -xzf /tmp/gh.tar.gz -C /tmp; mv "/tmp/$${name}/bin/gh" /usr/local/bin/gh; rm -r /tmp/gh.tar.gz "/tmp/$${name}"' \
 	  'ENTRYPOINT ["gh"]' \
 	| podman build $(PODMAN_NET_ARGS) --build-arg GH_VERSION="$(GH_VERSION)" -t "$(GH_IMAGE)" -f - . >&2
+
+ci-status: ## Print the CI result of HEAD (SHA=<sha>). WAIT=1 waits for the end. Fails unless the run passed
+	@set -eu; \
+	$(SDLC_GH_REPO); \
+	sha="$${SHA:-}"; \
+	if [ -z "$$sha" ]; then sha=$$(git rev-parse HEAD); fi; \
+	$(THIS_MAKE) --no-print-directory gh-image; \
+	tab=$$(printf '\t'); tries=0; \
+	while :; do \
+	  row=$$($(GH) run list -R "$$repo" --commit "$$sha" --limit 1 --json workflowName,status,conclusion,url --jq '.[] | [.workflowName, .status, (.conclusion // ""), .url] | @tsv'); \
+	  name=$$(printf '%s\n' "$$row" | awk -F "$$tab" '{ print $$1 }'); \
+	  state=$$(printf '%s\n' "$$row" | awk -F "$$tab" '{ print $$2 }'); \
+	  result=$$(printf '%s\n' "$$row" | awk -F "$$tab" '{ print $$3 }'); \
+	  url=$$(printf '%s\n' "$$row" | awk -F "$$tab" '{ print $$4 }'); \
+	  if [ "$$state" = completed ] || [ "$${WAIT:-}" != 1 ]; then break; fi; \
+	  tries=$$((tries + 1)); \
+	  if [ "$$tries" -ge "$(CI_WAIT_TRIES)" ]; then break; fi; \
+	  sleep "$(CI_WAIT_SECONDS)"; \
+	done; \
+	if [ -z "$$state" ]; then echo "ci-status: no CI run for commit $$sha." >&2; exit 1; fi; \
+	if [ "$$state" != completed ]; then echo "ci-status: $$name is $$state for commit $$sha. It is not finished. $$url" >&2; exit 1; fi; \
+	echo "ci-status: $$name $$result for commit $$sha. $$url"; \
+	if [ "$$result" != success ]; then exit 1; fi
+
+pull-request: ## Open a pull request from this branch to the default branch. TITLE and BODY are optional
+	@set -eu; \
+	$(SDLC_GH_REPO); \
+	$(SDLC_BRANCH); \
+	$(THIS_MAKE) --no-print-directory gh-image; \
+	open=$$($(GH) pr list -R "$$repo" --head "$$branch" --base "$(DEFAULT_BRANCH)" --state open --json url --jq '.[0].url // empty'); \
+	if [ -n "$$open" ]; then echo "$$open"; exit 0; fi; \
+	title="$${TITLE:-}"; \
+	if [ -z "$$title" ]; then title=$$(git log -1 --format=%s); fi; \
+	body="$${BODY:-}"; \
+	if [ -z "$$body" ]; then body=$$(git log --format='- %s' "origin/$(DEFAULT_BRANCH)..HEAD" 2>/dev/null || true); fi; \
+	$(GH) pr create -R "$$repo" --head "$$branch" --base "$(DEFAULT_BRANCH)" --title "$$title" --body "$$body"
+
+pull-request-merge: ## Merge the pull request of this branch when its checks passed. WAIT=1 waits for the checks
+	@set -eu; \
+	$(SDLC_GH_REPO); \
+	$(SDLC_BRANCH); \
+	$(THIS_MAKE) --no-print-directory gh-image; \
+	number=$$($(GH) pr list -R "$$repo" --head "$$branch" --base "$(DEFAULT_BRANCH)" --state open --json number --jq '.[0].number // empty'); \
+	if [ -z "$$number" ]; then echo "pull-request-merge: no open pull request from $$branch. Run make pull-request first." >&2; exit 1; fi; \
+	watch=""; \
+	if [ "$${WAIT:-}" = 1 ]; then watch="--watch"; fi; \
+	$(GH) pr checks "$$number" -R "$$repo" $$watch || { echo "pull-request-merge: the checks of pull request $$number did not pass. Nothing merged." >&2; exit 1; }; \
+	$(GH) pr merge "$$number" -R "$$repo" --merge
 
 version: ## Print MAJOR.MINOR.PATCH-run. PRINT=tag prints the vX.Y.Z tag
 	@set -eu; \

@@ -6,7 +6,7 @@ description: Generates the project report from the board and the tests. Use when
 The general rules in `CLAUDE.md` apply.
 
 <purpose>
-`make project-report` puts three sections in one file, so that `review` reads one file: the requirements-to-tests map, the architecture review, and the development review.
+`make project-report` writes `build/project-report.md`. The file has three sections, so that `review` reads one file: the requirements-to-tests map, the architecture review, and the development review.
 </purpose>
 
 <steps>

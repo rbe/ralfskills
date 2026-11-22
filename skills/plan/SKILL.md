@@ -39,6 +39,8 @@ The general rules in `CLAUDE.md` apply.
 </steps>
 
 <rules>
+- Ask the owner one question at a time. Ask only what the code and the board do not answer.
+- For a subskill that is not installed, write the line `<name>: not installed`.
 - Do not ask a question that an accepted ADR, a Decided row, or an open proposal already answers.
 - If the code or the board answers a question of step 2, write that answer in the line of that row.
 - The roadmap line holds only the id of the slice. The questions and answers stay in the Plan section.

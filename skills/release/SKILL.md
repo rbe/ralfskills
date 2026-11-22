@@ -16,17 +16,18 @@ The general rules in `CLAUDE.md` apply.
 4. Read the Review section of the history file. Stop if `make lint` or `make test` failed or did not run. Stop if a finding is neither fixed nor a known-issue id.
 5. If the request did not ask for a ship, ask the owner before the ship. Stop if the owner says no.
 6. Commit the change on the one branch of the slice. Push the branch.
-7. If the repository has a workflow, ask the owner for the result of CI on that push, because no Make target reads it. If the repository has no workflow, run the six gates on this machine. Stop if CI or a gate fails.
+7. If the repository has `.github/workflows` and `github-pipeline` is installed, run `make ci-status WAIT=1` for the commit of that push. If the repository has no workflow, run the six gates on this machine. Stop if the target or a gate fails.
 8. Ask `record` to write the Release section: what ships, and the Make target or the merge that ships it. Then ask `record` to close the task.
 9. Commit the board documents on the same branch and push. The first line of that commit says that the task is closed.
 10. If the owner said that the owner merges, stop here. The pushed branch is closed on the board and ready for the merge.
-11. Merge the branch into the default branch and push the default branch. If the repository host has pull requests and a Make target opens one, merge through the pull request. If not, use a merge commit.
+11. Merge the branch into the default branch and push the default branch. If `.github/workflows` exists and `make help` lists `pull-request`, run `make pull-request`, then `make pull-request-merge WAIT=1`. If not, use a Git merge commit.
 12. If `github-pipeline` is not installed, run the target that `CLAUDE.md` names for the shipment, such as `make build` for a library package. If `github-pipeline` is installed, the push to the default branch publishes.
 </steps>
 
 <rules>
 - The first line of a commit message is one sentence that says what the system now does.
 - A library with no package ships with the merge.
+- The owner creates a `v*` tag. This skill creates none.
 - You may delete the branch of the slice after the merge.
 - `record` stores a divergence where `github-pipeline` says to write divergences. If the divergence is not a pipeline divergence, `record` stores it as an ADR with the section `## Divergence`.
 </rules>

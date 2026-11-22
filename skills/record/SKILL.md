@@ -42,13 +42,14 @@ The agent writes each document by hand from a template in `templates/` beside th
 Ids:
 - Do the id check in this skill. Do not delegate it, and do not accept an id that the caller invented in prose.
 - The next number of a kind is one above the highest number of that kind in the documents and in `docs/ids.yaml`.
+- Write an id as plain text. After a document under `docs/` changes, run `make links`. It makes each id a link.
 - To retire an id, run `make ids-retire ID=<id>`, then `make links`. A retired id is never issued again. `make ids-retire` creates `docs/ids.yaml` at the first retire.
-- Roadmap line: `- H-2026-11-20-slugify`, or `- H-2026-11-20-slugify P-1` when the slice started from a proposal.
-- Known issue: one table row, id `K-` plus a number, from `K-1`.
-- Decision: one table row, id `D-` plus a number, from `D-1`. The status is Open or Decided. A Decided row is one sentence.
+- Roadmap line (work in progress): `- H-2026-11-20-slugify`, or `- H-2026-11-20-slugify P-1` when the slice started from a proposal.
+- Known issue (a defect): one table row, id `K-` plus a number, from `K-1`.
+- Decision (a small choice): one table row, id `D-` plus a number, from `D-1`. The status is Open or Decided. A Decided row is one sentence.
 - ADR: `docs/adr/<id>.md`, id `ADR-` plus four digits, from `ADR-0001`. The status is `Accepted` or `Superseded`.
-- Proposal: `docs/proposals/<id>.md`, id `P-` plus a number, from `P-1`. The status is `open`, `started`, or `done`. The proposals are the backlog.
-- History file: `docs/history/<id>.md`, id `H-` plus the day the file is created and a slug, as `H-2026-11-20-slugify`. The status is `started` or `closed`. The branch of the slice has the slug as its name.
+- Proposal (work for later): `docs/proposals/<id>.md`, id `P-` plus a number, from `P-1`. The status is `open`, `started`, or `done`. The proposals are the backlog.
+- History file (a started slice): `docs/history/<id>.md`, id `H-` plus the day the file is created and a slug, as `H-2026-11-20-slugify`. The status is `started` or `closed`. The branch of the slice has the slug as its name.
 
 History:
 - One task has one history file.
@@ -59,6 +60,7 @@ History:
 - While the task is open, a Develop, Review, or Release section whose stage did not run keeps `Not invoked yet.` When the task closes or waits, that section is one sentence that says why the stage was not invoked, as `Not invoked: this slice does not ship.`
 - A subskill that is not installed is one line in the Review section.
 - An agent on another task opens a history file only when an id names it.
+- A skill that is not a stage asks `record` to add one line that names the skill to the open section. That skill opens no history file. If no history file is open, it adds no line.
 
 Tests:
 - `make ids` matches the `id:` line in the header or the metadata of a test.

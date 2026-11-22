@@ -11,7 +11,7 @@ This skill is the order of the other skills. Each skill named in a step owns the
 
 <steps>
 1. If `CLAUDE.md` is missing or has no `<general_rules>` block, read `.claude/skills/project-setup/templates/CLAUDE.md`. Its general rules apply to this run.
-2. Run the target `doctor` from `.claude/skills/project-setup/doctor.mk`. If the target fails, stop and tell the owner each `FAIL` line and its fix. Install no tool on the host.
+2. Run the target `doctor` from `.claude/skills/project-setup/doctor.mk`. If the target fails, stop and tell the owner each `FAIL` line and its fix.
 3. Read the project before you ask a question.
    - Name the language from the manifest and the file types: `package.json`, `build.gradle`, `go.mod`, `pyproject.toml`, `*.py`, or a shell recipe.
    - Run the target `old-board` from `.claude/skills/project-setup/old-board.mk`. A failure of this target does not stop this run. Step 5 handles it.
