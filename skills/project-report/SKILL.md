@@ -17,7 +17,7 @@ The general rules in `CLAUDE.md` apply.
 
 <rules>
 - A test file with no id fails the target. A test that names an id that is not a requirement fails the target. An id with no test is listed and does not fail the target.
-- The map lists ADR ids and decision ids. The map does not list a superseded ADR as an id with no test. The map does not list a roadmap line or a known issue. The two reviews list them.
+- The map lists ADR ids and the ids of requirement rows in force. The map does not list a superseded ADR as an id with no test. The map does not list a roadmap row or a planned row. The two reviews list them.
 - The two reviews are lists of the rules in force, the open work, and the numbered steps of the stages. They are not a judgement.
 - `report.mk` beside this skill owns the `project-report` target. `project.mk` and `sdlc.mk` include that file when this skill is installed.
 </rules>

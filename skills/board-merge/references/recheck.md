@@ -4,7 +4,7 @@ Read each unit in full and run `make board-numbers IDS="<ids>"`. Stop at the fir
 
 ## All actions
 
-- Each id is a unit in scope: a requirement row, a Decided row, an ADR, or a history file.
+- Each id is a unit in scope: a requirement row in force, an ADR, or a history file.
 - The text of the report still holds. A row that changed since the report fails the check.
 
 ## merge

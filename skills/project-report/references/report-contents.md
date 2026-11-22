@@ -10,8 +10,8 @@
 
 | Review | Board documents | Numbered steps of |
 | --- | --- | --- |
-| Architecture review | ADRs, roadmap, known issues | `plan`, `review` |
-| Development review | ADRs, decisions, roadmap, known issues | `develop`, `review`, `release`, `project-setup` |
+| Architecture review | ADRs, roadmap | `plan`, `review` |
+| Development review | ADRs, roadmap, planned requirement rows | `develop`, `review`, `release`, `project-setup` |
 
 If a review misses a step of a skill, check that the step is numbered and stands in the first `<steps>` block of that skill. For `project-setup`, the block is the first `<checks>` block.
 

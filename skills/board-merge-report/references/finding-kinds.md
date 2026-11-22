@@ -3,7 +3,6 @@
 ## Merge
 
 - Two or more rows state the same obligation: the same actor, the same repository kind, the same stage, the same condition, and the same result.
-- A Decided row whose choice a requirement row or an ADR states in full goes with no addition. A Decided row with a unique sentence is a merge only when that sentence moves into the surviving row. List the sentence in the finding.
 - The requirement or the ADR survives when it has the same number of tests or more.
 - A sentence that only one row states is not repeated text. Do not list it.
 
@@ -25,7 +24,7 @@
 
 - The file has the status `closed`. A file with the status `started` is never a finding.
 - Read the Plan, Develop, and Review sections. A sentence that gives a reason or a rejected alternative is a reason.
-- If no row, ADR, or Decided row that the file names states that reason, the file holds the only copy. Flag the file, quote the reason, and name the row that receives it. The words after are the words of that one sentence.
+- If no row or ADR that the file names states that reason, the file holds the only copy. Flag the file, quote the reason, and name the row that receives it. The words after are the words of that one sentence.
 - A living document that links to the history id keeps a dead link. Count those in the links column. `board-merge` edits each out.
 
 ## Contradiction

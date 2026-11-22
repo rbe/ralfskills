@@ -1,6 +1,6 @@
 ---
 name: board-merge-report
-description: Reports which board rows, Decided rows, ADRs, and closed history files can merge, shrink, or go, which rows contradict each other, and which rows differ from the code. Writes nothing. Use when the owner asks to cut board duplicates, clean the board, or check the board against the code.
+description: Reports which board rows, ADRs, and closed history files can merge, shrink, or go, which rows contradict each other, and which rows differ from the code. Writes nothing. Use when the owner asks to cut board duplicates, clean the board, or check the board against the code.
 ---
 
 The general rules in `CLAUDE.md` apply.
@@ -10,8 +10,8 @@ The report lists board text that says one fact twice, says opposite facts, or di
 </purpose>
 
 <inputs>
-- The scope is the requirement rows of `docs/REQUIREMENTS.md`, the Decided rows of `docs/DECISIONS.md`, the ADRs in `docs/adr/`, and the files in `docs/history/`.
-- Open decision rows, roadmap lines, known issues, and proposals are out of scope.
+- The scope is the requirement rows in force of `docs/REQUIREMENTS.md`, the ADRs in `docs/adr/`, and the files in `docs/history/`.
+- Planned rows, roadmap rows, and proposals are out of scope.
 - If `docs/adr/` does not exist, the ADR part is empty. Say so in one line.
 </inputs>
 
@@ -32,7 +32,7 @@ The report lists board text that says one fact twice, says opposite facts, or di
 - If a closed history file holds the only copy of a reason, say so. The reason moves to a row first.
 - A row that no test names is never a covered-by-code finding.
 - A contradiction or against-code finding needs evidence as path and line. If the code does not decide, ask the owner. Never guess.
-- Do not report an id of an Open row, a roadmap line, a known issue, or a proposal.
+- Do not report an id of a planned row, a roadmap row, or a proposal.
 - Invent no id. Use only ids that `make board-numbers` printed.
 </rules>
 

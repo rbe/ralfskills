@@ -14,7 +14,7 @@ The report is successful if the reader understands each sentence on the first re
 1. Collect the evidence. Read before you write. Write down each thing that you cannot read or run. It goes in the section "Not verified".
    - The repository: structure, entry points, configuration, tests.
    - The history: `git log`, and the diffs of the period that the user names. If the user names no period, use the time since the last report in `reports/`, or the full history.
-   - The board, each file when it exists: `docs/DECISIONS.md`, `docs/KNOWN_ISSUES.md`, `docs/REQUIREMENTS.md`, the ADRs in `docs/adr/`, and the history files in `docs/history/`.
+   - The board, each file when it exists: `docs/ROADMAP.md`, `docs/REQUIREMENTS.md`, the ADRs in `docs/adr/`, and the history files in `docs/history/`.
    - `build/project-report.md`, after you run `make project-report`, when `project-report` is installed.
    - The current chat, and the transcripts or notes that the user supplies.
    - The result of `make test`, and of the target that `CLAUDE.md` names for starting the system. Run each only if it changes no data and no external system. Record the real result.
@@ -27,14 +27,14 @@ The report is successful if the reader understands each sentence on the first re
    1. Summary. Maximum 5 sentences: what the system does now, the largest difference from what was asked, and the number of decisions that wait for the human.
    2. What the system does now. A list of behaviours that a person can observe, in the form "When [actor] does [action], the system does [result]." Do not list files or modules.
    3. Differences from what was asked. Each item: what was asked, with the source; what exists; the effect for the user.
-   4. Decisions that were made. A table: the decision; who made it (human, agent, or agent without a question to the human); the rejected alternative; the reason; whether it is easy to reverse; the board row. Put the decisions that an agent made without a question first. Write `none` as the board row of each decision that has no row in `docs/DECISIONS.md` and no ADR.
+   4. Decisions that were made. A table: the decision; who made it (human, agent, or agent without a question to the human); the rejected alternative; the reason; whether it is easy to reverse; the board row. Put the decisions that an agent made without a question first. Write `none` as the board row of each decision that has no row in `docs/REQUIREMENTS.md` and no ADR.
    5. Not verified. What you could not run or read, and what only a chat claims.
    6. Risks and defects. Only those that you can point to, each with the location and the effect.
    7. Decisions for you. Each item is a question that the human answers with a selection. Give the options, the effect of each option, and your recommendation with one reason.
    8. Glossary. The table from step 2.
 4. Read `references/cold-reader.md` and run the cold-reader check.
 5. Save the report as `reports/state-YYYY-MM-DD.md`. `make links` reads only `docs/`, so write each id in the report as a link by hand.
-6. Ask `record` to add each decision with the board row `none`. A row that `record` adds has the status Decided.
+6. For each decision with the board row `none` that must hold, ask `record` where it goes. A decision that need not hold gets no row.
 7. In the chat, give the summary, the list "Decisions for you", and the rows that `record` added. Do not repeat the full report.
 </steps>
 
