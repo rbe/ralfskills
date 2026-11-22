@@ -13,7 +13,7 @@ issues: []
 
 ## Plan
 
-`plan` was not invoked. The owner stated the goal and decided four things, and [D-15](../DECISIONS.md#d-15) records them:
+`plan` was not invoked. The owner stated the goal and decided four things, and D-15 records them:
 
 1. The general rules stand once in `CLAUDE.md` and in the entry-file template of `project-setup`. Each `SKILL.md` refers to them in one line.
 2. A person and an agent type only `make <target>` and Git commands. Every other tool runs behind a Make target in a Podman image. The host needs Make, Git, and Podman.
