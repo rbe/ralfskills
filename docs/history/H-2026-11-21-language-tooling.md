@@ -29,7 +29,7 @@ The JVM target writes `build.gradle`, `settings.gradle` with `NAME`, and the Che
 
 The Go target runs `go mod init` with `MODULE`. It runs `make format-fix` only when the project has a Go package, because `go list ./...` has nothing to list in a new project.
 
-`python`, `jvm`, `go`, and step 3 of setup mode in `project-setup` name the targets. [R-66](../REQUIREMENTS.md#r-66) states them.
+`python`, `jvm`, `go`, and step 3 of setup mode in `project-setup` name the targets. [R-66](../requirements/collection.md#r-66) states them.
 
 Shell is the language skill.
 

@@ -2,7 +2,7 @@
 """Write the document index and the installed-skill index.
 
 A product repository gets the ADR index. A repository that keeps
-docs/REQUIREMENTS.md and no ADR file gets the requirements index
+docs/requirements/ and no ADR file gets the requirements index
 instead. When both are present, the ADR index is the one that is written.
 """
 
@@ -26,8 +26,10 @@ def has_adr_markdown(root: Path) -> bool:
 
 
 def uses_requirements_list(root: Path) -> bool:
-    listed = root / "docs" / "REQUIREMENTS.md"
-    return listed.is_file() and not has_adr_markdown(root)
+    _adr_index, requirements_index, _skill_index = load()
+    return bool(requirements_index.requirement_files(root)) and not has_adr_markdown(
+        root
+    )
 
 
 def write_indexes(root: Path) -> None:

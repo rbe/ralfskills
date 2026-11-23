@@ -12,6 +12,7 @@ The general rules in `CLAUDE.md` apply.
 <steps>
 1. Read the board: `docs/ROADMAP.md`, `docs/adr/index.toon`, `docs/requirements-index.toon`, `docs/skill-index.toon`, and the open files in `docs/proposals/`.
    If a file does not exist, skip it.
+   For each row of `docs/requirements-index.toon` that names a part that the change touches, run `make req ID=<ids>`.
    If the index names an ADR that this slice can change, read that ADR.
 2. For each row of `docs/skill-index.toon` with the `kind` `check`, in file order: read that skill and ask its questions.
    If the request is too vague for these questions, do step 3 first. Ask them when the slice is one sentence.
@@ -29,7 +30,7 @@ The general rules in `CLAUDE.md` apply.
 6. If the owner answers a choice that must hold, ask `record` where it goes: a requirement row, a sentence in an ADR, or a new ADR.
    A storage format, a protocol, and the interface of a library are expensive to reverse, so each is an ADR. The project is a library when the entry file says it ships as a library package.
    For a library interface, the ADR is the public names and their signatures. What a function does is requirement rows.
-   If the repository keeps `docs/REQUIREMENTS.md` and no `docs/adr/`, the answer is a row of that list.
+   If the repository keeps `docs/requirements/` and no `docs/adr/`, the answer is a row of the file of its owner there.
    A choice that need not hold is not recorded.
 7. If the Makefile is missing, or if the slice adds or overrides a target, invoke `project-setup`.
 8. If the slice needs a language and no `language` row of `docs/skill-index.toon` matches the files, stop. The index lists only installed skills.
@@ -37,7 +38,7 @@ The general rules in `CLAUDE.md` apply.
    Ask `record` to write the Plan section: the questions and answers, the boundary and the pattern, the lines of step 2, and each ADR id.
    Each answer that a test must prove becomes a requirement row, or an ADR as step 6 says. `develop` names those ids in the tests.
    Develop, Review, and Release read `Not invoked yet.`
-10. If the owner chooses to implement later: ask `record` for a proposal id and write `docs/proposals/<id>.md`. Ask `record` for the roadmap row that names the proposal. If the repository keeps `docs/REQUIREMENTS.md` and no `docs/adr/`, the row is a planned row of `docs/REQUIREMENTS.md`. Create no history file.
+10. If the owner chooses to implement later: ask `record` for a proposal id and write `docs/proposals/<id>.md`. Ask `record` for the roadmap row that names the proposal. If the repository keeps `docs/requirements/` and no `docs/adr/`, the row is a planned row of the file of its owner there. Create no history file.
 </steps>
 
 <rules>

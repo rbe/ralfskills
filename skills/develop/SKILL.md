@@ -18,6 +18,7 @@ The general rules in `CLAUDE.md` apply.
    Stop when a file set has no matching row.
    A document, such as `README.md` or a file under `docs/`, needs no language row.
 3. Read `docs/adr/index.toon`. Open each ADR whose status is `Accepted` and whose `skills` names a skill that this slice uses.
+   In a repository with no `docs/adr/`, read `docs/requirements-index.toon` and run `make req ID=<ids>` for each row that names a part that this slice touches.
    Stop when the change would break one of them.
 4. If the files in hand have two languages, split them into two disjoint file sets. Finish one set before you edit the other.
 5. Write the change, and write a unit test for each behaviour change.

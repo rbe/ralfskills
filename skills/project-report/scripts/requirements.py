@@ -38,6 +38,7 @@ class Requirement:
     kind: str
     title: str
     status: str
+    path: str = ""
 
 
 @dataclass(frozen=True)
@@ -54,9 +55,14 @@ def adr_markdown(root: Path) -> list[Path]:
     return sorted(path for path in adr_dir.glob("*.md") if path.is_file())
 
 
+def requirement_files(root: Path) -> list[Path]:
+    """The files of docs/requirements/, one for each skill that owns rows."""
+    folder = root / "docs" / "requirements"
+    return sorted(folder.glob("*.md")) if folder.is_dir() else []
+
+
 def uses_requirements_list(root: Path) -> bool:
-    listed = root / "docs" / "REQUIREMENTS.md"
-    return listed.is_file() and not adr_markdown(root)
+    return bool(requirement_files(root)) and not adr_markdown(root)
 
 
 def strip_anchor(cell: str) -> str:
@@ -87,16 +93,26 @@ def table_rows(path: Path) -> list[dict[str, str]]:
 def requirement_rows(root: Path) -> list[Requirement]:
     """The rows of the requirements list. A planned row is work, not a rule."""
     found = []
-    for row in table_rows(root / "docs" / "REQUIREMENTS.md"):
-        status = row.get("status") or IN_FORCE
-        kind = "planned" if status == "planned" else "requirement"
-        found.append(Requirement(row["id"], kind, row.get("title", ""), status))
+    for path in requirement_files(root):
+        relative = path.relative_to(root).as_posix()
+        for row in table_rows(path):
+            status = row.get("status") or IN_FORCE
+            kind = "planned" if status == "planned" else "requirement"
+            found.append(
+                Requirement(row["id"], kind, row.get("title", ""), status, relative)
+            )
     return found
 
 
 def roadmap_rows(root: Path) -> list[Requirement]:
     return [
-        Requirement(row["id"], "roadmap", row.get("title", ""), row.get("kind", ""))
+        Requirement(
+            row["id"],
+            "roadmap",
+            row.get("title", ""),
+            row.get("kind", ""),
+            "docs/ROADMAP.md",
+        )
         for row in table_rows(root / "docs" / "ROADMAP.md")
     ]
 

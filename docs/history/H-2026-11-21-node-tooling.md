@@ -27,7 +27,7 @@ The owner's text is changed in four places, because the template differs from th
 
 The template sets `NAME` and `NODE_DEV_TOOLS` with `?=`. `NAME` is the name of the directory. The target also runs `npm pkg delete main repository scripts` after `npm init`, as the old comment of the template did, and it adds `node_modules/` and `coverage/` to `.gitignore`.
 
-`node` and `project-setup` name the target. [R-66](../REQUIREMENTS.md#r-66) states it.
+`node` and `project-setup` name the target. [R-66](../requirements/collection.md#r-66) states it.
 
 Shell is the language skill.
 

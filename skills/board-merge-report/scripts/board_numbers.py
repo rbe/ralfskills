@@ -114,16 +114,16 @@ def status_index(path):
 
 def row_units(root):
     found = []
-    path = root / "docs" / "REQUIREMENTS.md"
-    at = status_index(path)
-    for number, ident, cells in table_rows(path):
-        status = cells[at] if at is not None else "in force"
-        if status == "planned":
-            continue
-        rest = [cell for index, cell in enumerate(cells) if index != at]
-        found.append(
-            unit(ident, "requirement", status, word_count(" ".join(rest)), path, number)
-        )
+    folder = root / "docs" / "requirements"
+    for path in sorted(folder.glob("*.md")) if folder.is_dir() else []:
+        at = status_index(path)
+        for number, ident, cells in table_rows(path):
+            status = cells[at] if at is not None else "in force"
+            if status == "planned":
+                continue
+            rest = [cell for index, cell in enumerate(cells) if index != at]
+            words = word_count(" ".join(rest))
+            found.append(unit(ident, "requirement", status, words, path, number))
     return found
 
 

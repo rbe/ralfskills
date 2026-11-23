@@ -46,7 +46,7 @@ def write(root, relative, text):
 
 
 def sample(root):
-    write(root, "docs/REQUIREMENTS.md", REQUIREMENTS)
+    write(root, "docs/requirements/record.md", REQUIREMENTS)
     write(root, "docs/adr/ADR-0001.md", ADR)
     write(root, "docs/history/H-2026-11-22-slug.md", HISTORY)
     write(
@@ -91,7 +91,7 @@ class BoardNumbersTest(unittest.TestCase):
             root = Path(tmp)
             write(
                 root,
-                "docs/REQUIREMENTS.md",
+                "docs/requirements/record.md",
                 "| Id | Title | Statement |\n| --- | --- | --- |\n"
                 "| R-1 | One | Keep it short. |\n",
             )
@@ -146,11 +146,30 @@ class BoardNumbersTest(unittest.TestCase):
                 root,
                 "docs/history/H-2026-11-23-other.md",
                 "---\nid: H-2026-11-23-other\nstatus: closed\n"
-                "adrs: [R-2]\n---\n\nSee [R-2](../REQUIREMENTS.md#r-2).\n",
+                "adrs: [R-2]\n---\n\nSee [R-2](../requirements/record.md#r-2).\n",
             )
             rows = by_id(board_numbers.numbers(root))
             self.assertEqual(rows["R-2"]["lists"], 3)
             self.assertEqual(rows["R-2"]["links"], 1)
+
+    def test_rows_of_two_requirement_files_are_units_and_a_link_across_files_counts(
+        self,
+    ):
+        """id: R-77"""
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            sample(root)
+            write(
+                root,
+                "docs/requirements/plan.md",
+                "| Id | Title | Status | Statement |\n| --- | --- | --- | --- |\n"
+                "| R-4 | Four | in force | See [R-2](record.md#r-2). |\n"
+                "| R-5 | Five | planned | Open. |\n",
+            )
+            rows = by_id(board_numbers.numbers(root))
+            self.assertIn("R-4", rows)
+            self.assertNotIn("R-5", rows)
+            self.assertEqual(rows["R-2"]["links"], 2)
 
     def test_the_output_has_a_header_one_line_for_each_unit_and_a_total(self):
         """id: R-77"""

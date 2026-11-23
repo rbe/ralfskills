@@ -102,7 +102,8 @@ def superseded(item) -> bool:
 
 def linker(requirements, extra=()):
     """A function that links the known ids in a text."""
-    known = {item.id for item in requirements} | set(extra)
+    known = {ident: "" for ident in extra}
+    known.update({item.id: item.path for item in requirements})
     module = sibling("report_links")
     return lambda text: module.link_text(text, known)
 
@@ -112,7 +113,7 @@ def format_requirement(item, proofs_found, link) -> str:
     names = "; ".join(proved) if proved else "no test"
     status = item.status or "unspecified"
     title = link((item.title or item.id).rstrip("."))
-    ident = sibling("report_links").link(item.id)
+    ident = sibling("report_links").link(item.id, item.path)
     if item.kind == "planned":
         return f"- {ident}, planned. {title}."
     if item.kind not in sibling("requirements").PROVABLE:
@@ -168,7 +169,7 @@ def append_proof_map(lines: list[str], requirements, proofs_found) -> None:
         proved = tests_for(item.id, proofs_found)
         names = "; ".join(proved) if proved else "no test"
         lines.append(
-            f"| {cell(ident_link(item.id))} | {cell(item.kind)} | {cell(item.status)} | {cell(names)} |"
+            f"| {cell(ident_link(item.id, item.path))} | {cell(item.kind)} | {cell(item.status)} | {cell(names)} |"
         )
     lines.append("")
     lines.append("### Ids with no test")
@@ -182,7 +183,7 @@ def append_proof_map(lines: list[str], requirements, proofs_found) -> None:
         lines.append("None.")
     else:
         for item in gaps:
-            lines.append(f"- {ident_link(item.id)} ({item.kind})")
+            lines.append(f"- {ident_link(item.id, item.path)} ({item.kind})")
     lines.append("")
     lines.append("### Tests with no id")
     lines.append("")
@@ -210,7 +211,7 @@ def render_product(root: Path, requirements, proofs_found) -> str:
         "",
         "## Requirements",
         "",
-        "The id is an ADR id or a row of `docs/REQUIREMENTS.md`. A roadmap row is work, not a rule.",
+        "The id is an ADR id or a row of a file in `docs/requirements/`. A roadmap row is work, not a rule.",
         "The test names that id with `id:` in its header or metadata.",
         "",
     ]
@@ -261,13 +262,13 @@ def render_requirements_list(root: Path, requirements, proofs_found) -> str:
         "",
         "## Requirements",
         "",
-        "The id is a row in `docs/REQUIREMENTS.md`. A planned row is open work, not a rule in force.",
+        "The id is a row in a file in `docs/requirements/`. A planned row is open work, not a rule in force.",
         "The test names that id with `id:` in its header or metadata.",
         "",
     ]
     ident_link = sibling("report_links").link
     for item in requirements:
-        lines.append(f"- {ident_link(item.id)}. {link(item.title)}")
+        lines.append(f"- {ident_link(item.id, item.path)}. {link(item.title)}")
     lines.append("")
     append_proof_map(lines, requirements, proofs_found)
     lines.append("## Architecture review")
@@ -283,7 +284,7 @@ def render_requirements_list(root: Path, requirements, proofs_found) -> str:
     lines.append("## Development review")
     lines.append("")
     lines.append(
-        "The open work of this collection is the planned rows of `docs/REQUIREMENTS.md`. "
+        "The open work of this collection is the planned rows of the files in `docs/requirements/`. "
         "The checks in `develop`, `review`, `release`, and `project-setup` still apply."
     )
     lines.append("")

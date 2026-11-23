@@ -14,7 +14,7 @@ The report is successful if the reader understands each sentence on the first re
 1. Collect the evidence. Read before you write. Write down each thing that you cannot read or run. It goes in the section "Not verified".
    - The repository: structure, entry points, configuration, tests.
    - The history: `git log`, and the diffs of the period that the user names. If the user names no period, use the time since the last report in `reports/`, or the full history.
-   - The board, each file when it exists: `docs/ROADMAP.md`, `docs/REQUIREMENTS.md`, the ADRs in `docs/adr/`, and the history files in `docs/history/`.
+   - The board, each file when it exists: `docs/ROADMAP.md`, the files in `docs/requirements/`, the ADRs in `docs/adr/`, and the history files in `docs/history/`.
    - `build/project-report.md`, after you run `make project-report`, when `project-report` is installed.
    - The current chat, and the transcripts or notes that the user supplies.
    - The result of `make test`, and of the target that `CLAUDE.md` names for starting the system. Run each only if it changes no data and no external system. Record the real result.

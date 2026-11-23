@@ -37,7 +37,7 @@ The `name` in each skill's frontmatter matches its directory. A project installs
 
 The rules that hold for every skill stand once, in the `<general_rules>` block of `CLAUDE.md`: the interface, the start of a task, the board, and the gates. Each `SKILL.md` starts with the line ``The general rules in `CLAUDE.md` apply.`` and states only what the skill adds. The body is XML tags: `purpose`, `steps`, `rules`, `output`, and `references`, with `mode` for a skill that has modes, and `questions` and `checks` for a subskill. A table, a sample, or a rule for one condition is in `references/` beside the skill. The agent reads such a file only when a step names it.
 
-`make toon` writes the ADR index and the skill index for a product repository. In this collection it writes `docs/requirements-index.toon` and the skill index, and it does not create `docs/adr/`. `project.mk` and `sdlc.mk` include these targets from `record` when the skill is installed, and `make setup` runs `make toon` after `make doctor`. Every Python command, including a one-off `make py ARGS='...'`, runs in Podman on the machine where Make runs. Set `PYTHON_IMAGE` before the include to pick the version. The host does not need Python.
+`make toon` writes the ADR index and the skill index for a product repository. In this collection it writes `docs/requirements-index.toon`, with the file and the owner of each row, and the skill index, and it does not create `docs/adr/`. `project.mk` and `sdlc.mk` include these targets from `record` when the skill is installed, and `make setup` runs `make toon` after `make doctor`. Every Python command, including a one-off `make py ARGS='...'`, runs in Podman on the machine where Make runs. Set `PYTHON_IMAGE` before the include to pick the version. The host does not need Python.
 
 ## The cycle
 
@@ -49,7 +49,7 @@ A request goes through `plan`, `develop`, `review`, and `release`. A new or vagu
 | --- | --- |
 | `docs/ROADMAP.md` | The things to do, one row each: id, kind (feature, defect, or question), title, and proposal. A row is not done. `record` deletes it when the slice closes |
 | `docs/proposals/<id>.md` | The detailed plan of one roadmap row |
-| `docs/adr/` and `docs/REQUIREMENTS.md` | The rules in force. A product repository keeps ADRs and may keep requirement rows. This collection keeps only `docs/REQUIREMENTS.md`, where a row is `planned` (open work) or `in force` |
+| `docs/adr/` and `docs/requirements/` | The rules in force. A product repository keeps ADRs and may keep requirement rows. This collection keeps only `docs/requirements/`, one file `<skill>.md` for each skill that owns rows, and `collection.md` for the rows with no owning skill. A row is `planned` (open work) or `in force`. `make req ID=R-45` prints one row, and `make req Q=<word>` finds rows |
 | `docs/history/<id>.md` | The report of one slice. It is complete at any time and holds nothing that waits for a decision or for work |
 | Code and tests | The current state. A test names the rule it proves with `id:` |
 

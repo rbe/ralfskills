@@ -15,7 +15,6 @@ ID_LINE = re.compile(r"^id:\s*[\"']?([^\"'#\s]+)")
 ROW_ID = re.compile(r'^\|\s*(?:<a id="[^"]*"></a>)?\s*([A-Z]+-\d+)\s*\|')
 COUNTER_LINE = re.compile(r"^([A-Z]+):\s*(\d+)$")
 NUMBERED = re.compile(r"(ADR|[A-Z])-(\d+)")
-TABLE_FILES = ("REQUIREMENTS.md", "ROADMAP.md")
 # The kinds that `make id` issues. A counter of another kind in the file is
 # a kind too, as `D` in a repository that kept the old decisions.
 KINDS = ("R", "W", "ADR", "P")
@@ -35,12 +34,16 @@ def repo_root(start):
     return current
 
 
+def table_paths(docs):
+    """The roadmap and each file of docs/requirements/."""
+    return [*sorted((docs / "requirements").glob("*.md")), docs / "ROADMAP.md"]
+
+
 def table_ids(docs):
     found = {}
     if not docs.is_dir():
         return found
-    for name in TABLE_FILES:
-        path = docs / name
+    for path in table_paths(docs):
         if not path.is_file():
             continue
         for number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
@@ -174,6 +177,10 @@ def check(root):
     docs = root / "docs"
     live = live_ids(docs)
     counters, errors = read_counters(docs / "ids.yaml")
+    if (docs / "REQUIREMENTS.md").exists():
+        errors.append(
+            f"{docs / 'REQUIREMENTS.md'} exists: move its rows to docs/requirements/<skill>.md"
+        )
     errors += list_errors(docs, counters)
     for ident, places in sorted(live.items()):
         if len(places) > 1:

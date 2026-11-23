@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Make every document id in running text a link.
 
-An id is defined by a table row in docs/REQUIREMENTS.md,
-docs/ROADMAP.md, or by `id:` in the
+An id is defined by a table row in a file of docs/requirements/,
+in docs/ROADMAP.md, or by `id:` in the
 frontmatter of a Markdown file. A table row gets an anchor. Every other
 mention of the id in running text links to the definition.
 """
@@ -25,7 +25,13 @@ SPANS = re.compile(
     r"|\[[^\]]*\]\[[^\]]*\]"
     r"|<[A-Za-z/][^>\n]*>"
 )
-TABLE_FILES = ("REQUIREMENTS.md", "ROADMAP.md")
+
+
+def table_paths(root: Path) -> list[Path]:
+    """The files whose table rows define an id: the roadmap and each requirement file."""
+    docs = root / "docs"
+    listed = sorted((docs / "requirements").glob("*.md"))
+    return [*listed, docs / "ROADMAP.md"]
 
 
 def repo_root(start: Path) -> Path:
@@ -208,8 +214,7 @@ def targets(root: Path) -> dict[str, tuple[str, str]]:
     found: dict[str, tuple[str, str]] = {}
     if not docs.is_dir():
         return found
-    for name in TABLE_FILES:
-        path = docs / name
+    for path in table_paths(root):
         if not path.is_file():
             continue
         relative = path.relative_to(root).as_posix()
@@ -230,7 +235,7 @@ def targets(root: Path) -> dict[str, tuple[str, str]]:
 
 
 def prepared(root: Path, path: Path, text: str) -> str:
-    if path.parent == root / "docs" and path.name in TABLE_FILES:
+    if path in table_paths(root):
         return anchor_rows(text)
     return text
 

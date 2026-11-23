@@ -14,13 +14,13 @@ The agent writes each document by hand from a template in `templates/` beside th
 1. Run `make ids`. If it exits non-zero, an id is a duplicate or above its counter: stop and do not write the document. In step 3 of `migrate-docs`, a failure that names an old label with no counter does not stop you. Without the include of `project.mk` or `sdlc.mk`, run `make -f .claude/skills/record/index.mk <target>`. `PYTHON_IMAGE=<image>` on that line replaces the default image.
 2. For a new item, run `make id KIND=<kind>`. It prints the next id and raises the counter. Read `references/id-kinds.md` for the form of each kind.
 3. If the document does not exist, copy its template: `ROADMAP.md`, `adr.md`, `proposal.md`, or `history.md`. Keep the layout. Before you write frontmatter or a table row for the first time in a task, read `references/documents.md`.
-4. If a choice must hold, read `references/adr.md` and write it where it says. In a repository that keeps `docs/REQUIREMENTS.md` and no `docs/adr/`, the home is a row of that list. If no home fits, ask the user.
+4. If a choice must hold, read `references/adr.md` and write it where it says. In a repository that keeps `docs/requirements/` and no `docs/adr/`, the home is a row of the file of its owner there. If no home fits, ask the user.
 5. If the document is an ADR, follow `references/adr.md`.
 6. If the caller asks for a new history file or for a stage section, read `references/history.md`. Write a new file from `templates/history.md`. Set `roadmap:` to the row of the task, and add that row when the task has none.
 7. If a stage asks for its section, write it in sentences: what the stage did, each gate with its result, and what the stage left alone. Replace `Not invoked yet.` and keep the heading. Update the frontmatter lists.
 8. If another skill asks for its line, add the line to the section of the stage that runs, as `python: the language skill for the Python files.` or `security: no listener, no secret.` Add the skill name to `skills` in the frontmatter. That skill opens no history file. If no history file is open, add no line.
 9. If a document or a table row is deleted, delete it and nothing else. The counter keeps its number. No document is rewritten.
-10. If ADR frontmatter, the requirements list, or the set of installed skills changed, run `make toon`. If `make toon` fails, read `references/indexes.md`.
+10. If ADR frontmatter, a file of `docs/requirements/`, or the set of installed skills changed, run `make toon`. If `make toon` fails, read `references/indexes.md`.
 </steps>
 </mode>
 
@@ -36,10 +36,11 @@ The agent writes each document by hand from a template in `templates/` beside th
 - The next number of a kind comes from `make id KIND=<kind>`, never from a count by hand. The counter in `docs/ids.yaml` only grows, so a number is never issued twice.
 - Write an id as plain text. After a document under `docs/` changes, run `make links`. It makes each id a link.
 - A frontmatter list of ids follows `references/documents.md`: ids only, one form, and no id above its counter.
-- A history file follows `references/history.md`: it holds facts only. Open work is a roadmap row, or a planned row of `docs/REQUIREMENTS.md`.
-- A defect and an open question are roadmap rows. A repository that keeps `docs/REQUIREMENTS.md` and no `docs/adr/` keeps them as planned rows of that list. A question row states the choices.
+- A history file follows `references/history.md`: it holds facts only. Open work is a roadmap row, or a planned row of `docs/requirements/`.
+- A defect and an open question are roadmap rows. A repository that keeps `docs/requirements/` and no `docs/adr/` keeps them as planned rows of the file of their owner. A question row states the choices.
 - A defect that the owner reports gets a roadmap row of the kind `defect` through `record`, then starts at `develop`. A defect with no known expected behaviour starts at `plan`.
 - A question that the owner has not answered is a roadmap row of the kind `question`. It is never in a history file.
+- To read one requirement row or one ADR, run `make req ID=<ids>`. To find rows, run `make req Q=<word>`, `OWNER=<skill>`, or `STATUS=planned`. Do not open a whole file of `docs/requirements/` for one row.
 - A deleted id has no target. After the delete, run `make links`. A history file keeps the id as it is.
 - One task has one history file. A deferred slice is a roadmap row with a proposal and has no history file.
 - `onboard`, `migrate-docs`, and setup mode of `project-setup` open no history file, and their commits go on the default branch. An agent on another task opens a history file only when an id names it.

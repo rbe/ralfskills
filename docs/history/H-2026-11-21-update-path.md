@@ -19,7 +19,7 @@ Boundary: the README owns the update text. `onboard` only names it.
 
 ## Develop
 
-The README has an `Update` section with five steps. It uses `apm update`, because APM 0.36.1 marks `apm install --update` as deprecated. [R-72](../REQUIREMENTS.md#r-72) states it. `onboard` step 10 names the pin when the collection has a tag.
+The README has an `Update` section with five steps. It uses `apm update`, because APM 0.36.1 marks `apm install --update` as deprecated. [R-72](../requirements/collection.md#r-72) states it. `onboard` step 10 names the pin when the collection has a tag.
 
 The section warns that `apm update` overwrites a changed skill file, and that a new Makefile template does not change the `Makefile` of the project.
 

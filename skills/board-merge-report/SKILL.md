@@ -10,7 +10,7 @@ The report lists board text that says one fact twice, says opposite facts, or di
 </purpose>
 
 <inputs>
-- The scope is the requirement rows in force of `docs/REQUIREMENTS.md`, the ADRs in `docs/adr/`, and the files in `docs/history/`.
+- The scope is the requirement rows in force of the files in `docs/requirements/`, the ADRs in `docs/adr/`, and the files in `docs/history/`.
 - Planned rows, roadmap rows, and proposals are out of scope.
 - If `docs/adr/` does not exist, the ADR part is empty. Say so in one line.
 </inputs>

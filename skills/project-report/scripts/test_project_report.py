@@ -437,6 +437,37 @@ def general_rules():
     return found
 
 
+class RequirementFilesTest(unittest.TestCase):
+    def files(self):
+        return sorted((ROOT / "docs" / "requirements").glob("*.md"))
+
+    def test_there_is_no_single_requirements_file_and_one_file_for_each_owner(self):
+        """id: R-28"""
+        self.assertFalse((ROOT / "docs" / "REQUIREMENTS.md").exists())
+        skills = {path.name for path in (ROOT / "skills").iterdir() if path.is_dir()}
+        for path in self.files():
+            self.assertIn(path.stem, skills | {"collection"}, path.name)
+
+    def test_each_row_stands_once_with_the_columns_of_the_table_form(self):
+        """id: R-28"""
+        seen = []
+        for path in self.files():
+            lines = path.read_text(encoding="utf-8").splitlines()
+            self.assertIn("| Id | Title | Status | Statement |", lines, path.name)
+            for row in requirements.table_rows(path):
+                self.assertIn(row["status"], ("in force", "planned"), row["id"])
+                seen.append(row["id"])
+        self.assertTrue(seen)
+        self.assertEqual(len(seen), len(set(seen)))
+
+    def test_the_report_of_this_collection_links_each_row_to_its_own_file(self):
+        """id: R-28"""
+        text, _errors = project_report.build(ROOT)
+        self.assertIn("(../docs/requirements/record.md#r-13)", text)
+        self.assertIn("(../docs/requirements/project-setup.md#r-45)", text)
+        self.assertNotIn("REQUIREMENTS.md", text)
+
+
 class GeneralRulesTest(unittest.TestCase):
     def test_the_entry_file_and_its_template_have_the_same_general_rules(self):
         """id: R-76"""
@@ -598,7 +629,7 @@ class ProjectReportTest(unittest.TestCase):
         )
         write(
             root,
-            "docs/REQUIREMENTS.md",
+            "docs/requirements/core.md",
             "| Id | Title | Status | Statement |\n| --- | --- | --- | --- |\n"
             "| R-1 | Keep the host make | in force | The host runs make only. |\n"
             "| R-2 | Name the port | planned | Which port. |\n",
@@ -641,7 +672,7 @@ class ProjectReportTest(unittest.TestCase):
             gap = text.split("### Ids with no test", 1)[1].split(
                 "### Tests with no id", 1
             )[0]
-            self.assertIn("[R-1](../docs/REQUIREMENTS.md#r-1) (requirement)", gap)
+            self.assertIn("[R-1](../docs/requirements/core.md#r-1) (requirement)", gap)
             self.assertNotIn("R-2", gap)
             self.assertNotIn("W-1", gap)
             roadmap = text.split("### Roadmap", 1)[1].split("### Checks", 1)[0]
@@ -649,7 +680,7 @@ class ProjectReportTest(unittest.TestCase):
                 "[W-1](../docs/ROADMAP.md#w-1), feature, roadmap. Add a port.", roadmap
             )
             self.assertIn(
-                "[R-2](../docs/REQUIREMENTS.md#r-2), planned. Name the port.", text
+                "[R-2](../docs/requirements/core.md#r-2), planned. Name the port.", text
             )
             self.assertNotIn("ADR-0001](../docs/adr/ADR-0001.md) (adr)", gap)
             self.assertIn("Hand-editing this file is a defect.", text)
@@ -665,7 +696,7 @@ class ProjectReportTest(unittest.TestCase):
             )
             write(
                 root,
-                "docs/REQUIREMENTS.md",
+                "docs/requirements/core.md",
                 "| Id | Title | Status | Statement |\n| --- | --- | --- | --- |\n"
                 "| R-2 | Divide | in force | divide raises on zero. |\n",
             )
@@ -677,7 +708,7 @@ class ProjectReportTest(unittest.TestCase):
             text, errors = project_report.build(root)
             self.assertEqual(errors, [])
             self.assertIn(
-                "| [R-2](../docs/REQUIREMENTS.md#r-2) | requirement | in force | tests.test_core.test_divide_raises_on_zero |",
+                "| [R-2](../docs/requirements/core.md#r-2) | requirement | in force | tests.test_core.test_divide_raises_on_zero |",
                 text,
             )
 
@@ -698,7 +729,7 @@ class ProjectReportTest(unittest.TestCase):
             )
             write(
                 root,
-                "docs/REQUIREMENTS.md",
+                "docs/requirements/core.md",
                 "| Id | Title | Status | Statement |\n| --- | --- | --- | --- |\n"
                 "| R-5 | Divide | planned | divide must raise. |\n",
             )
@@ -755,7 +786,7 @@ class ProjectReportTest(unittest.TestCase):
             root = Path(tmp)
             write(
                 root,
-                "docs/REQUIREMENTS.md",
+                "docs/requirements/core.md",
                 "| Id | Statement |\n| --- | --- |\n| R-1 | A test names the requirement. |\n",
             )
             write(
@@ -765,8 +796,10 @@ class ProjectReportTest(unittest.TestCase):
             )
             text, errors = project_report.build(root)
             self.assertEqual(errors, [])
-            self.assertIn("| [R-1](../docs/REQUIREMENTS.md#r-1) | requirement |", text)
-            self.assertIn("The id is a row in `docs/REQUIREMENTS.md`.", text)
+            self.assertIn(
+                "| [R-1](../docs/requirements/core.md#r-1) | requirement |", text
+            )
+            self.assertIn("The id is a row in a file in `docs/requirements/`.", text)
             self.assertNotIn("### ADRs", text)
 
     def test_an_adr_file_keeps_the_product_report_and_reads_the_requirement_rows(self):
@@ -776,7 +809,7 @@ class ProjectReportTest(unittest.TestCase):
             self.sample(root)
             write(
                 root,
-                "docs/REQUIREMENTS.md",
+                "docs/requirements/core.md",
                 "| Id | Title | Statement |\n| --- | --- | --- |\n| R-9 | Other | Other. |\n",
             )
             text, errors = project_report.build(root)
@@ -786,7 +819,8 @@ class ProjectReportTest(unittest.TestCase):
             )
             self.assertIn("### ADRs", text)
             self.assertIn(
-                "| [R-9](../docs/REQUIREMENTS.md#r-9) | requirement | in force |", text
+                "| [R-9](../docs/requirements/core.md#r-9) | requirement | in force |",
+                text,
             )
 
     def test_the_reviews_quote_the_stage_checks(self):
@@ -871,7 +905,7 @@ class ProjectReportTest(unittest.TestCase):
         self.assertIn("## Requirements", text)
         self.assertIn("## Architecture review", text)
         self.assertIn("## Development review", text)
-        self.assertIn("| [R-7](../docs/REQUIREMENTS.md#r-7) | requirement |", text)
+        self.assertIn("| [R-7](../docs/requirements/plan.md#r-7) | requirement |", text)
         gap = text.split("### Ids with no test", 1)[1].split("### Tests with no id", 1)[
             0
         ]
@@ -883,7 +917,9 @@ class ProjectReportTest(unittest.TestCase):
         self.assertIn("who owns state", architecture)
         self.assertIn("one integration entry", development)
         self.assertIn("### Planned requirements", development)
-        self.assertIn("[R-81](../docs/REQUIREMENTS.md#r-81), planned.", development)
+        self.assertIn(
+            "[R-81](../docs/requirements/project-setup.md#r-81), planned.", development
+        )
         self.assertNotIn("### Decisions", development)
 
 
@@ -899,28 +935,28 @@ class ReportLinkTest(unittest.TestCase):
             )
             write(
                 root,
-                "docs/REQUIREMENTS.md",
+                "docs/requirements/core.md",
                 "| Id | Title | Status | Statement |\n| --- | --- | --- | --- |\n"
                 '| <a id="r-2"></a>R-2 | See ADR-0001 and `R-2`. | planned | One. |\n',
             )
             text, _errors = project_report.build(root)
             self.assertIn("| [ADR-0001](../docs/adr/ADR-0001.md) | adr |", text)
             self.assertIn(
-                "[R-2](../docs/REQUIREMENTS.md#r-2), planned. See [ADR-0001](../docs/adr/ADR-0001.md) and `R-2`.",
+                "[R-2](../docs/requirements/core.md#r-2), planned. See [ADR-0001](../docs/adr/ADR-0001.md) and `R-2`.",
                 text,
             )
             (root / "docs" / "adr" / "ADR-0001.md").unlink()
             write(
                 root,
-                "docs/REQUIREMENTS.md",
+                "docs/requirements/core.md",
                 "| Id | Title | Statement |\n| --- | --- | --- |\n"
                 '| <a id="r-12"></a>R-12 | One. | Two. |\n',
             )
             text, _errors = project_report.build(root)
             self.assertIn(
-                "| [R-12](../docs/REQUIREMENTS.md#r-12) | requirement |", text
+                "| [R-12](../docs/requirements/core.md#r-12) | requirement |", text
             )
-            self.assertIn("- [R-12](../docs/REQUIREMENTS.md#r-12). One.", text)
+            self.assertIn("- [R-12](../docs/requirements/core.md#r-12). One.", text)
 
     def test_a_roadmap_row_links_to_its_row(self):
         """id: R-69"""

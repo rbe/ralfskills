@@ -25,7 +25,7 @@ Out of scope: a selection of changed tests for Node and JVM. The project sets `T
 
 `release` has the steps that ship a slice: stop on a failed gate or an open finding, one branch, commit, push, CI, merge, and close. `record` closes a task. `develop` asks for the history file when `plan` did not run. `record` names the sections of an ADR body. `make decision-log` writes `build/decision-log.md`. `project-setup` writes `CLAUDE.md` from `templates/CLAUDE.md` when the file is missing. `make toon` fails when the name of a skill differs from its directory. The project report reads the id of a JavaScript, TypeScript, Java, Groovy, or Kotlin test from a comment, and it does not read a test inside an installed skill. `report.mk` gives a product repository the `project-report` command.
 
-`docs/REQUIREMENTS.md` has the rows [R-1](../REQUIREMENTS.md#r-1) to [R-64](../REQUIREMENTS.md#r-64) with the columns Id, Title, and Statement. [R-16](../REQUIREMENTS.md#r-16) to [R-52](../REQUIREMENTS.md#r-52) are the owner's list, checked against the skills and corrected. [R-57](../REQUIREMENTS.md#r-57) to [R-64](../REQUIREMENTS.md#r-64) are new. The requirements index lists the id and the title.
+`docs/REQUIREMENTS.md` has the rows [R-1](../requirements/record.md#r-1) to [R-64](../requirements/project-report.md#r-64) with the columns Id, Title, and Statement. [R-16](../requirements/collection.md#r-16) to [R-52](../requirements/collection.md#r-52) are the owner's list, checked against the skills and corrected. [R-57](../requirements/release.md#r-57) to [R-64](../requirements/project-report.md#r-64) are new. The requirements index lists the id and the title.
 
 Four contradictions between skills are removed. `security` and `privacy` name the same order as the skill index. `github-pipeline` names itself as the owner of the shipment rule. `SDLC_CI` has the default of `sdlc.mk`. The `.PHONY` list of `project-setup` is the list in `project.mk`. A divergence that is not a pipeline divergence is an ADR, not a Decided line.
 
@@ -45,7 +45,7 @@ ux-ui-design: no screen.
 
 api-design: not HTTP. Not a module export. The interface is the Make targets `decision-log` and `project-report`.
 
-No finding. Left alone: the claims of [R-50](../REQUIREMENTS.md#r-50) and [R-52](../REQUIREMENTS.md#r-52) are rules for this collection that no skill states. No Containerfile template exists. The ignore list is prose in `github-pipeline`.
+No finding. Left alone: the claims of [R-50](../requirements/plan.md#r-50) and [R-52](../requirements/collection.md#r-52) are rules for this collection that no skill states. No Containerfile template exists. The ignore list is prose in `github-pipeline`.
 
 ## Release
 

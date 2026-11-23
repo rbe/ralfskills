@@ -15,7 +15,7 @@ Every history file has these 4 headings.
 
 - If a proposal is picked up, set `proposals:` in the new history file to that id, set the proposal status to `started`, and set `roadmap:` to the id of its roadmap row.
 - A history file is a report. It holds what was done, what was found, and what was not run, each as a fact. It is complete at every stage end.
-- An item that waits for work or for a decision is not part of a history file. Write it as a roadmap row or as a planned row of `docs/REQUIREMENTS.md`. The history file may name that id.
+- An item that waits for work or for a decision is not part of a history file. Write it as a roadmap row or as a planned row of a file in `docs/requirements/`. The history file may name that id.
 - A history file is not rewritten when a row is deleted later. A list that names the id of a deleted row stays valid, because the id is not above its counter.
 - A declined idea is a fact of the history file of its slice. Write it in Plan with the reason, as `Declined: <idea>, because <reason>.` No other document keeps a declined idea.
 - A question that the owner answered stays in Plan with its answer.
