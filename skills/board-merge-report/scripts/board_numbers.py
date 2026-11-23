@@ -177,7 +177,7 @@ def mentions(root):
     Each mention is (id, file, line number, kind), the kind is link or list.
     A frontmatter list of a history file counts, because it names an id
     that the slice wrote or proved. A link in the text of a history file
-    does not count, because the text keeps the ids that were retired later.
+    does not count, because the text keeps the ids that were deleted later.
     """
     found = []
     for path in sorted((root / "docs").rglob("*.md")):

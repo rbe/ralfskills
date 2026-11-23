@@ -47,7 +47,7 @@ A request goes through `plan`, `develop`, `review`, and `release`. A new or vagu
 
 | Document | Holds |
 | --- | --- |
-| `docs/ROADMAP.md` | The things to do, one row each: id, kind (feature, defect, or question), title, and proposal. A row is not done. `record` deletes it and retires its id when the slice closes |
+| `docs/ROADMAP.md` | The things to do, one row each: id, kind (feature, defect, or question), title, and proposal. A row is not done. `record` deletes it when the slice closes |
 | `docs/proposals/<id>.md` | The detailed plan of one roadmap row |
 | `docs/adr/` and `docs/REQUIREMENTS.md` | The rules in force. A product repository keeps ADRs and may keep requirement rows. This collection keeps only `docs/REQUIREMENTS.md`, where a row is `planned` (open work) or `in force` |
 | `docs/history/<id>.md` | The report of one slice. It is complete at any time and holds nothing that waits for a decision or for work |
@@ -73,7 +73,7 @@ The host needs GNU Make 3.81 or newer, Git, and Podman. It needs no other tool: 
 
 1. It checks that Make, Git, and Podman run on the machine, with `make -f .claude/skills/project-setup/doctor.mk doctor`. Once the Makefile has the include, `make doctor` is the same check, and `make setup` runs it first.
 2. It reads the project: the language, the old board, the remote, and the tests. It asks you only what the files do not tell, such as how the project ships.
-3. It runs `migrate-docs` when `docs/BUGS.md`, `docs/WAVES.md`, `docs/FEATURES.md`, `docs/DECISIONS.md`, `docs/KNOWN_ISSUES.md`, or their directories, or `AGENTS.md` exist, and commits the new board. `make old-board` tests those eight paths and fails when one exists.
+3. It runs `migrate-docs` when `docs/BUGS.md`, `docs/WAVES.md`, `docs/FEATURES.md`, `docs/DECISIONS.md`, `docs/KNOWN_ISSUES.md`, or their directories, or `AGENTS.md` exist, and commits the new board. `make old-board` tests those eight paths and a `docs/ROADMAP.md` in the old line form, which has a line that starts with `- `. It fails when one of these nine checks finds something.
 4. It runs `project-setup` in report mode, then in setup mode. Setup mode asks how the project ships, copies the Makefile template of the language, and runs the tooling target of that language: `make node-tooling`, `make python-tooling`, `make jvm-tooling`, or `make go-tooling`. It writes `CLAUDE.md`, `.editorconfig`, and `.gitignore`, and commits with `.claude/skills/`, `apm.yml`, and `apm.lock.yaml`.
 5. When the project publishes through GitHub, it runs `github-pipeline`: one workflow, a `Containerfile`, and the targets of the pipeline.
 6. It records each rule the project already follows as an ADR or a requirement row, and gives each existing test the `id:` of the row it proves.

@@ -39,21 +39,35 @@ class IdsTest(unittest.TestCase):
 
     def test_duplicate_id_fails(self):
         """id: R-13"""
-        body = "---\nid: D-1\nstatus: open\n---\n\n# One\n"
-        self.write("docs/ROADMAP.md", body)
-        self.write("docs/proposals/P-1.md", "---\nid: D-1\nstatus: open\n---\n")
+        body = "---\nid: H-2026-11-15-one\nstatus: open\n---\n\n# One\n"
+        self.write("docs/history/a.md", body)
+        self.write("docs/history/b.md", body)
         errors = ids.check(self.root)
-        self.assertTrue(any("D-1" in error for error in errors))
+        self.assertTrue(any("H-2026-11-15-one is used 2 times" in e for e in errors))
 
-    def test_retired_id_still_in_use_fails(self):
+    def test_a_live_id_above_its_counter_fails(self):
         """id: R-13"""
-        self.write("docs/ids.yaml", "retired:\n- D-1\n")
-        self.write("docs/ROADMAP.md", "---\nid: D-1\nstatus: decided\n---\n")
+        self.write("docs/ids.yaml", "P: 1\n")
+        self.write("docs/proposals/P-2.md", "---\nid: P-2\nstatus: open\n---\n")
         errors = ids.check(self.root)
-        self.assertTrue(any("retired" in error for error in errors))
+        self.assertTrue(any("P-2 is above the counter P: 1" in e for e in errors))
+
+    def test_a_live_id_of_a_kind_with_no_counter_fails(self):
+        """id: R-13"""
+        self.write("docs/ids.yaml", "R: 5\n")
+        self.write("docs/proposals/P-1.md", "---\nid: P-1\nstatus: open\n---\n")
+        errors = ids.check(self.root)
+        self.assertTrue(any("P-1 has no counter" in error for error in errors))
+
+    def test_a_counter_may_stand_above_the_highest_live_id(self):
+        """id: R-13"""
+        self.write("docs/ids.yaml", "P: 9\n")
+        self.write("docs/proposals/P-2.md", "---\nid: P-2\nstatus: open\n---\n")
+        self.assertEqual(ids.check(self.root), [])
 
     def test_a_roadmap_row_is_a_live_id_and_a_roadmap_list_may_name_it(self):
         """id: R-13"""
+        self.write("docs/ids.yaml", "W: 1\n")
         self.write(
             "docs/ROADMAP.md",
             "| Id | Kind | Title | Proposal |\n| --- | --- | --- | --- |\n"
@@ -61,114 +75,85 @@ class IdsTest(unittest.TestCase):
         )
         self.write("docs/history/H-1.md", "---\nid: H-1\nroadmap: [W-1]\n---\n")
         self.assertEqual(ids.check(self.root), [])
-        self.assertEqual(
-            ids.retire(self.root, "W-1"),
-            ["W-1 is still in use: " + str(self.root / "docs" / "ROADMAP.md") + ":3"],
-        )
 
-    def test_retire_moves_an_unused_id(self):
+    def test_a_list_may_name_an_id_whose_row_is_gone(self):
         """id: R-13"""
-        self.write("docs/ids.yaml", "retired: []\n")
-        errors = ids.retire(self.root, "H-2026-11-15-old")
-        self.assertEqual(errors, [])
-        self.assertIn(
-            "H-2026-11-15-old", ids.retired_ids(self.root / "docs" / "ids.yaml")
-        )
+        self.write("docs/ids.yaml", "W: 9\n")
+        self.write("docs/history/H-1.md", "---\nid: H-1\nroadmap: [W-5]\n---\n")
         self.assertEqual(ids.check(self.root), [])
 
-    def test_a_list_may_name_a_retired_id(self):
+    def test_a_list_that_names_an_id_above_its_counter_fails(self):
         """id: R-13"""
-        self.write("docs/ids.yaml", "retired:\n- D-5\n")
-        self.write(
-            "docs/history/H-1.md",
-            "---\nid: H-1\nadrs: []\ndecisions: [D-5]\n---\n",
-        )
-        self.assertEqual(ids.check(self.root), [])
-
-    def test_a_list_that_names_an_unknown_id_fails(self):
-        """id: R-13"""
-        self.write(
-            "docs/history/H-1.md",
-            "---\nid: H-1\nadrs: []\ndecisions: [D-5]\n---\n",
-        )
+        self.write("docs/ids.yaml", "W: 4\n")
+        self.write("docs/history/H-1.md", "---\nid: H-1\nroadmap: [W-5]\n---\n")
         errors = ids.check(self.root)
         self.assertTrue(
-            any("D-5, which is neither live nor retired" in error for error in errors)
+            any("W-5: W-5 is above the counter W: 4" in error for error in errors)
         )
 
     def test_a_list_that_is_text_or_has_no_brackets_fails(self):
         """id: R-13"""
         self.write(
             "docs/history/H-1.md",
-            "---\nid: H-1\nadrs: none\ndecisions: [D-5, text]\nissues:\n---\n",
+            "---\nid: H-1\nadrs: none\nroadmap: [W-1, text]\nissues:\n---\n",
         )
         errors = ids.check(self.root)
         self.assertTrue(any("adrs is not a list" in error for error in errors))
         self.assertTrue(any("issues is not a list" in error for error in errors))
         self.assertTrue(any("text, which is not an id" in error for error in errors))
 
-    def test_retire_with_into_writes_the_map_and_leaves_the_documents(self):
+    def test_a_line_that_is_not_a_counter_fails(self):
         """id: R-13"""
-        row = '| <a id="r-28"></a>R-28 | Title | One sentence. |\n'
-        self.write(
-            "docs/REQUIREMENTS.md", "| Id | T | S |\n| --- | --- | --- |\n" + row
-        )
-        text = "---\nid: H-1\nadrs: []\ndecisions: [D-5, D-6]\n---\n\nBody D-5.\n"
-        history = self.write("docs/history/H-1.md", text)
-        self.assertEqual(ids.retire(self.root, "D-5", ["R-28"]), [])
-        self.assertEqual(history.read_text(encoding="utf-8"), text)
-        path = self.root / "docs" / "ids.yaml"
-        self.assertEqual(ids.retired_ids(path), ["D-5"])
-        self.assertEqual(ids.merged_ids(path), [("D-5", ["R-28"])])
-        self.assertIn("merged:\n  D-5: [R-28]\n", path.read_text(encoding="utf-8"))
-
-    def test_retire_without_into_writes_no_map_entry(self):
-        """id: R-13"""
-        self.assertEqual(ids.retire(self.root, "D-5"), [])
-        path = self.root / "docs" / "ids.yaml"
-        self.assertEqual(ids.retired_ids(path), ["D-5"])
-        self.assertEqual(ids.merged_ids(path), [])
-        self.assertNotIn("merged", path.read_text(encoding="utf-8"))
-
-    def test_retire_of_a_surviving_id_hands_the_map_entry_on(self):
-        """id: R-13"""
-        rows = "".join(
-            f'| <a id="r-{n}"></a>R-{n} | Title | One sentence. |\n' for n in (2, 3)
-        )
-        self.write(
-            "docs/REQUIREMENTS.md", "| Id | T | S |\n| --- | --- | --- |\n" + rows
-        )
-        self.write("docs/ids.yaml", "retired:\n- D-5\nmerged:\n  D-5: [R-9]\n")
-        self.assertEqual(ids.retire(self.root, "R-9", ["R-2", "R-3"]), [])
-        path = self.root / "docs" / "ids.yaml"
-        self.assertEqual(
-            ids.merged_ids(path), [("D-5", ["R-2", "R-3"]), ("R-9", ["R-2", "R-3"])]
-        )
-
-    def test_the_map_names_a_retired_key_and_a_live_surviving_id(self):
-        """id: R-13"""
-        self.write(
-            "docs/ids.yaml", "retired:\n- D-5\nmerged:\n  D-5: [R-9]\n  D-6: [R-2]\n"
-        )
+        self.write("docs/ids.yaml", "retired:\n- D-1\nR: 1\nR: 2\n")
         errors = ids.check(self.root)
+        self.assertTrue(any("ids.yaml:1 is not a counter" in e for e in errors))
+        self.assertTrue(any("ids.yaml:2 is not a counter" in e for e in errors))
         self.assertTrue(
-            any("D-5 names R-9, which is not a live id" in e for e in errors)
-        )
-        self.assertTrue(
-            any("D-6, which is not on the retired list" in e for e in errors)
+            any("ids.yaml:4 has a second counter for R" in e for e in errors)
         )
 
-    def test_retire_rejects_a_surviving_id_that_is_not_live(self):
+    def test_next_id_raises_the_counter_and_never_gives_a_number_twice(self):
         """id: R-13"""
-        errors = ids.retire(self.root, "D-5", ["R-99"])
-        self.assertTrue(any("R-99 is not a live id" in error for error in errors))
+        self.write("docs/ids.yaml", "R: 7\nW: 5\nADR: 14\nP: 0\n")
+        path = self.root / "docs" / "ids.yaml"
+        self.assertEqual(ids.next_id(self.root, "W"), ("W-6", []))
+        self.assertEqual(ids.next_id(self.root, "W"), ("W-7", []))
+        self.assertEqual(ids.next_id(self.root, "ADR"), ("ADR-0015", []))
+        self.assertEqual(
+            path.read_text(encoding="utf-8"), "R: 7\nW: 7\nADR: 15\nP: 0\n"
+        )
+        self.assertEqual(ids.check(self.root), [])
+
+    def test_next_id_starts_above_the_highest_live_id_when_no_file_exists(self):
+        """id: R-13"""
+        self.write(
+            "docs/REQUIREMENTS.md",
+            "| Id | T | S |\n| --- | --- | --- |\n| R-3 | One | Two. |\n",
+        )
+        self.assertEqual(ids.next_id(self.root, "R"), ("R-4", []))
+        path = self.root / "docs" / "ids.yaml"
+        self.assertEqual(path.read_text(encoding="utf-8"), "R: 4\nW: 0\nADR: 0\nP: 0\n")
+        self.assertEqual(ids.check(self.root), [])
+
+    def test_next_id_refuses_a_kind_with_no_counter(self):
+        """id: R-13"""
+        for kind in ("H", "X"):
+            ident, errors = ids.next_id(self.root, kind)
+            self.assertIsNone(ident)
+            self.assertTrue(errors)
         self.assertFalse((self.root / "docs" / "ids.yaml").exists())
 
-    def test_retire_rejects_a_live_id(self):
+    def test_raise_counter_sets_a_kind_and_never_lowers_it(self):
         """id: R-13"""
-        self.write("docs/history/H-1.md", "---\nid: H-1\n---\n")
-        errors = ids.retire(self.root, "H-1")
-        self.assertTrue(errors)
+        self.assertEqual(ids.raise_counter(self.root, "D", 24), [])
+        self.assertEqual(ids.next_id(self.root, "D"), ("D-25", []))
+        errors = ids.raise_counter(self.root, "D", 25)
+        self.assertTrue(any("not below 25" in error for error in errors))
+        self.assertTrue(ids.raise_counter(self.root, "d", 3))
+        path = self.root / "docs" / "ids.yaml"
+        self.assertEqual(
+            path.read_text(encoding="utf-8"), "D: 25\nR: 0\nW: 0\nADR: 0\nP: 0\n"
+        )
 
 
 skill_index = load("skill_index", HERE / "skill_index.py")
@@ -387,20 +372,18 @@ class TableIdTest(unittest.TestCase):
 
     def test_a_known_issue_row_is_a_live_id(self):
         """id: R-13"""
+        self.write("docs/ids.yaml", "W: 1\nR: 1\n")
         self.write(
             "docs/ROADMAP.md",
             "| Id | Defect |\n| --- | --- |\n| W-1 | One. |\n",
         )
         self.assertEqual(ids.check(self.root), [])
-        self.assertEqual(
-            ids.retire(self.root, "W-1"),
-            ["W-1 is still in use: " + str(self.root / "docs" / "ROADMAP.md") + ":3"],
-        )
         self.write("docs/history/extra.md", "---\nid: W-1\n---\n")
         self.assertTrue(any("W-1" in error for error in ids.check(self.root)))
 
     def test_a_table_id_is_live_and_a_repeat_fails(self):
         """id: R-13"""
+        self.write("docs/ids.yaml", "W: 1\nR: 1\n")
         self.write(
             "docs/REQUIREMENTS.md",
             "| Id | Statement |\n| --- | --- |\n| R-1 | One. |\n",
@@ -444,16 +427,16 @@ class LinkTest(unittest.TestCase):
         "H-2026-11-20-go-skill": ("docs/history/H-2026-11-20-go-skill.md", ""),
     }
 
-    def test_targets_cover_a_table_id_and_a_frontmatter_id_and_skip_a_retired_id(self):
+    def test_targets_cover_a_table_id_and_a_frontmatter_id_and_skip_a_deleted_id(self):
         """id: R-69"""
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             tree(
                 root,
                 {
-                    "docs/ROADMAP.md": ANCHORED + "| W-1 | feature | Gone. |\n",
+                    "docs/ROADMAP.md": ANCHORED,
                     "docs/history/H-2026-11-20-go-skill.md": "---\nid: H-2026-11-20-go-skill\n---\n",
-                    "docs/ids.yaml": "retired:\n- W-1\n",
+                    "docs/ids.yaml": "W: 9\n",
                 },
             )
             found = links.targets(root)
@@ -537,7 +520,7 @@ class LinkTest(unittest.TestCase):
                 "docs/REQUIREMENTS.md": "| Id | Title | Statement |\n| --- | --- | --- |\n"
                 "| R-1 | One | See W-9. |\n",
                 "docs/history/H-2026-11-20-x.md": "---\nid: H-2026-11-20-x\n---\n\n# X\n\nSee W-9 and `R-1`.\n",
-                "docs/ids.yaml": "retired:\n- W-1\n",
+                "docs/ids.yaml": "W: 9\nR: 1\n",
             },
         )
 

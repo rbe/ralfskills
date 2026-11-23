@@ -36,15 +36,6 @@ def repo_root(start: Path) -> Path:
     return current
 
 
-def retired(path: Path) -> set[str]:
-    here = str(Path(__file__).resolve().parent)
-    if here not in sys.path:
-        sys.path.insert(0, here)
-    import ids
-
-    return set(ids.retired_ids(path))
-
-
 def strip_anchor(cell: str) -> str:
     """Remove a leading anchor from a table cell."""
     return ANCHOR.sub("", cell.strip()).strip()
@@ -212,12 +203,11 @@ def anchor_rows(text: str) -> str:
 
 
 def targets(root: Path) -> dict[str, tuple[str, str]]:
-    """Each defined id that is not retired, with its file and anchor."""
+    """Each defined id, with its file and anchor. A deleted id has no target."""
     docs = root / "docs"
     found: dict[str, tuple[str, str]] = {}
     if not docs.is_dir():
         return found
-    gone = retired(docs / "ids.yaml")
     for name in TABLE_FILES:
         path = docs / name
         if not path.is_file():
@@ -225,14 +215,14 @@ def targets(root: Path) -> dict[str, tuple[str, str]]:
         relative = path.relative_to(root).as_posix()
         for line in path.read_text(encoding="utf-8").splitlines():
             match = ROW.match(line)
-            if match and match.group(2) not in gone:
+            if match:
                 found.setdefault(match.group(2), (relative, match.group(2).lower()))
     for path in sorted(docs.rglob("*.md")):
         relative = path.relative_to(root).as_posix()
         lines = path.read_text(encoding="utf-8").splitlines()
         for line, flag in zip(lines, skipped(lines, front=False)):
             match = None if flag else ID_LINE.match(line.strip())
-            if match is None or match.group(1) in gone:
+            if match is None:
                 continue
             if WHOLE.fullmatch(match.group(1)):
                 found.setdefault(match.group(1), (relative, ""))

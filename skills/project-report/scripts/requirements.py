@@ -11,7 +11,7 @@ ID_CELL = re.compile(r"^[A-Z]+-\d+$")
 ANCHOR = re.compile(r'^<a id="[^"]*"></a>')
 IN_FORCE = "in force"
 # A test proves a rule in force. A roadmap row and a planned row are
-# work. A roadmap row ends, and its id is retired.
+# work. A roadmap row ends, and its number is never issued again.
 PROVABLE = {"adr", "requirement"}
 SKIP = {
     ".git",

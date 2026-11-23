@@ -13,7 +13,7 @@
 - A repository that keeps `docs/REQUIREMENTS.md` and no `docs/adr/` gets `docs/requirements-index.toon` and the skill index. `make toon` does not create `docs/adr/` there.
 - A product repository with no ADR still gets an `docs/adr/index.toon` that holds only the header.
 - If a repository has an ADR file and `docs/REQUIREMENTS.md`, `make toon` writes the ADR index.
-- `project.mk` and `sdlc.mk` include `.claude/skills/record/index.mk`. A Makefile that includes one of them has the targets `toon`, `ids`, `ids-retire`, `links`, and `links-check`.
+- `project.mk` and `sdlc.mk` include `.claude/skills/record/index.mk`. A Makefile that includes one of them has the targets `toon`, `ids`, `id`, `id-raise`, `links`, and `links-check`.
 - `make setup` runs `toon` first when that include is present.
 - `toon` and `ids` call `$(PYTHON)` from `project-setup`. `make ids` checks ids and writes no index.
 

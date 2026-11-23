@@ -5,9 +5,11 @@
 #   make old-board-delete
 #
 # old-board is old-board.mk of project-setup: it prints each of the eight
-# paths that exists and fails when one exists. old-board-delete deletes
+# paths that exists and a docs/ROADMAP.md in the old line form, and fails
+# when one of these nine checks finds something. old-board-delete deletes
 # the eight paths, files and directories, and then runs old-board. Run it
-# only after each still-true fact has a new place.
+# only after each still-true fact has a new place, and after the roadmap
+# is a table.
 #
 # A project whose Makefile has no include yet runs
 #   make -f .claude/skills/migrate-docs/migrate.mk old-board

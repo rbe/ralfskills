@@ -6,8 +6,13 @@
 #   make ids
 #   make links
 #   make links-check
-#   make ids-retire ID=W-5 INTO="R-28 R-60"
-#   make ids-retire ID=W-6
+#   make id KIND=W
+#   make id-raise KIND=D TO=24
+#
+# id prints the next id of a kind (R, W, ADR, or P) and raises the
+# counter of that kind in docs/ids.yaml by one. A number is never given
+# twice. id-raise sets a counter to a higher number, for the ids that
+# a repository already uses.
 #
 # toon writes docs/adr/index.toon and docs/skill-index.toon.
 # A repository with docs/REQUIREMENTS.md and no ADR file writes
@@ -24,18 +29,23 @@ ifndef PYTHON
 include $(RECORD_DIR)../project-setup/podman-python.mk
 endif
 
-.PHONY: toon ids ids-retire links links-check
+.PHONY: toon ids id id-raise links links-check
 
 toon: ## Write the ADR or requirements index, and the skill index
 	$(PYTHON) "$(RECORD_DIR)scripts/toon.py"
 
-ids: ## Reject a repeated id, and a list that names an id that does not resolve
+ids: ## Reject a repeated id, an id above its counter, and a list item that is no id
 	$(PYTHON) "$(RECORD_DIR)scripts/ids.py"
 
-ids-retire: ## Retire an id. Set ID=, and INTO= for the ids that took its content
+id: ## Print the next id of a kind and raise its counter. Set KIND=R, W, ADR, or P
 	@set -eu; \
-	if [ -z "$(ID)" ]; then printf '%s\n' "ids-retire: set ID=<id>" >&2; exit 1; fi
-	$(PYTHON) "$(RECORD_DIR)scripts/ids.py" retire "$(ID)" $(INTO)
+	if [ -z "$(KIND)" ]; then printf '%s\n' "id: set KIND=<R, W, ADR, or P>" >&2; exit 1; fi; \
+	$(PYTHON) "$(RECORD_DIR)scripts/ids.py" id "$(KIND)"
+
+id-raise: ## Set the counter of a kind to a higher number. Set KIND= and TO=
+	@set -eu; \
+	if [ -z "$(KIND)" ] || [ -z "$(TO)" ]; then printf '%s\n' "id-raise: set KIND=<kind> and TO=<number>" >&2; exit 1; fi; \
+	$(PYTHON) "$(RECORD_DIR)scripts/ids.py" raise "$(KIND)" "$(TO)"
 
 links: ## Write a link for each id in the documents under docs/
 	$(PYTHON) "$(RECORD_DIR)scripts/links.py"

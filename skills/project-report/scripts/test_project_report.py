@@ -6,6 +6,7 @@ import io
 import json
 import os
 import re
+import subprocess
 import tempfile
 import unittest
 from contextlib import redirect_stderr, redirect_stdout
@@ -1134,6 +1135,38 @@ class MakeAndPodmanInterfaceTest(unittest.TestCase):
         self.assertNotIn("rmdir", skill)
         for path in ("docs/DECISIONS.md", "docs/KNOWN_ISSUES.md"):
             self.assertIn(path, skill)
+
+    def test_old_board_fails_on_the_old_line_form_of_the_roadmap(self):
+        """id: R-21"""
+        board = (self.SETUP / "old-board.mk").read_text(encoding="utf-8")
+        lines = [
+            line
+            for line in board.splitlines()
+            if "docs/ROADMAP.md" in line and line.lstrip().startswith("if [ -f")
+        ]
+        self.assertEqual(len(lines), 1)
+        check = lines[0].strip().removesuffix("\\")
+        cases = (
+            ("- H-1: the old line form\n", "1"),
+            ("# Roadmap\n\n| Id | Kind |\n| --- | --- |\n| W-1 | feature |\n", "0"),
+            (None, "0"),
+        )
+        for text, expected in cases:
+            with tempfile.TemporaryDirectory() as tmp:
+                (Path(tmp) / "docs").mkdir()
+                if text is not None:
+                    (Path(tmp) / "docs" / "ROADMAP.md").write_text(
+                        text, encoding="utf-8"
+                    )
+                result = subprocess.run(
+                    ["sh", "-c", f"found=0; {check} echo $found"],
+                    cwd=tmp,
+                    capture_output=True,
+                    text=True,
+                    check=True,
+                )
+            self.assertEqual(result.stdout.strip().splitlines()[-1], expected)
+        self.assertIn("old roadmap form", lines[0])
 
     def test_the_github_cli_runs_in_podman_with_the_token_of_the_environment(self):
         """id: R-46"""
