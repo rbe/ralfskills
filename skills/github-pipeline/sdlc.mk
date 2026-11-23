@@ -9,10 +9,9 @@
 # variables) and the image targets of container.mk (image, image-ci,
 # publish-container). A project on a language makefile of its language
 # skill therefore keeps those targets when it switches from project.mk to
-# this file. A project that writes its own recipe for them, as the Node and
-# Gradle makefiles of this skill do, sets SDLC_OWN_CONTRACT = 1 before the
-# include, and then owns the targets (setup, build, test, docs,
-# publish-*, image, run, stop).
+# this file. A project does not define a contract target again. The Node
+# and Gradle makefiles of this skill set the command variables too. The
+# project owns the targets after the include (publish-*, run, stop).
 #
 # GNU Make 3.81, including the macOS system make. Recipes do not use the
 # one-shell option or Make 4 functions. Each recipe is one shell, joined
@@ -72,10 +71,8 @@ include $(SDLC_MK_DIR)../project-setup/skills.mk
 include $(SDLC_MK_DIR)../project-setup/old-board.mk
 include $(SDLC_MK_DIR)../project-setup/test-changed.mk
 -include .claude/skills/project-report/report.mk
-ifndef SDLC_OWN_CONTRACT
 include $(SDLC_MK_DIR)../project-setup/contract.mk
 include $(SDLC_MK_DIR)container.mk
-endif
 
 # Recipes call ${MAKE} from the shell. Make does not export this variable
 # unless asked, and a recipe that writes $(MAKE) is executed even by make -n.

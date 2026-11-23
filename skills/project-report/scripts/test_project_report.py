@@ -883,7 +883,7 @@ class ProjectReportTest(unittest.TestCase):
         self.assertIn("who owns state", architecture)
         self.assertIn("one integration entry", development)
         self.assertIn("### Planned requirements", development)
-        self.assertIn("[R-79](../docs/REQUIREMENTS.md#r-79), planned.", development)
+        self.assertIn("[R-81](../docs/REQUIREMENTS.md#r-81), planned.", development)
         self.assertNotIn("### Decisions", development)
 
 
@@ -1200,6 +1200,102 @@ class MakeAndPodmanInterfaceTest(unittest.TestCase):
             for run in runs:
                 self.assertRegex(run, r"^make [a-z-]+$")
             self.assertIn("GH_TOKEN: ${{ github.token }}", workflow)
+
+    CONTRACT_TARGETS = (
+        "setup",
+        "build",
+        "test",
+        "editorconfig",
+        "format",
+        "format-fix",
+        "lint",
+        "integration",
+        "coverage",
+        "test-changed",
+        "docs",
+        "login",
+    )
+
+    def test_the_pipeline_templates_set_command_variables_and_no_contract_target(
+        self,
+    ):
+        """id: R-23 R-71"""
+        variables = (
+            "SETUP_CMD",
+            "BUILD_CMD",
+            "TEST_CMD",
+            "FORMAT_CMD",
+            "FORMAT_FIX_CMD",
+            "LINT_CMD",
+            "INTEGRATION_CMD",
+            "COVERAGE_CMD",
+            "TEST_CHANGED_CMD",
+            "DOCS_CMD",
+        )
+        for name in ("Makefile.node", "Makefile.gradle"):
+            text = (self.PIPELINE / "templates" / name).read_text(encoding="utf-8")
+            include = text.index("include .claude/skills/github-pipeline/sdlc.mk")
+            for variable in variables:
+                match = re.search(rf"(?m)^{variable} = ", text)
+                self.assertIsNotNone(match, f"{name} {variable}")
+                self.assertLess(match.start(), include, f"{name} {variable}")
+            for variable in ("RENDER_DOCS = 1", "PUBLISH_IMAGE = 1"):
+                self.assertLess(text.index(variable), include, f"{name} {variable}")
+            for target in self.CONTRACT_TARGETS:
+                self.assertNotRegex(text, rf"(?m)^{target}:", f"{name} {target}")
+            self.assertNotIn("project-setup/project.mk", text)
+
+    def test_no_file_of_a_skill_names_the_own_contract_switch(self):
+        """id: R-23"""
+        switch = "SDLC_OWN" + "_CONTRACT"
+        found = []
+        for path in sorted((ROOT / "skills").rglob("*")):
+            if not path.is_file() or path.suffix in (".pyc", ".toon"):
+                continue
+            if switch in path.read_text(encoding="utf-8", errors="ignore"):
+                found.append(str(path))
+        self.assertEqual(found, [])
+
+    def test_the_summary_of_a_pipeline_command_writes_a_hash_as_backslash_hash(self):
+        """id: R-71"""
+        for name in ("Makefile.node", "Makefile.gradle"):
+            text = (self.PIPELINE / "templates" / name).read_text(encoding="utf-8")
+            lines = [
+                line
+                for line in text.splitlines()
+                if re.search(r"> build/summaries/(setup|build|test|docs)\.md", line)
+            ]
+            self.assertGreaterEqual(len(lines), 3, name)
+            for line in lines:
+                self.assertIn("printf '\\# ", line, f"{name}: {line}")
+
+    def test_the_empty_command_check_of_the_contract_is_made_by_make(self):
+        """id: R-71"""
+        contract = (self.SETUP / "contract.mk").read_text(encoding="utf-8")
+        for variable in ("SETUP_CMD", "BUILD_CMD", "DOCS_CMD"):
+            self.assertIn(f"ifeq ($(strip $({variable})),)", contract)
+            self.assertNotIn(f'-z "$({variable})"', contract)
+
+    def test_the_image_targets_of_the_pipeline_take_their_context_from_variables(
+        self,
+    ):
+        """id: R-71"""
+        container = (self.PIPELINE / "container.mk").read_text(encoding="utf-8")
+        for variable in ("IMAGE_CONTEXT", "IMAGE_PREPARE", "PUBLISH_PREPARE"):
+            self.assertRegex(container, rf"(?m)^{variable} \?= ")
+        sdlc = (self.PIPELINE / "sdlc.mk").read_text(encoding="utf-8")
+        self.assertIn("\ninclude $(SDLC_MK_DIR)container.mk\n", sdlc)
+        self.assertIn("\ninclude $(SDLC_MK_DIR)../project-setup/contract.mk\n", sdlc)
+        gradle = (self.PIPELINE / "templates" / "Makefile.gradle").read_text(
+            encoding="utf-8"
+        )
+        for variable in ("IMAGE_CONTEXT", "IMAGE_PREPARE", "PUBLISH_PREPARE"):
+            self.assertRegex(gradle, rf"(?m)^{variable} = ")
+        node = (self.PIPELINE / "templates" / "Makefile.node").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("image-ci", node.split("\nBUILD_CMD = ")[1].split("\n\n")[0])
+        self.assertRegex(node, r"(?m)^SMOKE_CMD = ")
 
     def test_jvm_tooling_counts_a_kotlin_build_file_as_present(self):
         """id: R-66"""

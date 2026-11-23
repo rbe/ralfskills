@@ -28,7 +28,7 @@ If the Makefile includes `project.mk` or `.claude/skills/project-setup/project.m
 
 `sdlc.mk` provides `help`, and it includes `contract.mk`, the contract targets of `project-setup`: `setup`, `build`, `test`, `format`, `lint`, `coverage`, and the others. The command variables of the language Makefile therefore keep their effect.
 
-If a project has no `project.mk` include and writes its own recipes for those targets, it sets `SDLC_OWN_CONTRACT = 1` before the include. The Node template and the Gradle template do this today. That is an exception to the rule of `project-setup`, which keeps the contract targets in `contract.mk` and changes them only through the command variables.
+A project never defines a contract target again. The Node template and the Gradle template set the command variables of `project-setup` (`SETUP_CMD`, `BUILD_CMD`, `TEST_CMD`, `FORMAT_CMD`, `FORMAT_FIX_CMD`, `LINT_CMD`, `INTEGRATION_CMD`, `COVERAGE_CMD`, `TEST_CHANGED_CMD`, `DOCS_CMD`) before the include, like the language templates do. They add the variables of the pipeline: the image variables of `container.mk`, `RENDER_DOCS`, and `PUBLISH_IMAGE`. They do not include the language template, because that one includes `project.mk` and `sdlc.mk` already defines `help`. The commands differ from the language templates, because these templates run `npm test` and `npm run integration`, pack the dependencies for the next job, and build the image.
 ## The image block of a language Makefile
 
 A project on the Makefile of the `python` skill or the `go` skill does these steps:
