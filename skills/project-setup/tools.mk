@@ -15,6 +15,10 @@ RUFF_IMAGE ?= ghcr.io/astral-sh/ruff:0.15.2
 ifndef DEFAULT_BRANCH
 DEFAULT_BRANCH := $(or $(patsubst origin/%,%,$(shell git symbolic-ref --quiet --short refs/remotes/origin/HEAD 2>/dev/null)),$(if $(shell git rev-parse -q --verify refs/heads/main 2>/dev/null),main,$(if $(shell git rev-parse -q --verify refs/heads/master 2>/dev/null),master,main)))
 endif
+# The name of the project: the repository name in the URL of the git
+# remote origin, else the name of the directory. A language template, the
+# image targets, and the tooling targets read it.
+NAME ?= $(or $(shell git remote get-url origin 2>/dev/null | sed -n 's|.*github\.com[:/][^/]*/\([^/]*\)$$|\1|p' | sed 's|\.git$$||'),$(notdir $(CURDIR)))
 COVERAGE_VERSION ?= 7.17.3
 DIFF_COVER_VERSION ?= 11.0.2
 

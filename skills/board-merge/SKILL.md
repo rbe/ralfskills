@@ -11,7 +11,7 @@ The owner chooses findings from the report of `board-merge-report`. This skill d
 
 <inputs>
 - An action and ids, as `merge R-51 R-76`, `shorten R-12`, `cover R-40`, `delete H-2026-11-15-slug`, or `fix R-12`.
-- Several lines make several findings.
+- Several lines make several findings. Edit one finding and commit it before the first edit of the next. Two findings in one file then stay in two commits.
 - A question of the report waits for the owner's answer.
 </inputs>
 

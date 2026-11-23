@@ -36,7 +36,8 @@
 #
 # Set before the include:
 #   IMAGE            ghcr.io/owner/name, no tag
-#   PACKAGE          GitHub owner/name. Defaults to GITHUB_REPOSITORY.
+#   PACKAGE          GitHub owner/name. Defaults to GITHUB_REPOSITORY, else
+#                    OWNER/NAME from the remote origin.
 #   KEEP_VERSIONS    versions to keep, counting the one just published.
 #                    Default 2 (published + one former).
 #   SDLC_JOBS        report rows, in pipeline order
@@ -79,7 +80,7 @@ include $(SDLC_MK_DIR)container.mk
 export MAKE
 
 KEEP_VERSIONS ?= 2
-PACKAGE ?= $(GITHUB_REPOSITORY)
+PACKAGE ?= $(or $(GITHUB_REPOSITORY),$(if $(OWNER),$(OWNER)/$(NAME)))
 SDLC_JOBS ?= setup build test docs publish-container
 SDLC_CI ?= setup build editorconfig format lint test integration coverage docs report
 SDLC_KEEP_ARTIFACTS ?= report,docs
@@ -266,7 +267,11 @@ version: ## Print MAJOR.MINOR.PATCH-run. PRINT=tag prints the vX.Y.Z tag
 	printf '%s-%s\n' "$${tag#v}" "$(GITHUB_RUN_NUMBER)"
 
 ci: ## Run the local CI targets, in order. Does not publish
-	@set -eu; for t in $(SDLC_CI); do $(MAKE) --no-print-directory "$$t"; done
+	@set -eu; for t in $(SDLC_CI); do \
+	  $(MAKE) --no-print-directory "$$t"; \
+	  key=$$(printf '%s' "$$t" | tr 'a-z-' 'A-Z_'); \
+	  eval "JOB_RESULT_$$key=success; export JOB_RESULT_$$key"; \
+	done
 
 report: ## Match CI: write build/report/index.md from logs, summaries, and job results
 	@set -eu; \

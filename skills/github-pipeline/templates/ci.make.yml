@@ -2,7 +2,8 @@
 # Jobs: setup, then build and test beside each other, then
 # publish-container (needs build and test), then report.
 # There is no docs job. A repository that renders docs adds the job of
-# ci.node.yml and the docs target. See github-pipeline.
+# A repository that renders docs adds a docs job that runs `make docs`,
+# the docs target, and its own renderer. See github-pipeline.
 # publish-container runs on a push to the default branch and when
 # workflow_dispatch selects it. A tag push does not start a run; after
 # tagging vX.Y.Z, dispatch publish-container. Any other branch skips it.
@@ -21,7 +22,7 @@ name: CI
 
 on:
   push:
-    branches: ['**']
+    branches: ["**"]
   workflow_dispatch:
     inputs:
       job:

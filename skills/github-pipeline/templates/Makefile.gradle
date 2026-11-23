@@ -19,13 +19,13 @@ IMAGE_NAME ?= ghcr.io/$(OWNER)/$(NAME)
 IMAGE ?= $(IMAGE_NAME)
 PACKAGE ?= $(OWNER)/$(NAME)
 KEEP_VERSIONS ?= 2
-SDLC_JOBS ?= setup build test docs publish-container publish-github
+SDLC_JOBS ?= setup build test publish-container publish-github
 
 JDK_IMAGE ?= docker.io/library/eclipse-temurin:25-jdk
 JRE_IMAGE ?= docker.io/library/eclipse-temurin:25-jre
 CI_IMAGE ?= localhost/$(NAME):ci
 JAR_GLOB ?= build/libs/$(NAME)-*.jar
-GRADLE ?= podman run --rm -e CI -e GRADLE_USER_HOME=/gradle -v "$$HOME/.gradle":/gradle:Z -v "$(CURDIR)":/work:Z -w /work $(JDK_IMAGE) ./gradlew --console=plain
+GRADLE ?= podman run --rm $(PODMAN_NET_ARGS) -e CI -e GRADLE_USER_HOME=/gradle -v "$$HOME/.gradle":/gradle:Z -v "$(CURDIR)":/work:Z -w /work $(JDK_IMAGE) ./gradlew --console=plain
 
 # The command variables of the contract. A # inside one is written \#.
 SETUP_CMD = set -eu; \
@@ -46,8 +46,9 @@ TEST_CMD = set -eu; \
 	printf '\# test\n\nJUnit XML in build/test-results.\n' > build/summaries/test.md
 FORMAT_CMD = $(GRADLE) spotlessCheck
 FORMAT_FIX_CMD = $(GRADLE) spotlessApply
-LINT_CMD = $(GRADLE) checkstyleMain
-INTEGRATION_CMD = $(GRADLE) integrationTest
+LINT_CMD = $(GRADLE) checkstyleMain checkstyleTest
+# No integration entry. The build.gradle of the jvm skill has no integrationTest task.
+INTEGRATION_CMD = true
 COVERAGE_CMD = set -eu; \
 	$(GRADLE) test jacocoTestReport; \
 	$(PYTHON) .claude/skills/project-report/scripts/jacoco_cover_map.py; \
@@ -64,13 +65,16 @@ TEST_CHANGED_CMD = chosen=$$($(PYTHON) .claude/skills/project-report/scripts/cha
 	if [ -z "$$chosen" ]; then printf '%s\n' "test-changed: no test covers the changed files. make test runs the full suite."; \
 	else printf 'test-changed: %s\n' "$$chosen"; args=""; for name in $$chosen; do args="$$args --tests $$name"; done; $(GRADLE) test $$args; fi
 
-# docs and login come from the contract when these two are set.
-RENDER_DOCS = 1
+# login comes from the contract when PUBLISH_IMAGE is set. The docs target
+# stays off, because no skill ships scripts/render-docs.py. A repository
+# that writes that renderer sets RENDER_DOCS = 1, adds docs to SDLC_JOBS and
+# SDLC_CI, and adds a docs job to the workflow.
 DOCS_CMD = set -eu; \
 	mkdir -p build/docs build/summaries; \
 	if find docs -name '*.md' 2>/dev/null | grep -q .; then $(PYTHON) scripts/render-docs.py docs build/docs; fi; \
 	printf '\# docs\n\n%s HTML files.\n' "$$(find build/docs -type f | wc -l | tr -d ' ')" > build/summaries/docs.md
 PUBLISH_IMAGE = 1
+SDLC_CI ?= setup build editorconfig format lint test integration coverage report
 
 # The image targets come from container.mk. make image builds the image
 # from the tested JAR. No Gradle runs in it, and nothing is pushed.

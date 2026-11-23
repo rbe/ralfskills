@@ -73,8 +73,10 @@ TEST_CHANGED_CMD = chosen=$$($(PYTHON) .claude/skills/project-report/scripts/cha
 	if [ -z "$$chosen" ]; then printf '%s\n' "test-changed: no test covers the changed files. make test runs the full suite."; \
 	else printf 'test-changed: %s\n' "$$chosen"; $(NODE_RUN) npm test -- $$chosen; fi
 
-# docs and login come from the contract when these two are set.
-RENDER_DOCS = 1
+# login comes from the contract when PUBLISH_IMAGE is set. The docs target
+# stays off, because no skill ships scripts/render-docs.mjs. A repository
+# that writes that renderer sets RENDER_DOCS = 1, adds docs to SDLC_JOBS and
+# SDLC_CI, and adds a docs job to the workflow.
 DOCS_CMD = set -eu; \
 	mkdir -p build/docs build/summaries; \
 	if find docs -name '*.md' 2>/dev/null | grep -q .; then \
@@ -82,6 +84,8 @@ DOCS_CMD = set -eu; \
 	fi; \
 	printf '\# docs\n\n%s HTML files.\n' "$$(find build/docs -type f | wc -l | tr -d ' ')" > build/summaries/docs.md
 PUBLISH_IMAGE = 1
+SDLC_JOBS ?= setup build test publish-container
+SDLC_CI ?= setup build editorconfig format lint test integration coverage report
 
 # The image targets come from container.mk. make build builds the image,
 # runs the smoke check, and saves the image tar.

@@ -31,7 +31,7 @@
 ifndef CONTAINER_MK
 CONTAINER_MK := 1
 
-NAME ?= $(or $(shell git remote get-url origin 2>/dev/null | sed -n 's|.*github\.com[:/][^/]*/\([^/]*\)$$|\1|p' | sed 's|\.git$$||'),$(notdir $(CURDIR)))
+# NAME comes from tools.mk, which sdlc.mk includes first.
 OWNER ?= $(shell git remote get-url origin 2>/dev/null | sed -n 's|.*github\.com[:/]\([^/]*\)/.*|\1|p' | tr 'A-Z' 'a-z')
 IMAGE ?= ghcr.io/$(OWNER)/$(NAME)
 CI_IMAGE ?= localhost/$(NAME):ci
@@ -54,7 +54,7 @@ image: ## Build the image
 	  ghcr.io//*|"") printf '%s\n' "image: set OWNER (the GitHub owner) or IMAGE before the include." >&2; exit 1 ;; \
 	esac; \
 	$(IMAGE_PREPARE); \
-	podman build -f "$(CONTAINERFILE)" $(IMAGE_BUILD_ARGS) \
+	podman build $(PODMAN_NET_ARGS) -f "$(CONTAINERFILE)" $(IMAGE_BUILD_ARGS) \
 		--label org.opencontainers.image.source="https://github.com/$(PACKAGE)" \
 		--label org.opencontainers.image.revision="$(or $(GITHUB_SHA),local)" \
 		--label org.opencontainers.image.version="$(or $(GITHUB_RUN_NUMBER),local)" \

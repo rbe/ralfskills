@@ -1,5 +1,5 @@
 # The image block of a project that delivers a container image from the
-# Makefile of its language skill: python, go, or any other. This file is
+# Makefile of its language skill: python, go, node, or any other. This file is
 # not a Makefile. Add its lines to the Makefile above the include, then
 # change the include from project.mk to
 # .claude/skills/github-pipeline/sdlc.mk. sdlc.mk keeps the contract
@@ -12,7 +12,9 @@
 #    commented lines below are the place.
 # 2. Copy the Containerfile template of the language to Containerfile and
 #    `containerignore` to .containerignore.
-# 3. Put the three lines marked "language" below into the Makefile.
+# 3. Copy every line below into the Makefile, above the include. Keep the
+#    lines marked "language" that the project needs. BUILD_CMD += stands
+#    after the line BUILD_CMD = of the language template.
 
 IMAGE ?= ghcr.io/$(OWNER)/$(NAME)
 PACKAGE ?= $(OWNER)/$(NAME)
