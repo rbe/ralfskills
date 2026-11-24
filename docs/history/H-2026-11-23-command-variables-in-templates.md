@@ -26,7 +26,7 @@ Both templates set `SETUP_CMD`, `BUILD_CMD`, `TEST_CMD`, `FORMAT_CMD`, `FORMAT_F
 
 `contract.mk` tests an empty `SETUP_CMD`, `BUILD_CMD`, and `DOCS_CMD` with `ifeq`, as it does for the other commands. The shell test `[ -z "$(BUILD_CMD)" ]` ran a command substitution inside the command variable once more and broke on a double quote.
 
-Five unit tests in `test_project_report.py` read the templates, `contract.mk`, `container.mk`, and `sdlc.mk`. The test of the report names [R-81](../requirements/project-setup.md#r-81) as its planned row, because R-79 is deleted. No test was weakened or deleted.
+Five unit tests in `test_project_report.py` read the templates, `contract.mk`, `container.mk`, and `sdlc.mk`. The test of the report names R-81 as its planned row, because R-79 is deleted. No test was weakened or deleted.
 
 ## Review
 

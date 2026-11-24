@@ -917,10 +917,7 @@ class ProjectReportTest(unittest.TestCase):
         self.assertIn("who owns state", architecture)
         self.assertIn("one integration entry", development)
         self.assertIn("### Planned requirements", development)
-        self.assertIn(
-            "[R-85](../docs/requirements/github-pipeline.md#r-85), planned.",
-            development,
-        )
+        self.assertNotIn("[R-85](", development)
         self.assertNotIn("### Decisions", development)
 
 
@@ -1426,6 +1423,229 @@ class MakeAndPodmanInterfaceTest(unittest.TestCase):
         )
         for target in ("ci-status", "pull-request", "pull-request-merge"):
             self.assertIn(f"| `{target}` |", listing)
+
+
+PIPELINE_MK = ROOT / "skills" / "github-pipeline" / "sdlc.mk"
+
+FAKE_GH = """\
+printf '%s\\n' "$*" >> calls.log
+case "$*" in
+    *"-X DELETE"*) ;;
+    *"/versions?per_page"*) cat versions.tsv ;;
+    *"/releases?per_page"*) cat releases.tsv ;;
+    *"users/"*) echo User ;;
+esac
+"""
+
+# Columns: id, created_at, tags.
+PACKAGE_VERSIONS = (
+    ("10", "2025-01-01T00:00:00Z", "1.2.0-1"),
+    ("11", "2025-01-02T00:00:00Z", "1.2.0-2"),
+    ("12", "2025-01-03T00:00:00Z", "1.2.0-3"),
+    ("13", "2025-01-04T00:00:00Z", "1.2.0-4"),
+    ("14", "2025-01-05T00:00:00Z", "1.2.0-5,latest"),
+    ("15", "2025-01-06T00:00:00Z", "sha-abc"),
+    ("17", "2024-12-01T00:00:00Z", "1.1.0-9"),
+)
+
+# Columns: id, tag_name, created_at. v1.2.0 is the newest and is no build.
+RELEASES = (
+    ("20", "1.2.0-1", "2025-01-01T00:00:00Z"),
+    ("21", "1.2.0-2", "2025-01-02T00:00:00Z"),
+    ("22", "1.2.0-3", "2025-01-03T00:00:00Z"),
+    ("23", "v1.2.0", "2025-01-10T00:00:00Z"),
+)
+
+
+def expand_make_recipe(target, variables):
+    """The shell text that Make hands to sh for a recipe of sdlc.mk.
+
+    Make is not in the test image. This reads the recipe of the target and
+    the two define blocks it expands, and replaces `$(NAME)` from
+    `variables` and `$$` with `$`. An unknown `$(NAME)` fails the test.
+    """
+    text = PIPELINE_MK.read_text(encoding="utf-8")
+    recipe = text.split("\n" + target + ": ## ")[1].split("\n\n")[0]
+    recipe = recipe.split("\n", 1)[1]
+    lines = [line[1:] if line.startswith("\t") else line for line in recipe.split("\n")]
+    shell = "\n".join(lines).replace("@set -eu;", "set -eu;", 1)
+    for name in ("SDLC_ON_DEFAULT", "SDLC_TAG"):
+        body = text.split(f"define {name}\n")[1].split("\nendef")[0]
+        shell = shell.replace(f"$({name})", body)
+    shell = shell.replace("$(THIS_MAKE) --no-print-directory gh-image", "true")
+
+    def replace(match):
+        if match.group(1) is None:
+            return "$"
+        return variables[match.group(1)]
+
+    return re.sub(r"\$\$|\$\((\w+)\)", replace, shell)
+
+
+class CleanupRecipeTest(unittest.TestCase):
+    """Runs the real recipes of sdlc.mk in sh against a fake GitHub CLI."""
+
+    def run_cleanup(self, target, rows, env=None, dry_run="", tag="", version=None):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "gh.sh").write_text(FAKE_GH, encoding="utf-8")
+            listing = "".join("\t".join(row) + "\n" for row in rows)
+            name = "versions.tsv" if "versions" in target else "releases.tsv"
+            (root / name).write_text(listing, encoding="utf-8")
+            if version is not None:
+                (root / "build").mkdir()
+                (root / "build" / "publish-version.txt").write_text(
+                    version + "\n", encoding="utf-8"
+                )
+            variables = {
+                "GH": f"sh {root / 'gh.sh'}",
+                "IMAGE": "ghcr.io/acme/app",
+                "PACKAGE": "acme/app",
+                "KEEP_VERSIONS": "2",
+                "DRY_RUN": dry_run,
+                "PUBLISHED_TAG": tag,
+            }
+            shell = expand_make_recipe(target, variables)
+            environment = {"PATH": os.environ["PATH"], **(env or {})}
+            result = subprocess.run(
+                ["sh", "-c", shell],
+                cwd=tmp,
+                env=environment,
+                capture_output=True,
+                text=True,
+            )
+            calls = root / "calls.log"
+            lines = (
+                calls.read_text(encoding="utf-8").splitlines() if calls.exists() else []
+            )
+            fields = dict(
+                line.split("=", 1) for line in result.stdout.splitlines() if "=" in line
+            )
+            return result, lines, fields
+
+    def deleted(self, calls):
+        return [line for line in calls if "-X DELETE" in line]
+
+    def test_a_cleanup_without_a_tag_keeps_the_newest_rolling_version(self):
+        """id: R-96"""
+        result, calls, fields = self.run_cleanup(
+            "cleanup-container-versions", PACKAGE_VERSIONS, dry_run="1"
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(fields["status"], "dry-run")
+        self.assertEqual(fields["kept"], "2")
+        self.assertEqual(fields["deleted"], "4")
+        self.assertIn("Kept 1.2.0-5 ", fields["reason"])
+        for version in ("10", "11", "12", "17"):
+            self.assertIn(f"would delete package version {version}\n", result.stdout)
+        for version in ("13", "14", "15"):
+            self.assertNotIn(f"would delete package version {version}\n", result.stdout)
+        self.assertEqual(self.deleted(calls), [])
+
+    def test_a_cleanup_without_a_tag_deletes_on_a_laptop(self):
+        """id: R-96"""
+        for target, rows, expected in (
+            ("cleanup-container-versions", PACKAGE_VERSIONS, ("10", "11", "12", "17")),
+            ("cleanup-github-releases", RELEASES, ("20",)),
+        ):
+            result, calls, fields = self.run_cleanup(target, rows)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertEqual(fields["status"], "deleted", target)
+            removed = self.deleted(calls)
+            for ident in expected:
+                self.assertTrue(
+                    any(f"/{ident}" in line for line in removed), (target, ident)
+                )
+            self.assertEqual(
+                len(removed), len(expected) * (2 if "releases" in target else 1)
+            )
+            self.assertFalse(any("/13" in line or "/14" in line for line in removed))
+            self.assertFalse(any("/23" in line for line in removed))
+
+    def test_a_dry_run_of_the_releases_prints_and_deletes_nothing(self):
+        """id: R-96"""
+        result, calls, fields = self.run_cleanup(
+            "cleanup-github-releases", RELEASES, dry_run="1"
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(fields["status"], "dry-run")
+        self.assertIn("would delete release 1.2.0-1\n", result.stdout)
+        self.assertNotIn("would delete release v1.2.0", result.stdout)
+        self.assertEqual(self.deleted(calls), [])
+
+    def test_a_given_tag_decides_the_kept_version_and_names_its_source(self):
+        """id: R-96"""
+        for source in ("PUBLISHED_TAG", "build/publish-version.txt"):
+            kwargs = {"tag": "1.2.0-4"} if source == "PUBLISHED_TAG" else {}
+            if source != "PUBLISHED_TAG":
+                kwargs["version"] = "1.2.0-4"
+            result, calls, fields = self.run_cleanup(
+                "cleanup-container-versions", PACKAGE_VERSIONS, dry_run="1", **kwargs
+            )
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertIn("Kept 1.2.0-4 ", fields["reason"], source)
+            self.assertIn("would delete package version 10\n", result.stdout)
+            self.assertNotIn("would delete package version 12\n", result.stdout)
+            bad = {"tag": "1.2.0-99"} if source == "PUBLISHED_TAG" else {}
+            if source != "PUBLISHED_TAG":
+                bad["version"] = "1.2.0-99"
+            for target, rows in (
+                ("cleanup-container-versions", PACKAGE_VERSIONS),
+                ("cleanup-github-releases", RELEASES),
+            ):
+                result, calls, fields = self.run_cleanup(target, rows, **bad)
+                self.assertNotEqual(result.returncode, 0, (target, source))
+                self.assertIn(f"from {source} is not exactly one", result.stderr)
+                self.assertEqual(self.deleted(calls), [])
+        result, _calls, _fields = self.run_cleanup(
+            "cleanup-container-versions", PACKAGE_VERSIONS, tag="1.2.0"
+        )
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("from PUBLISHED_TAG is not MAJOR.MINOR.PATCH-run", result.stderr)
+
+    def test_a_list_without_a_rolling_version_deletes_nothing_and_exits_zero(self):
+        """id: R-96"""
+        only_fixed = (
+            ("30", "2025-01-01T00:00:00Z", "latest"),
+            ("31", "2025-01-02T00:00:00Z", "sha-abc"),
+        )
+        for target, rows in (
+            ("cleanup-container-versions", only_fixed),
+            ("cleanup-github-releases", (("40", "v1.0.0", "2025-01-01T00:00:00Z"),)),
+            ("cleanup-github-releases", ()),
+        ):
+            result, calls, fields = self.run_cleanup(target, rows)
+            self.assertEqual(result.returncode, 0, (target, result.stderr))
+            self.assertEqual(fields["status"], "kept", target)
+            self.assertEqual(fields["deleted"], "0")
+            self.assertEqual(self.deleted(calls), [])
+
+    def test_ci_deletes_only_on_the_default_branch(self):
+        """id: R-96"""
+        other = {"GITHUB_REF": "refs/heads/feature", "SDLC_DEFAULT_BRANCH": "main"}
+        main = {"GITHUB_REF": "refs/heads/main", "SDLC_DEFAULT_BRANCH": "main"}
+        for target, rows in (
+            ("cleanup-container-versions", PACKAGE_VERSIONS),
+            ("cleanup-github-releases", RELEASES),
+        ):
+            result, calls, fields = self.run_cleanup(target, rows, env=other)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertEqual(fields["status"], "kept", target)
+            self.assertEqual(calls, [])
+            result, calls, fields = self.run_cleanup(target, rows, env=main)
+            self.assertEqual(fields["status"], "deleted", target)
+            self.assertTrue(self.deleted(calls), target)
+
+    def test_the_tag_of_a_cleanup_never_calls_version(self):
+        """id: R-96"""
+        text = PIPELINE_MK.read_text(encoding="utf-8")
+        body = text.split("define SDLC_TAG\n")[1].split("\nendef")[0]
+        self.assertNotIn("$(THIS_MAKE)", body)
+        self.assertNotIn("GITHUB_RUN_NUMBER", body)
+        for target in ("cleanup-container-versions", "cleanup-github-releases"):
+            recipe = text.split("\n" + target + ": ## ")[1].split("\n\n")[0]
+            self.assertIn("$(SDLC_TAG)", recipe)
+            self.assertNotIn("-s --no-print-directory version", recipe)
 
 
 if __name__ == "__main__":

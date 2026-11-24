@@ -44,6 +44,7 @@ All repositories of one account share the artifact quota, so each upload has a s
 - The published version is `MAJOR.MINOR.PATCH-<run>`. A publish from the default branch also tags `latest`. A manual publish from any other ref does not.
 - There is no `edge` tag, no `sha-*` tag, and no bare `1.2.0` tag.
 - After a push to the default branch, the cleanup keeps that run and the next-lower run number on the same `MAJOR.MINOR.PATCH` line. The upload time does not decide.
+- The cleanup reads the published run from `PUBLISHED_TAG`, else from `build/publish-version.txt`. When both are empty, as on a laptop, it keeps the newest rolling version by `created_at`. It needs no git tag.
 - The cleanup does not delete a GHCR version that carries `latest` or a tag other than `MAJOR.MINOR.PATCH-<run>`.
 - HTTP 404 for a missing package is an empty list, so the first cleanup does not fail the job.
 

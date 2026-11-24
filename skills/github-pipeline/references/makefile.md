@@ -49,11 +49,11 @@ The project sets the command variables of `project-setup` above the include. It 
 | `ci-status` | Prints the result of the CI run for `HEAD`, or for `SHA=<sha>`. Fails when the run failed, did not finish, or does not exist. `WAIT=1` waits for the end |
 | `pull-request` | Opens a pull request from the current branch to `DEFAULT_BRANCH`. `TITLE` and `BODY` are optional. Prints the open one when it exists. Uses `gh api` REST routes only |
 | `pull-request-merge` | Merges the pull request of the current branch when all check runs of its head commit passed. No check run, or one that did not pass, stops the merge. `WAIT=1` waits for the checks. Uses `gh api` REST routes only |
-| `cleanup-container-versions` | On the default branch, keeps this run and the next-lower run on the same `MAJOR.MINOR.PATCH` line. A missing package is an empty list. Does not delete `latest` or a tag that is not `MAJOR.MINOR.PATCH-<run>`. Off the default branch, deletes nothing |
-| `cleanup-github-releases` | On the default branch, keeps this release and the next-lower run. Does not delete a name that is not `MAJOR.MINOR.PATCH-<run>`. Off the default branch, deletes nothing |
+| `cleanup-container-versions` | On the default branch, keeps one version and the next-lower run on the same `MAJOR.MINOR.PATCH` line. The kept version is `PUBLISHED_TAG`, else the content of `build/publish-version.txt`, else the newest rolling version by `created_at`. Needs no git tag. A missing package, or a list with no rolling version, is an empty list. Does not delete `latest` or a tag that is not `MAJOR.MINOR.PATCH-<run>`. A given tag that is not exactly one version stops the target, and the message names its source. In CI, off the default branch, deletes nothing |
+| `cleanup-github-releases` | On the default branch, keeps one release and the next-lower run, chosen as in `cleanup-container-versions`. Needs no git tag. Does not delete a name that is not `MAJOR.MINOR.PATCH-<run>`. A list with no rolling release deletes nothing. In CI, off the default branch, deletes nothing |
 | `cleanup-actions-artifacts` | Deletes the artifacts of this repository that are older than one hour, except `report`, `docs`, and the artifacts of this run |
 
-`DRY_RUN=1` makes each cleanup print what it would delete. The cleanup then only reads, so it is safe against the real API.
+`DRY_RUN=1` makes each cleanup print what it would delete. The cleanup then only reads, so it is safe against the real API. A cleanup runs at any time, with or without `DRY_RUN=1` and with or without a git tag. Without `DRY_RUN=1` it deletes, also on a laptop.
 
 ## Targets of container.mk
 

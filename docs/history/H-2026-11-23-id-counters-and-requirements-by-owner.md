@@ -12,7 +12,7 @@ proposals: []
 
 ## Plan
 
-The owner answered the open points of the earlier slices. The id counters of `docs/ids.yaml` replace the retired list, and no merged history exists, because only `record` reads `docs/ids.yaml`. An id is never reused. The requirement rows live in one file for each owning skill, and `make req` prints rows. The collection keeps no backward compatibility, because it has no users yet. The owner agreed to the removal of the planned row R-80. The planned row [R-81](../requirements/project-setup.md#r-81) stays, and the owner asked for a summary of it. The owner uses the repository `gh-sweep` for tests and takes care of the push on their own.
+The owner answered the open points of the earlier slices. The id counters of `docs/ids.yaml` replace the retired list, and no merged history exists, because only `record` reads `docs/ids.yaml`. An id is never reused. The requirement rows live in one file for each owning skill, and `make req` prints rows. The collection keeps no backward compatibility, because it has no users yet. The owner agreed to the removal of the planned row R-80. The planned row R-81 stays, and the owner asked for a summary of it. The owner uses the repository `gh-sweep` for tests and takes care of the push on their own.
 
 Five trials ran on copies and on a test repository: Covered by code, Node, Gradle, Go, and `gh-sweep`. The trials covered the pipeline templates, the makefiles, and the board skills. The owner chose no cover finding, so this slice applies none.
 
@@ -26,7 +26,7 @@ The Gradle template of `github-pipeline` sets `INTEGRATION_CMD = true`, uses the
 
 The Node language template runs `npm ci` before Prettier and ESLint when `node_modules` is missing. The three workflow templates are Prettier-clean. The Go `FORMAT_CMD` stops on a `gofmt` error. `Containerfile.go` is now `Containerfile.golang`. `Makefile.image` says to copy every line, says where `BUILD_CMD +=` stands, and names `node`. `references/setup-files.md` names the Gradle order, the Go layout, and the Node build script. `templates/pipeline-rules.md` has bracket placeholders in "This repository". `migrate-docs` deletes an old `docs/ids.yaml` with a `retired:` list first. `board-merge` says to commit one finding before the next edit. The rows [R-42](../requirements/github-pipeline.md#r-42), [R-46](../requirements/github-pipeline.md#r-46), and [R-71](../requirements/project-setup.md#r-71) say what the files now do.
 
-The new planned rows are [R-85](../requirements/github-pipeline.md#r-85) (cleanup targets on a laptop) and [R-86](../requirements/board-merge-report.md#r-86) (size limit and test names of the cover finding), because each needs a decision of the owner.
+The new planned rows are R-85 (cleanup targets on a laptop) and [R-86](../requirements/board-merge-report.md#r-86) (size limit and test names of the cover finding), because each needs a decision of the owner.
 
 ## Review
 
