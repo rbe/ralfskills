@@ -485,10 +485,26 @@ class GeneralRulesTest(unittest.TestCase):
 
     def test_the_entry_file_and_its_template_stay_within_their_word_limits(self):
         """id: R-76"""
-        limits = {"CLAUDE.md": 760, "skills/project-setup/templates/CLAUDE.md": 830}
+        limits = {"CLAUDE.md": 824, "skills/project-setup/templates/CLAUDE.md": 894}
         for name, limit in limits.items():
             text = (ROOT / name).read_text(encoding="utf-8")
             self.assertLessEqual(len(text.split()), limit, name)
+
+    def test_the_entry_file_and_its_template_hold_the_group_questions(self):
+        """id: R-51"""
+        for name in ENTRY_FILES:
+            text = (ROOT / name).read_text(encoding="utf-8")
+            contract = text[text.index("\n## Communication contract\n") :]
+            self.assertEqual(contract.count("\nQuestions:\n"), 1, name)
+            self.assertLess(
+                contract.index("\nContent:\n"), contract.index("\nQuestions:\n")
+            )
+            self.assertLess(
+                contract.index("\nQuestions:\n"), contract.index("\nExample.")
+            )
+            self.assertIn("Never write a bare id.", contract, name)
+            self.assertIn("as a Markdown link to its definition", contract, name)
+            self.assertIn("Recommend one choice.", contract, name)
 
     def test_the_general_rules_name_the_interface_and_the_start_of_a_task(self):
         """id: R-75"""

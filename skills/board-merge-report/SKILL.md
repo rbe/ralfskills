@@ -30,7 +30,7 @@ The report lists board text that says one fact twice, says opposite facts, or di
 - A merge lists the tests and the links that name the id that the merge deletes. The numbers count a frontmatter list of a history file. They do not count a link in its text. A history file keeps the deleted id.
 - A history file is never merged. It is deleted only when it is closed.
 - If a closed history file holds the only copy of a reason, say so. The reason moves to a row first.
-- A row that no test names is never a covered-by-code finding.
+- A row that no test names is never a covered-by-code finding. A covered-by-code finding has no size limit.
 - A contradiction or against-code finding needs evidence as path and line. If the code does not decide, ask the owner. Never guess.
 - Do not report an id of a planned row, a roadmap row, or a proposal.
 - Invent no id. Use only ids that `make board-numbers` printed.

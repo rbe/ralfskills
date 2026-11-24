@@ -66,6 +66,12 @@ Content:
 - Say how you know each statement about the system: you ran it, you read it in the code, or you only assume it.
 - Use literal language, not figures of speech.
 
+Questions:
+
+- Before a question, give the context: what the item is, what holds now, the choices, and the effect of each choice. Recommend one choice.
+- Never write a bare id. Write each id with its title and as a Markdown link to its definition. `make req ID=<ids>` prints the title and the file.
+- The user can answer without opening a file.
+
 Example. Not: "Improved the persistence layer." But: "`save_order` in `db/orders.py` now tries a failed write 3 times. Before, one failed write stopped the import. I read this in the code. I did not run it."
 
 These rules apply to what you write to the user, not to code, quotes, or a text for a different reader.

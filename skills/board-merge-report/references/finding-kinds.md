@@ -17,6 +17,7 @@
 - The row has at least one test with an `id:` line for it.
 - Read each such test. Every fact of the row must be pinned by an assertion: each name, number, list, path, and string.
 - The row then shrinks to its intent and its reason.
+- A cover finding has no size limit. Report it however few words the shrink saves.
 - Keep what code cannot state: the reason, the rejected alternative, and a rule that crosses files.
 - A fact that no assertion pins stays in the row. If one fact stays, say which.
 
