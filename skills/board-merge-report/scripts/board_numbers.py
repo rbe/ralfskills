@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Count the words, the tests, and the links of each board unit.
+"""Count the words, the tests, and the links of each board unit, and name the tests.
 
 A unit is an in force requirement row, an ADR, or a history file. A planned
 row is out of scope. The numbers are the base of the merge report. The agent
@@ -34,7 +34,13 @@ OTHER_TEST_FILE = re.compile(
     r"|(?:Test|Tests|Spec|IT)\.(?:java|groovy|kt)"
     r"|_test\.go)$"
 )
-COLUMNS = ("id", "kind", "status", "words", "tests", "links", "lists")
+DECLARATION = re.compile(
+    r"\bdef\s+(\w+)\s*\("
+    r"|\bfunc\s+(Test\w*)\s*\("
+    r"|\b(?:void|fun)\s+(\w+)\s*\("
+    r"|\b(?:it|test)\s*\(\s*[\"'`]([^\"'`]+)[\"'`]"
+)
+COLUMNS = ("id", "kind", "status", "words", "tests", "links", "lists", "names")
 
 
 def repo_root(start):
@@ -160,15 +166,39 @@ def test_files(root):
     return found
 
 
-def test_counts(root):
-    """How many lines `id:` of a test name each id."""
-    counts = {}
+def declared_name(lines, index):
+    """The name of the test that the line `id:` at `index` belongs to.
+
+    If the line is a comment, a declaration within the 3 lines below wins,
+    because a comment above a test names that test. Else the nearest
+    declaration above wins, because a docstring inside a test follows its
+    declaration. Else the nearest one below is taken. The result is empty
+    when the file has no declaration.
+    """
+    below = range(index + 1, len(lines))
+    is_comment = not lines[index].strip().startswith(('"""', "'''"))
+    near = below[:3] if is_comment else []
+    for number in [*near, *range(index, -1, -1), *below]:
+        match = DECLARATION.search(lines[number])
+        if match:
+            return next(group for group in match.groups() if group)
+    return ""
+
+
+def test_names(root):
+    """The tests of each id as `file::name`, from the lines `id:`, sorted."""
+    names = {}
     for path in test_files(root):
-        for line in path.read_text(encoding="utf-8").splitlines():
+        label = path.relative_to(root).as_posix()
+        lines = path.read_text(encoding="utf-8").splitlines()
+        for index, line in enumerate(lines):
             match = TEST_ID.match(line.strip())
             if match:
-                counts[match.group(1)] = counts.get(match.group(1), 0) + 1
-    return counts
+                name = declared_name(lines, index)
+                names.setdefault(match.group(1), []).append(
+                    f"{label}::{name}" if name else label
+                )
+    return {ident: sorted(found) for ident, found in names.items()}
 
 
 def mentions(root):
@@ -212,14 +242,16 @@ def counted(item, kind, found):
 
 
 def numbers(root):
-    tests = test_counts(root)
+    tests = test_names(root)
     found = mentions(root)
     rows = []
     for item in units(root):
+        named = tests.get(item["id"], [])
         rows.append(
             {
                 **item,
-                "tests": tests.get(item["id"], 0),
+                "tests": len(named),
+                "names": ";".join(named),
                 "links": counted(item, "link", found),
                 "lists": counted(item, "list", found),
             }

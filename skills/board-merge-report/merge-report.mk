@@ -8,7 +8,8 @@
 # Without IDS the target lists every in force requirement row, ADR, and
 # history file. The columns are id, kind, status, words,
 # tests that name the id with `id:`, links to the id from other
-# documents, and frontmatter lists that name the id.
+# documents, frontmatter lists that name the id, and names. The
+# names are the tests as `file::name`, sorted, joined with `;`.
 
 ifndef BOARD_MERGE_REPORT_MK
 BOARD_MERGE_REPORT_MK := 1
@@ -23,7 +24,7 @@ endif
 
 .PHONY: board-numbers
 
-board-numbers: ## List words, tests, and links of each board unit. IDS= narrows it
+board-numbers: ## List words, tests with their names, and links of each board unit. IDS= narrows it
 	$(PYTHON) "$(BOARD_MERGE_REPORT_DIR)scripts/board_numbers.py" $(IDS)
 
 # help is the default goal. This fragment does not take it.

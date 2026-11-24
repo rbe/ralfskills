@@ -16,7 +16,7 @@ The report lists board text that says one fact twice, says opposite facts, or di
 </inputs>
 
 <steps>
-1. Run `make toon` and `make board-numbers`. If a target fails, stop. Do not count words, tests, or links yourself.
+1. Run `make toon` and `make board-numbers`. If a target fails, stop. Do not count words, tests, or links yourself. Take the names of the tests from the column `names`. Open a test file only to read its assertions.
 2. Read each row, ADR, or history file that the index or the numbers make a candidate. Open a unit in full before you quote it.
 3. List the candidates of the six kinds. Read `references/finding-kinds.md` for the test of each kind.
 4. Try to refute each merge candidate. If the actor, the repository kind, or the stage differs, drop it.
@@ -27,7 +27,7 @@ The report lists board text that says one fact twice, says opposite facts, or di
 
 <rules>
 - A merge keeps the id that more tests name. If the tests tie, it keeps the id with more links, then the lower number.
-- A merge lists the tests and the links that name the id that the merge deletes. The numbers count a frontmatter list of a history file. They do not count a link in its text. A history file keeps the deleted id.
+- A merge lists the tests (by the names of the column `names`) and the links that name the id that the merge deletes. The numbers count a frontmatter list of a history file. They do not count a link in its text. A history file keeps the deleted id.
 - A history file is never merged. It is deleted only when it is closed.
 - If a closed history file holds the only copy of a reason, say so. The reason moves to a row first.
 - A row that no test names is never a covered-by-code finding. A covered-by-code finding has no size limit.

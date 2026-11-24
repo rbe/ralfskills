@@ -179,10 +179,56 @@ class BoardNumbersTest(unittest.TestCase):
             text = board_numbers.render(board_numbers.numbers(root))
             lines = text.splitlines()
             self.assertEqual(
-                lines[0], "board[4]{id,kind,status,words,tests,links,lists}:"
+                lines[0], "board[4]{id,kind,status,words,tests,links,lists,names}:"
             )
-            self.assertIn("  R-1,requirement,in force,7,2,0,0", lines)
+            self.assertIn(
+                "  R-1,requirement,in force,7,2,0,0,"
+                "tests/test_sample.py::test_one;tests/test_sample.py::test_two",
+                lines,
+            )
             self.assertEqual(lines[-1], "total: 4 units, 25 words")
+
+    def test_the_names_of_the_tests_of_an_id_are_printed_sorted_in_one_line(self):
+        """id: R-86"""
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            sample(root)
+            write(
+                root,
+                "tests/test_other.py",
+                'def test_zeta():\n    """id: R-1"""\n\n\n'
+                "# id: R-1\ndef test_alpha():\n    pass\n",
+            )
+            write(
+                root,
+                "web/shape.test.ts",
+                'it("keeps the list short", () => {\n  // id: R-2\n});\n',
+            )
+            write(
+                root,
+                "pkg/shape_test.go",
+                "// id: R-2\nfunc TestShape(t *testing.T) {\n}\n",
+            )
+            text = board_numbers.render(board_numbers.numbers(root))
+            line_one = next(x for x in text.splitlines() if x.startswith("  R-1,"))
+            self.assertEqual(
+                line_one.split(",")[-1],
+                "tests/test_other.py::test_alpha;tests/test_other.py::test_zeta;"
+                "tests/test_sample.py::test_one;tests/test_sample.py::test_two",
+            )
+            self.assertEqual(line_one.split(",")[4], "4")
+            line_two = next(x for x in text.splitlines() if x.startswith("  R-2,"))
+            self.assertIn("pkg/shape_test.go::TestShape", line_two)
+            self.assertIn("web/shape.test.ts::keeps the list short", line_two)
+            self.assertIn("web/app.test.ts", line_two.split(",")[-1].split(";"))
+
+    def test_an_id_with_no_test_has_an_empty_names_cell(self):
+        """id: R-86"""
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            sample(root)
+            text = board_numbers.render(board_numbers.numbers(root))
+            self.assertIn("  ADR-0001,adr,Accepted,5,0,0,0,", text.splitlines())
 
     def test_a_named_id_narrows_the_rows_and_an_unknown_id_is_an_error(self):
         """id: R-77"""

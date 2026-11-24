@@ -15,7 +15,8 @@ The first sentence of the reply states the intent. A short count follows: the fi
 
 - The numbers continue across the tables, so that each finding has one number.
 - Words now is the sum of the rows. Words after is about, and it is your estimate. For a deletion it is the words of the sentence that moves.
-- Tests to rewrite and Links to rewrite are the numbers of the id that goes. Links to rewrite leave out history files.
+- Tests to rewrite and Links to rewrite are the numbers of the id that goes. Links to rewrite leave out history files. Name the tests to rewrite as `file::name`, as the column `names` of `make board-numbers` gives them.
+- Facts the tests pin names the tests that pin them, as `file::name`.
 - Sentences to move are a quote, or none.
 - The repeated text is a quote of at most 20 words.
 - A contradiction or an against-code finding with a question has no corrected sentence. The owner answers first.
