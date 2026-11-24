@@ -918,7 +918,8 @@ class ProjectReportTest(unittest.TestCase):
         self.assertIn("one integration entry", development)
         self.assertIn("### Planned requirements", development)
         self.assertIn(
-            "[R-81](../docs/requirements/project-setup.md#r-81), planned.", development
+            "[R-85](../docs/requirements/github-pipeline.md#r-85), planned.",
+            development,
         )
         self.assertNotIn("### Decisions", development)
 
@@ -1205,7 +1206,7 @@ class MakeAndPodmanInterfaceTest(unittest.TestCase):
         self.assertIn("old roadmap form", lines[0])
 
     def test_the_github_cli_runs_in_podman_with_the_token_of_the_environment(self):
-        """id: R-46"""
+        """id: R-99"""
         sdlc = (self.PIPELINE / "sdlc.mk").read_text(encoding="utf-8")
         self.assertRegex(sdlc, r"(?m)^GH_VERSION \?= \d+\.\d+\.\d+$")
         self.assertRegex(sdlc, r"(?m)^GH_BASE_IMAGE \?= \S+:\S+$")
