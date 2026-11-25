@@ -20,12 +20,13 @@
 #
 # coverage and test-changed fail until the first unit test exists.
 
-# The project name of a new project. make jvm-tooling writes it to settings.gradle.
-NAME ?= $(notdir $(CURDIR))
+# NAME, the project name of a new project, comes from project.mk: the
+# repository name of the remote origin, else the directory name.
+# make jvm-tooling writes it to settings.gradle.
 JDK_IMAGE ?= docker.io/library/eclipse-temurin:25-jdk
 GRADLE_VERSION ?= 9.1.0
 GRADLE_IMAGE ?= docker.io/library/gradle:$(GRADLE_VERSION)-jdk25
-GRADLE_RUN = mkdir -p "$$HOME/.gradle" && podman run --rm -e CI -e GRADLE_USER_HOME=/gradle \
+GRADLE_RUN = mkdir -p "$$HOME/.gradle" && podman run --rm $(PODMAN_NET_ARGS) -e CI -e GRADLE_USER_HOME=/gradle \
 	-v "$$HOME/.gradle":/gradle:Z -v "$(CURDIR)":/work:Z -w /work
 GRADLE = $(GRADLE_RUN) $(JDK_IMAGE) ./gradlew --console=plain
 
@@ -52,7 +53,7 @@ TEST_CHANGED_CMD = chosen=$$($(PYTHON) .claude/skills/project-report/scripts/cha
 
 include .claude/skills/project-setup/project.mk
 
-# Project targets and overrides.
+# Project targets.
 
 .PHONY: wrapper
 wrapper: ## Write the Gradle wrapper in Podman. A new project runs this once

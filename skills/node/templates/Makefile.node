@@ -20,10 +20,11 @@
 
 NODE_VERSION ?= 24
 NODE_IMAGE ?= docker.io/library/node:$(NODE_VERSION)-bookworm-slim
-# The package name of a new project, and the dev tools of node-tooling.
-NAME ?= $(notdir $(CURDIR))
+# The dev tools of node-tooling. NAME, the package name of a new project,
+# comes from project.mk: the repository name of the remote origin, else
+# the directory name.
 NODE_DEV_TOOLS ?= prettier eslint @eslint/js globals
-NODE = podman run --rm --user $(PYTHON_UID):$(PYTHON_GID) -e HOME=/tmp -e CI \
+NODE = podman run --rm $(PYTHON_USERNS) --user $(PYTHON_UID):$(PYTHON_GID) -e HOME=/tmp -e CI \
 	-e NODE_V8_COVERAGE -e npm_config_cache=/tmp/npm-cache \
 	-e npm_config_update_notifier=false -v "$(CURDIR)":/work:Z -w /work $(NODE_IMAGE)
 
@@ -34,9 +35,12 @@ SETUP_CMD = $(NODE) npm ci
 BUILD_CMD = mkdir -p build && $(NODE) npm pack --pack-destination build
 TEST_CMD = $(NODE) node --test $(UNIT_TESTS)
 INTEGRATION_CMD = $(NODE) node --test $(INTEGRATION_TESTS)
-FORMAT_CMD = $(NODE) npm exec -- prettier --check .
-FORMAT_FIX_CMD = $(NODE) npm exec -- prettier --write .
-LINT_CMD = $(NODE) npm exec -- eslint .
+# A fresh checkout has no node_modules. The tools run from the locked
+# dev dependencies, so these three commands install them first.
+NODE_DEPS = if [ ! -d node_modules ] && [ -f package-lock.json ]; then $(NODE) npm ci; fi
+FORMAT_CMD = $(NODE_DEPS) && $(NODE) npm exec -- prettier --check .
+FORMAT_FIX_CMD = $(NODE_DEPS) && $(NODE) npm exec -- prettier --write .
+LINT_CMD = $(NODE_DEPS) && $(NODE) npm exec -- eslint .
 COVERAGE_CMD = set -eu; \
 	base=$$(git merge-base HEAD origin/$(DEFAULT_BRANCH) 2>/dev/null || git merge-base HEAD $(DEFAULT_BRANCH) 2>/dev/null || git rev-parse -q --verify HEAD 2>/dev/null || git hash-object -t tree /dev/null); \
 	git add -N .; \
@@ -52,7 +56,7 @@ TEST_CHANGED_CMD = chosen=$$($(PYTHON) .claude/skills/project-report/scripts/cha
 
 include .claude/skills/project-setup/project.mk
 
-# Project targets and overrides.
+# Project targets.
 
 .PHONY: npm
 npm: ## Run npm in Podman on this machine. Set ARGS.

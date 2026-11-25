@@ -4,6 +4,16 @@
 
 - `plan` says when a choice is an ADR. `record` writes `docs/adr/<id>.md` with the status `Accepted`. The Plan section of the history file cites that id.
 
+## Where a choice goes
+
+Not every choice is a rule. When a choice must hold, `record` decides where it goes, in this order:
+
+1. A small requirement: a row of the file of its owner in `docs/requirements/`, where the repository keeps those files. The owner is the skill of the sentence `<skill> owns ...`, and `collection.md` holds a row with no owning skill. A repository with no `docs/adr/` has only this home. A product with `docs/adr/` keeps no such files, so it has homes 2 and 3. Do not create the files in a product.
+2. A sentence in an ADR that already fits.
+3. A new ADR.
+
+If no home fits, the agent asks the user. A choice that need not hold has no home and is not recorded.
+
 ## Body
 
 - `## Rule`: what an agent must do or must not do, in sentences that `review` can check.

@@ -44,11 +44,11 @@ This skill owns the GitHub delivery contract and `sdlc.mk`, the makefile that im
 - The project Makefile includes the installed `sdlc.mk` before any target. Do not copy `sdlc.mk` to the repository root, do not edit a file of this skill, and do not include `project.mk` beside it.
 - The workflow is one file, `.github/workflows/ci.yml`, named `CI`. A step is `actions/checkout`, an artifact upload or download, or `run: make <target>`.
 - `publish-*` runs only on a push to the default branch or when `workflow_dispatch` selects that job. It needs `build` and `test`. A tag push publishes nothing.
-- A version comes only from `make version`.
+- A published version comes only from `make version`. A cleanup does not call it. A cleanup needs no git tag, and it keeps `PUBLISHED_TAG`, else the version in `build/publish-version.txt`, else the newest rolling version that GitHub lists.
 - Every upload sets `retention-days`.
 - The contract allows no second name for one target and no Docker in place of Podman.
 - This skill ships no shell script, and a recipe that this skill adds calls no shell-script wrapper.
-- If a cleanup must be tried, set `DRY_RUN=1`. The cleanup then prints what it would delete and deletes nothing.
+- If a cleanup must be tried, set `DRY_RUN=1`. The cleanup then prints what it would delete and deletes nothing. A cleanup runs at any time, with or without `DRY_RUN=1`. Without `DRY_RUN=1` it deletes, also on a laptop. In CI, a ref that is not the default branch deletes nothing.
 - If the contract test of the repository fails, repair the pipeline or record a divergence.
 </rules>
 

@@ -9,10 +9,9 @@
 # variables) and the image targets of container.mk (image, image-ci,
 # publish-container). A project on a language makefile of its language
 # skill therefore keeps those targets when it switches from project.mk to
-# this file. A project that writes its own recipe for them, as the Node and
-# Gradle makefiles of this skill do, sets SDLC_OWN_CONTRACT = 1 before the
-# include, and then owns the targets (setup, build, test, docs,
-# publish-*, image, run, stop).
+# this file. A project does not define a contract target again. The Node
+# and Gradle makefiles of this skill set the command variables too. The
+# project owns the targets after the include (publish-*, run, stop).
 #
 # GNU Make 3.81, including the macOS system make. Recipes do not use the
 # one-shell option or Make 4 functions. Each recipe is one shell, joined
@@ -31,13 +30,21 @@
 # A publish whose GITHUB_REF is not refs/heads/$SDLC_DEFAULT_BRANCH tags
 # the version only: publish-tags omits latest, and both cleanups exit
 # without deleting. A missing GHCR package (HTTP 404) deletes nothing.
+# The two cleanups run at any time, with or without DRY_RUN=1, and need
+# no git tag and no GITHUB_RUN_NUMBER. The kept version is PUBLISHED_TAG,
+# else the content of build/publish-version.txt, else the newest rolling
+# version (MAJOR.MINOR.PATCH-run) by created_at of the list from GitHub.
+# A given tag that is not exactly one version in that list stops the
+# cleanup, and the message names where the tag came from. A list with no
+# rolling version deletes nothing and exits 0.
 # The former kept is the next-lower run on that MAJOR.MINOR.PATCH line.
 # A version that still wears latest, or any tag that is not
 # MAJOR.MINOR.PATCH-<run>, is not deleted.
 #
 # Set before the include:
 #   IMAGE            ghcr.io/owner/name, no tag
-#   PACKAGE          GitHub owner/name. Defaults to GITHUB_REPOSITORY.
+#   PACKAGE          GitHub owner/name. Defaults to GITHUB_REPOSITORY, else
+#                    OWNER/NAME from the remote origin.
 #   KEEP_VERSIONS    versions to keep, counting the one just published.
 #                    Default 2 (published + one former).
 #   SDLC_JOBS        report rows, in pipeline order
@@ -72,17 +79,15 @@ include $(SDLC_MK_DIR)../project-setup/skills.mk
 include $(SDLC_MK_DIR)../project-setup/old-board.mk
 include $(SDLC_MK_DIR)../project-setup/test-changed.mk
 -include .claude/skills/project-report/report.mk
-ifndef SDLC_OWN_CONTRACT
 include $(SDLC_MK_DIR)../project-setup/contract.mk
 include $(SDLC_MK_DIR)container.mk
-endif
 
 # Recipes call ${MAKE} from the shell. Make does not export this variable
 # unless asked, and a recipe that writes $(MAKE) is executed even by make -n.
 export MAKE
 
 KEEP_VERSIONS ?= 2
-PACKAGE ?= $(GITHUB_REPOSITORY)
+PACKAGE ?= $(or $(GITHUB_REPOSITORY),$(if $(OWNER),$(OWNER)/$(NAME)))
 SDLC_JOBS ?= setup build test docs publish-container
 SDLC_CI ?= setup build editorconfig format lint test integration coverage docs report
 SDLC_KEEP_ARTIFACTS ?= report,docs
@@ -133,13 +138,15 @@ exit $$st
 endef
 
 # Expanded inside a cleanup recipe. Reads PUBLISHED_TAG, then
-# build/publish-version.txt, then `version`. Result is shell variable tag.
+# build/publish-version.txt, else the tag is empty. It never calls
+# `version`, so it needs no git tag and no GITHUB_RUN_NUMBER. Result is
+# the shell variables tag and tag_from. An empty tag makes the recipe
+# take the newest rolling version of the list from GitHub.
 define SDLC_TAG
-tag="$(PUBLISHED_TAG)"; \
-if [ -z "$$tag" ] && [ -f build/publish-version.txt ]; then tag=$$(cat build/publish-version.txt); fi; \
-if [ -z "$$tag" ]; then tag=$$($(THIS_MAKE) -s --no-print-directory version); fi; \
-printf '%s\n' "$$tag" | grep -Eq '^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)-[1-9][0-9]*$$' \
-  || { echo "Publish tag '$$tag' is not MAJOR.MINOR.PATCH-run. Refusing to delete." >&2; exit 1; }
+tag="$(PUBLISHED_TAG)"; tag_from=PUBLISHED_TAG; \
+if [ -z "$$tag" ] && [ -f build/publish-version.txt ]; then tag=$$(cat build/publish-version.txt); tag_from=build/publish-version.txt; fi; \
+if [ -n "$$tag" ]; then printf '%s\n' "$$tag" | grep -Eq '^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)-[1-9][0-9]*$$' \
+  || { echo "Publish tag '$$tag' from $$tag_from is not MAJOR.MINOR.PATCH-run. Refusing to delete." >&2; exit 1; }; fi
 endef
 
 # Sets on_default=1 when this publish moves latest and may delete old versions.
@@ -269,7 +276,11 @@ version: ## Print MAJOR.MINOR.PATCH-run. PRINT=tag prints the vX.Y.Z tag
 	printf '%s-%s\n' "$${tag#v}" "$(GITHUB_RUN_NUMBER)"
 
 ci: ## Run the local CI targets, in order. Does not publish
-	@set -eu; for t in $(SDLC_CI); do $(MAKE) --no-print-directory "$$t"; done
+	@set -eu; for t in $(SDLC_CI); do \
+	  $(MAKE) --no-print-directory "$$t"; \
+	  key=$$(printf '%s' "$$t" | tr 'a-z-' 'A-Z_'); \
+	  eval "JOB_RESULT_$$key=success; export JOB_RESULT_$$key"; \
+	done
 
 report: ## Match CI: write build/report/index.md from logs, summaries, and job results
 	@set -eu; \
@@ -355,18 +366,26 @@ cleanup-container-versions: ## Match CI: on the default branch, keep this run an
 	  else cat "$$err" >&2; reason="Could not list package versions."; exit 1; fi; \
 	fi; \
 	if [ -z "$$versions" ]; then status=kept; reason="No package versions. A missing GHCR package (HTTP 404) is an empty list. Nothing deleted."; exit 0; fi; \
-	line=$${tag%-*}; runn=$${tag##*-}; \
-	if ! plan=$$(printf '%s\n' "$$versions" | awk -F "$$tab" -v tag="$$tag" -v line="$$line" -v run="$$runn" -v keep="$(KEEP_VERSIONS)" ' \
+	code=0; \
+	plan=$$(printf '%s\n' "$$versions" | awk -F "$$tab" -v tag="$$tag" -v keep="$(KEEP_VERSIONS)" ' \
 	  function rolling(t) { return t ~ /^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)-[1-9][0-9]*$$/ } \
+	  function runof(t) { sub(/^.*-/, "", t); return t + 0 } \
 	  NF < 2 { next } \
-	  { n++; id[n] = $$1; protected[n] = 0; ver_run[n] = -1; nt = split($$3, parts, ","); \
-	    for (i = 1; i <= nt; i++) { p = parts[i]; if (p == "") continue; \
+	  { n++; id[n] = $$1; created[n] = $$2 ""; protected[n] = 0; nt[n] = split($$3, parts, ","); \
+	    for (i = 1; i <= nt[n]; i++) { p = parts[i]; tg[n, i] = p; if (p == "") continue; seen[p]++; owner[p] = n; \
 	      if (!rolling(p)) protected[n] = 1; \
-	      if (p == tag) { hits++; cur = n } \
-	      if (rolling(p) && index(p, line "-") == 1) { r = p; sub(/^.*-/, "", r); r = r + 0; if (r > ver_run[n]) ver_run[n] = r } } } \
+	      else if (newest[n] == "" || runof(p) > runof(newest[n])) newest[n] = p } } \
 	  END { \
-	    if (hits != 1) exit 2; \
+	    if (tag == "") { best = 0; \
+	      for (i = 1; i <= n; i++) if (newest[i] != "" && (best == 0 || created[i] > created[best])) best = i; \
+	      if (best == 0) exit 3; \
+	      tag = newest[best] } \
+	    if (seen[tag] != 1) exit 2; \
+	    cur = owner[tag]; line = tag; sub(/-[^-]*$$/, "", line); run = runof(tag); \
+	    print "tag", tag; \
 	    print "keep", id[cur]; \
+	    for (i = 1; i <= n; i++) { ver_run[i] = -1; \
+	      for (k = 1; k <= nt[i]; k++) { p = tg[i, k]; if (rolling(p) && index(p, line "-") == 1) { r = runof(p); if (r > ver_run[i]) ver_run[i] = r } } } \
 	    extra = keep + 0 - 1; \
 	    while (extra > 0) { best = -1; \
 	      for (i = 1; i <= n; i++) { r = ver_run[i]; if (i == cur || r < 0 || r >= run + 0 || picked[r]) continue; if (best < 0 || r > best) best = r } \
@@ -375,11 +394,14 @@ cleanup-container-versions: ## Match CI: on the default branch, keep this run an
 	      if (ver_run[i] >= 0 && picked[ver_run[i]]) { print "keep", id[i]; continue } \
 	      if (protected[i]) continue; \
 	      print "delete", id[i] } \
-	  }'); then \
-	  reason="Tag $$tag is not exactly one package version. Refusing to delete."; \
+	  }') || code=$$?; \
+	if [ "$$code" -eq 3 ]; then status=kept; reason="No rolling version MAJOR.MINOR.PATCH-run in the package. Nothing deleted."; exit 0; fi; \
+	if [ "$$code" -ne 0 ]; then \
+	  reason="Tag $$tag from $$tag_from is not exactly one package version. Refusing to delete."; \
 	  echo "$$reason" >&2; \
 	  exit 1; \
 	fi; \
+	tag=$$(printf '%s\n' "$$plan" | awk '$$1 == "tag" { print $$2; exit }'); \
 	kept=$$(printf '%s\n' "$$plan" | grep -c '^keep ' || true); \
 	deleted=$$(printf '%s\n' "$$plan" | grep -c '^delete ' || true); \
 	printf '%s\n' "$$plan" | while read -r action id; do \
@@ -405,14 +427,21 @@ cleanup-github-releases: ## Match CI: on the default branch, keep this release a
 	if [ -z "$$repo" ]; then reason="PACKAGE is empty. Set it to owner/name."; echo "$$reason" >&2; exit 1; fi; \
 	tab=$$(printf '\t'); \
 	releases=$$($(GH) api --paginate "repos/$$repo/releases?per_page=100" --jq '.[] | [(.id|tostring), .tag_name, .created_at] | @tsv'); \
-	line=$${tag%-*}; runn=$${tag##*-}; \
-	if ! plan=$$(printf '%s\n' "$$releases" | awk -F "$$tab" -v tag="$$tag" -v line="$$line" -v run="$$runn" -v keep="$(KEEP_VERSIONS)" ' \
+	code=0; \
+	plan=$$(printf '%s\n' "$$releases" | awk -F "$$tab" -v tag="$$tag" -v keep="$(KEEP_VERSIONS)" ' \
 	  function rolling(t) { return t ~ /^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)-[1-9][0-9]*$$/ } \
+	  function runof(t) { sub(/^.*-/, "", t); return t + 0 } \
 	  NF < 3 { next } \
-	  { n++; id[n] = $$1; name[n] = $$2; ver_run[n] = -1; if ($$2 == tag) { hits++; cur = n } \
-	    if (rolling($$2) && index($$2, line "-") == 1) { r = $$2; sub(/^.*-/, "", r); ver_run[n] = r + 0 } } \
+	  { n++; id[n] = $$1; name[n] = $$2; created[n] = $$3 ""; seen[$$2]++; owner[$$2] = n } \
 	  END { \
-	    if (hits != 1) exit 2; \
+	    if (tag == "") { best = 0; \
+	      for (i = 1; i <= n; i++) if (rolling(name[i]) && (best == 0 || created[i] > created[best])) best = i; \
+	      if (best == 0) exit 3; \
+	      tag = name[best] } \
+	    if (seen[tag] != 1) exit 2; \
+	    cur = owner[tag]; line = tag; sub(/-[^-]*$$/, "", line); run = runof(tag); \
+	    for (i = 1; i <= n; i++) ver_run[i] = (rolling(name[i]) && index(name[i], line "-") == 1) ? runof(name[i]) : -1; \
+	    print "tag", tag; \
 	    print "keep", id[cur], name[cur]; \
 	    extra = keep + 0 - 1; \
 	    while (extra > 0) { best = -1; \
@@ -422,11 +451,14 @@ cleanup-github-releases: ## Match CI: on the default branch, keep this release a
 	      if (ver_run[i] >= 0 && picked[ver_run[i]]) { print "keep", id[i], name[i]; continue } \
 	      if (!rolling(name[i])) continue; \
 	      print "delete", id[i], name[i] } \
-	  }'); then \
-	  reason="Release $$tag does not exist. Refusing to delete."; \
+	  }') || code=$$?; \
+	if [ "$$code" -eq 3 ]; then status=kept; reason="No rolling release MAJOR.MINOR.PATCH-run. Nothing deleted."; exit 0; fi; \
+	if [ "$$code" -ne 0 ]; then \
+	  reason="Release $$tag from $$tag_from is not exactly one release. Refusing to delete."; \
 	  echo "$$reason" >&2; \
 	  exit 1; \
 	fi; \
+	tag=$$(printf '%s\n' "$$plan" | awk '$$1 == "tag" { print $$2; exit }'); \
 	kept=$$(printf '%s\n' "$$plan" | grep -c '^keep ' || true); \
 	deleted=$$(printf '%s\n' "$$plan" | grep -c '^delete ' || true); \
 	printf '%s\n' "$$plan" | while read -r action id name; do \
@@ -472,6 +504,7 @@ cleanup-actions-artifacts: ## Match CI: delete artifacts at least one hour old, 
 -include .claude/skills/record/index.mk
 -include .claude/skills/project-report/report.mk
 -include .claude/skills/migrate-docs/migrate.mk
+-include .claude/skills/board-merge-report/merge-report.mk
 
 # After the fragments this file includes. A fragment must not replace it.
 .DEFAULT_GOAL := help

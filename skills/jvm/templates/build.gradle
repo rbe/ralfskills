@@ -40,6 +40,14 @@ spotless {
     }
 }
 
+// A project that ships an image or a runnable JAR names its main class.
+// The Containerfile of github-pipeline runs `java -jar`.
+// jar {
+//     manifest {
+//         attributes 'Main-Class': 'com.example.Main'
+//     }
+// }
+
 test {
     useJUnitPlatform()
     forkEvery = 1

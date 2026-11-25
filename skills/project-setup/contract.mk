@@ -3,10 +3,11 @@
 # github-pipeline both include this file, so the targets are the same
 # on either include. It does not define help.
 #
-# A project that writes its own recipe for these targets, as the
-# Node and Gradle makefiles of github-pipeline do, sets
-# SDLC_OWN_CONTRACT = 1 before the sdlc.mk include. sdlc.mk then
-# leaves this file out, so no recipe is defined twice.
+# A project changes what these targets do only through the command
+# variables. No project defines one of these targets again, and the
+# Node and Gradle makefiles of github-pipeline set the variables too.
+# A command variable that holds a # writes it as \#, because Make reads
+# an unescaped # as a comment.
 #
 # GNU Make 3.81. See project.mk for the rules of a recipe.
 
@@ -21,21 +22,21 @@ REGISTRY ?= ghcr.io
 # setup. setup installs no tool on the host: every tool is a Podman
 # image behind a target.
 setup: ## Resolve dependencies
-	@set -eu; \
-	if [ -z "$(SETUP_CMD)" ]; then \
-	  printf '%s\n' "setup: stub. Set SETUP_CMD before the include. Resolve this project's dependencies." >&2; \
-	  exit 1; \
-	fi; \
+ifeq ($(strip $(SETUP_CMD)),)
+	@printf '%s\n' "setup: stub. Set SETUP_CMD before the include. Resolve this project's dependencies." >&2
+	@exit 1
+else
 	$(SETUP_CMD)
+endif
 
 # Stub. The project sets BUILD_CMD. Empty fails the target.
 build: ## Produce the artifact
-	@set -eu; \
-	if [ -z "$(BUILD_CMD)" ]; then \
-	  printf '%s\n' "build: stub. Set BUILD_CMD before the include. Produce this project's artifact." >&2; \
-	  exit 1; \
-	fi; \
+ifeq ($(strip $(BUILD_CMD)),)
+	@printf '%s\n' "build: stub. Set BUILD_CMD before the include. Produce this project's artifact." >&2
+	@exit 1
+else
 	$(BUILD_CMD)
+endif
 
 # Stub. The project sets TEST_CMD. Empty fails the target.
 # test is the unit tests. integration is the one integration entry.
@@ -118,12 +119,12 @@ ifeq ($(RENDER_DOCS),1)
 # help-docs
 .PHONY: docs
 docs: ## Render the docs
-	@set -eu; \
-	if [ -z "$(DOCS_CMD)" ]; then \
-	  printf '%s\n' "docs: stub. Set DOCS_CMD before the include. Run this project's renderer." >&2; \
-	  exit 1; \
-	fi; \
+ifeq ($(strip $(DOCS_CMD)),)
+	@printf '%s\n' "docs: stub. Set DOCS_CMD before the include. Run this project's renderer." >&2
+	@exit 1
+else
 	$(DOCS_CMD)
+endif
 endif
 
 # Real recipe. Set PUBLISH_IMAGE=1 only when an image is published.

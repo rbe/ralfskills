@@ -4,9 +4,8 @@ title: [the slice in a few words]
 status: open
 adrs: []
 skills: []
-decisions: []
+roadmap: []
 proposals: []
-issues: []
 ---
 
 # [the title]

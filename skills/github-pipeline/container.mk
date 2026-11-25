@@ -1,8 +1,6 @@
-# The image targets of a project that delivers a container image and
-# has no recipe of its own for them. sdlc.mk includes this file, and the
-# contract targets of project-setup, unless the project sets
-# SDLC_OWN_CONTRACT = 1 before the include. The Node and Gradle
-# makefiles of this skill set it, because they write their own recipes.
+# The image targets of a project that delivers a container image.
+# sdlc.mk includes this file and the contract targets of project-setup.
+# The Node and Gradle makefiles of this skill use these targets too.
 #
 # The language does not matter here. The Containerfile builds the image.
 # BUILD_CMD names the language build and then runs `make image-ci`:
@@ -21,13 +19,19 @@
 #   SMOKE_CMD     the one check that the image runs. Default: run the
 #                 image with SMOKE_ARGS. A non-zero exit fails build
 #   SMOKE_ARGS    arguments of that run, such as --help
+#   IMAGE_CONTEXT the build context. Default: .
+#   IMAGE_PREPARE shell commands that run before the image build, such as
+#                 a copy of the tested artifact into the context
+#   PUBLISH_PREPARE  shell commands that run before publish-container
+#                 pushes. Default: load the saved tar when the image is
+#                 not in the local store
 #
 # GNU Make 3.81. See project.mk for the rules of a recipe.
 
 ifndef CONTAINER_MK
 CONTAINER_MK := 1
 
-NAME ?= $(or $(shell git remote get-url origin 2>/dev/null | sed -n 's|.*github\.com[:/][^/]*/\([^/]*\)$$|\1|p' | sed 's|\.git$$||'),$(notdir $(CURDIR)))
+# NAME comes from tools.mk, which sdlc.mk includes first.
 OWNER ?= $(shell git remote get-url origin 2>/dev/null | sed -n 's|.*github\.com[:/]\([^/]*\)/.*|\1|p' | tr 'A-Z' 'a-z')
 IMAGE ?= ghcr.io/$(OWNER)/$(NAME)
 CI_IMAGE ?= localhost/$(NAME):ci
@@ -35,6 +39,12 @@ CONTAINERFILE ?= Containerfile
 IMAGE_BUILD_ARGS ?=
 SMOKE_ARGS ?=
 SMOKE_CMD ?= podman run --rm "$(CI_IMAGE)" $(SMOKE_ARGS)
+IMAGE_CONTEXT ?= .
+IMAGE_PREPARE ?= true
+PUBLISH_PREPARE ?= if ! podman image inspect "$(CI_IMAGE)" >/dev/null 2>&1; then \
+	  test -f "build/image/$(NAME)-image.tar"; \
+	  podman load -i "build/image/$(NAME)-image.tar"; \
+	fi
 
 .PHONY: image image-ci publish-container
 
@@ -43,11 +53,12 @@ image: ## Build the image
 	case "$(IMAGE)" in \
 	  ghcr.io//*|"") printf '%s\n' "image: set OWNER (the GitHub owner) or IMAGE before the include." >&2; exit 1 ;; \
 	esac; \
-	podman build -f "$(CONTAINERFILE)" $(IMAGE_BUILD_ARGS) \
+	$(IMAGE_PREPARE); \
+	podman build $(PODMAN_NET_ARGS) -f "$(CONTAINERFILE)" $(IMAGE_BUILD_ARGS) \
 		--label org.opencontainers.image.source="https://github.com/$(PACKAGE)" \
 		--label org.opencontainers.image.revision="$(or $(GITHUB_SHA),local)" \
 		--label org.opencontainers.image.version="$(or $(GITHUB_RUN_NUMBER),local)" \
-		-t "$(IMAGE)" -t "$(CI_IMAGE)" .
+		-t "$(IMAGE)" -t "$(CI_IMAGE)" "$(IMAGE_CONTEXT)"
 
 image-ci: ## Build the image, run the smoke check, save the image tar
 	@set -eu; \
@@ -63,10 +74,7 @@ publish-container: ## Match CI: push the version, and latest on the default bran
 
 _publish-container:
 	@set -eu; \
-	if ! podman image inspect "$(CI_IMAGE)" >/dev/null 2>&1; then \
-	  test -f "build/image/$(NAME)-image.tar"; \
-	  podman load -i "build/image/$(NAME)-image.tar"; \
-	fi; \
+	$(PUBLISH_PREPARE); \
 	version=$$($(THIS_MAKE) -s --no-print-directory version); \
 	mkdir -p build build/summaries; \
 	printf '%s\n' "$$version" > build/publish-version.txt; \

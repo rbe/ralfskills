@@ -9,12 +9,10 @@ from pathlib import Path
 ID_LINE = re.compile(r"^id:\s*[\"']?([^\"'#\s]+)")
 ID_CELL = re.compile(r"^[A-Z]+-\d+$")
 ANCHOR = re.compile(r'^<a id="[^"]*"></a>')
-ROADMAP_ID = re.compile(
-    r"(?<![A-Za-z0-9-])(?:ADR-\d+|D-\d+|P-\d+|H-[A-Za-z0-9-]+)(?![A-Za-z0-9-])"
-)
-# A test proves a rule in force. A roadmap line and a known issue are
-# work. They end, and their ids are retired.
-PROVABLE = {"adr", "decision", "requirement"}
+IN_FORCE = "in force"
+# A test proves a rule in force. A roadmap row and a planned row are
+# work. A roadmap row ends, and its number is never issued again.
+PROVABLE = {"adr", "requirement"}
 SKIP = {
     ".git",
     ".claude",
@@ -40,13 +38,7 @@ class Requirement:
     kind: str
     title: str
     status: str
-
-
-@dataclass(frozen=True)
-class DecisionRow:
-    id: str
-    status: str
-    choice: str
+    path: str = ""
 
 
 @dataclass(frozen=True)
@@ -63,9 +55,14 @@ def adr_markdown(root: Path) -> list[Path]:
     return sorted(path for path in adr_dir.glob("*.md") if path.is_file())
 
 
+def requirement_files(root: Path) -> list[Path]:
+    """The files of docs/requirements/, one for each skill that owns rows."""
+    folder = root / "docs" / "requirements"
+    return sorted(folder.glob("*.md")) if folder.is_dir() else []
+
+
 def uses_requirements_list(root: Path) -> bool:
-    listed = root / "docs" / "REQUIREMENTS.md"
-    return listed.is_file() and not adr_markdown(root)
+    return bool(requirement_files(root)) and not adr_markdown(root)
 
 
 def strip_anchor(cell: str) -> str:
@@ -73,37 +70,51 @@ def strip_anchor(cell: str) -> str:
     return ANCHOR.sub("", cell.strip()).strip()
 
 
-def table_rows(path: Path) -> list[list[str]]:
+def table_rows(path: Path) -> list[dict[str, str]]:
+    """Each id row of a table, by the lowercase name of its column."""
     if not path.is_file():
         return []
     found = []
+    header: list[str] = []
     for line in path.read_text(encoding="utf-8").splitlines():
         stripped = line.strip()
         if not stripped.startswith("|"):
             continue
         cells = [part.strip() for part in stripped.strip("|").split("|")]
-        if not cells or ID_CELL.match(strip_anchor(cells[0])) is None:
+        first = strip_anchor(cells[0]) if cells else ""
+        if first.lower() == "id":
+            header = [cell.lower() for cell in cells]
             continue
-        found.append([strip_anchor(cells[0]), *cells[1:]])
+        if header and ID_CELL.match(first):
+            found.append(dict(zip(header, [first, *cells[1:]])))
     return found
 
 
-def decision_rows(root: Path) -> list[DecisionRow]:
+def requirement_rows(root: Path) -> list[Requirement]:
+    """The rows of the requirements list. A planned row is work, not a rule."""
     found = []
-    for cells in table_rows(root / "docs" / "DECISIONS.md"):
-        if len(cells) < 3:
-            continue
-        found.append(DecisionRow(cells[0], cells[1], cells[2]))
+    for path in requirement_files(root):
+        relative = path.relative_to(root).as_posix()
+        for row in table_rows(path):
+            status = row.get("status") or IN_FORCE
+            kind = "planned" if status == "planned" else "requirement"
+            found.append(
+                Requirement(row["id"], kind, row.get("title", ""), status, relative)
+            )
     return found
 
 
-def collect_requirements_list(root: Path) -> list[Requirement]:
-    found = []
-    for cells in table_rows(root / "docs" / "REQUIREMENTS.md"):
-        if len(cells) < 2:
-            continue
-        found.append(Requirement(cells[0], "requirement", cells[1], ""))
-    return found
+def roadmap_rows(root: Path) -> list[Requirement]:
+    return [
+        Requirement(
+            row["id"],
+            "roadmap",
+            row.get("title", ""),
+            row.get("kind", ""),
+            "docs/ROADMAP.md",
+        )
+        for row in table_rows(root / "docs" / "ROADMAP.md")
+    ]
 
 
 def repo_root(start: Path) -> Path:
@@ -184,47 +195,14 @@ def requirements_in_markdown(path: Path, kind: str) -> list[Requirement]:
     return found
 
 
-def roadmap_requirements(path: Path, existing: set[str]) -> list[Requirement]:
-    if not path.is_file():
-        return []
-    text = path.read_text(encoding="utf-8")
-    found = []
-    seen = set(existing)
-    for line in text.splitlines():
-        title = line.strip().lstrip("-").strip()
-        for ident in ROADMAP_ID.findall(line):
-            if ident in seen:
-                continue
-            seen.add(ident)
-            found.append(Requirement(ident, "roadmap", title or ident, "in progress"))
-        match = ID_LINE.match(line.strip())
-        if match and match.group(1) not in seen:
-            seen.add(match.group(1))
-            found.append(
-                Requirement(
-                    match.group(1), "roadmap", title or match.group(1), "in progress"
-                )
-            )
-    return found
-
-
 def collect_board(root: Path) -> list[Requirement]:
-    docs = root / "docs"
     found = []
-    adr_dir = docs / "adr"
+    adr_dir = root / "docs" / "adr"
     if adr_dir.is_dir():
         for path in sorted(adr_dir.glob("*.md")):
             found.extend(requirements_in_markdown(path, "adr"))
-    for name, kind in (("DECISIONS.md", "decision"), ("KNOWN_ISSUES.md", "issue")):
-        path = docs / name
-        if path.is_file():
-            found.extend(requirements_in_markdown(path, kind))
-    for row in decision_rows(root):
-        found.append(Requirement(row.id, "decision", row.choice, row.status))
-    for cells in table_rows(docs / "KNOWN_ISSUES.md"):
-        if len(cells) >= 2:
-            found.append(Requirement(cells[0], "issue", cells[1], "open"))
-    found.extend(roadmap_requirements(docs / "ROADMAP.md", {item.id for item in found}))
+    found.extend(requirement_rows(root))
+    found.extend(roadmap_rows(root))
     unique = []
     seen = set()
     for item in found:
@@ -237,7 +215,7 @@ def collect_board(root: Path) -> list[Requirement]:
 
 def collect(root: Path) -> list[Requirement]:
     if uses_requirements_list(root):
-        return collect_requirements_list(root)
+        return requirement_rows(root)
     return collect_board(root)
 
 

@@ -1,4 +1,4 @@
-# Indexes and the decision log
+# Indexes
 
 ## `make toon`
 
@@ -6,14 +6,14 @@
 
 | File | Columns | What it lists |
 | --- | --- | --- |
-| `docs/adr/index.toon` | `id`, `status`, `title`, `adrs`, `skills`, `decisions` | ADR frontmatter. `plan` opens one ADR when the id matches |
-| `docs/requirements-index.toon` | `id`, `title` | The requirements list, when that list is the board and `docs/adr/` has no ADR file. The list has the columns Id, Title, and Statement. An agent opens the list for the statement |
+| `docs/adr/index.toon` | `id`, `status`, `title`, `adrs`, `skills`, `roadmap` | ADR frontmatter. `plan` opens one ADR when the id matches |
+| `docs/requirements-index.toon` | `id`, `title`, `status`, `file`, `owner` | The rows of `docs/requirements/`, when those files are the board and `docs/adr/` has no ADR file. The status is `planned` or `in force`. A row of a table with no status column is `in force`. The file is the path of the file of the row, and the owner is its name without `.md`. An agent runs `make req ID=<ids>` for the statement |
 | `docs/skill-index.toon` | `name`, `kind`, `order`, `files`, `names` | Installed skills whose frontmatter `kind` is `language` or `check` |
 
-- A repository that keeps `docs/REQUIREMENTS.md` and no `docs/adr/` gets `docs/requirements-index.toon` and the skill index. `make toon` does not create `docs/adr/` there.
+- A repository that keeps `docs/requirements/` and no `docs/adr/` gets `docs/requirements-index.toon` and the skill index. `make toon` does not create `docs/adr/` there.
 - A product repository with no ADR still gets an `docs/adr/index.toon` that holds only the header.
-- If a repository has an ADR file and `docs/REQUIREMENTS.md`, `make toon` writes the ADR index.
-- `project.mk` and `sdlc.mk` include `.claude/skills/record/index.mk`. A Makefile that includes one of them has the targets `toon`, `ids`, `ids-retire`, `links`, `links-check`, and `decision-log`.
+- If a repository has an ADR file and `docs/requirements/`, `make toon` writes the ADR index.
+- `project.mk` and `sdlc.mk` include `.claude/skills/record/index.mk`. A Makefile that includes one of them has the targets `toon`, `ids`, `id`, `id-raise`, `req`, `links`, and `links-check`.
 - `make setup` runs `toon` first when that include is present.
 - `toon` and `ids` call `$(PYTHON)` from `project-setup`. `make ids` checks ids and writes no index.
 
@@ -28,11 +28,3 @@
 
 - The `name` in the frontmatter of a skill differs from its directory.
 - A frontmatter value has a colon followed by a space, or a space followed by `#`. APM reads the frontmatter as YAML and refuses to install such a skill.
-
-## `make decision-log`
-
-- `make decision-log` writes `build/decision-log.md`. A person reads this document.
-- It lists each accepted ADR with its rule and its reason, each Decided row, each Open row, and each superseded ADR with the ADR that replaced it.
-- A repository that keeps `docs/REQUIREMENTS.md` and has no ADR file gets that list in the log.
-- A repository that renders docs uses this file as a source.
-- The log does not replace the ADR that an agent opens.

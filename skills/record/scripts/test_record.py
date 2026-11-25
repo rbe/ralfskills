@@ -2,9 +2,12 @@
 """Tests for the id check and the ADR index."""
 
 import importlib.util
+import io
 import os
+import sys
 import tempfile
 import unittest
+from contextlib import redirect_stderr, redirect_stdout
 from pathlib import Path
 
 
@@ -39,34 +42,121 @@ class IdsTest(unittest.TestCase):
 
     def test_duplicate_id_fails(self):
         """id: R-13"""
-        body = "---\nid: D-1\nstatus: open\n---\n\n# One\n"
-        self.write("docs/DECISIONS.md", body)
-        self.write("docs/proposals/P-1.md", "---\nid: D-1\nstatus: open\n---\n")
+        body = "---\nid: H-2026-11-15-one\nstatus: open\n---\n\n# One\n"
+        self.write("docs/history/a.md", body)
+        self.write("docs/history/b.md", body)
         errors = ids.check(self.root)
-        self.assertTrue(any("D-1" in error for error in errors))
+        self.assertTrue(any("H-2026-11-15-one is used 2 times" in e for e in errors))
 
-    def test_retired_id_still_in_use_fails(self):
+    def test_a_live_id_above_its_counter_fails(self):
         """id: R-13"""
-        self.write("docs/ids.yaml", "retired:\n- D-1\n")
-        self.write("docs/DECISIONS.md", "---\nid: D-1\nstatus: decided\n---\n")
+        self.write("docs/ids.yaml", "P: 1\n")
+        self.write("docs/proposals/P-2.md", "---\nid: P-2\nstatus: open\n---\n")
         errors = ids.check(self.root)
-        self.assertTrue(any("retired" in error for error in errors))
+        self.assertTrue(any("P-2 is above the counter P: 1" in e for e in errors))
 
-    def test_retire_moves_an_unused_id(self):
+    def test_a_live_id_of_a_kind_with_no_counter_fails(self):
         """id: R-13"""
-        self.write("docs/ids.yaml", "retired: []\n")
-        errors = ids.retire(self.root, "H-2026-11-15-old")
-        self.assertEqual(errors, [])
-        self.assertIn(
-            "H-2026-11-15-old", ids.retired_ids(self.root / "docs" / "ids.yaml")
+        self.write("docs/ids.yaml", "R: 5\n")
+        self.write("docs/proposals/P-1.md", "---\nid: P-1\nstatus: open\n---\n")
+        errors = ids.check(self.root)
+        self.assertTrue(any("P-1 has no counter" in error for error in errors))
+
+    def test_a_counter_may_stand_above_the_highest_live_id(self):
+        """id: R-13"""
+        self.write("docs/ids.yaml", "P: 9\n")
+        self.write("docs/proposals/P-2.md", "---\nid: P-2\nstatus: open\n---\n")
+        self.assertEqual(ids.check(self.root), [])
+
+    def test_a_roadmap_row_is_a_live_id_and_a_roadmap_list_may_name_it(self):
+        """id: R-13"""
+        self.write("docs/ids.yaml", "W: 1\n")
+        self.write(
+            "docs/ROADMAP.md",
+            "| Id | Kind | Title | Proposal |\n| --- | --- | --- | --- |\n"
+            "| W-1 | defect | One. | |\n",
+        )
+        self.write("docs/history/H-1.md", "---\nid: H-1\nroadmap: [W-1]\n---\n")
+        self.assertEqual(ids.check(self.root), [])
+
+    def test_a_list_may_name_an_id_whose_row_is_gone(self):
+        """id: R-13"""
+        self.write("docs/ids.yaml", "W: 9\n")
+        self.write("docs/history/H-1.md", "---\nid: H-1\nroadmap: [W-5]\n---\n")
+        self.assertEqual(ids.check(self.root), [])
+
+    def test_a_list_that_names_an_id_above_its_counter_fails(self):
+        """id: R-13"""
+        self.write("docs/ids.yaml", "W: 4\n")
+        self.write("docs/history/H-1.md", "---\nid: H-1\nroadmap: [W-5]\n---\n")
+        errors = ids.check(self.root)
+        self.assertTrue(
+            any("W-5: W-5 is above the counter W: 4" in error for error in errors)
+        )
+
+    def test_a_list_that_is_text_or_has_no_brackets_fails(self):
+        """id: R-13"""
+        self.write(
+            "docs/history/H-1.md",
+            "---\nid: H-1\nadrs: none\nroadmap: [W-1, text]\nissues:\n---\n",
+        )
+        errors = ids.check(self.root)
+        self.assertTrue(any("adrs is not a list" in error for error in errors))
+        self.assertTrue(any("issues is not a list" in error for error in errors))
+        self.assertTrue(any("text, which is not an id" in error for error in errors))
+
+    def test_a_line_that_is_not_a_counter_fails(self):
+        """id: R-13"""
+        self.write("docs/ids.yaml", "retired:\n- D-1\nR: 1\nR: 2\n")
+        errors = ids.check(self.root)
+        self.assertTrue(any("ids.yaml:1 is not a counter" in e for e in errors))
+        self.assertTrue(any("ids.yaml:2 is not a counter" in e for e in errors))
+        self.assertTrue(
+            any("ids.yaml:4 has a second counter for R" in e for e in errors)
+        )
+
+    def test_next_id_raises_the_counter_and_never_gives_a_number_twice(self):
+        """id: R-13"""
+        self.write("docs/ids.yaml", "R: 7\nW: 5\nADR: 14\nP: 0\n")
+        path = self.root / "docs" / "ids.yaml"
+        self.assertEqual(ids.next_id(self.root, "W"), ("W-6", []))
+        self.assertEqual(ids.next_id(self.root, "W"), ("W-7", []))
+        self.assertEqual(ids.next_id(self.root, "ADR"), ("ADR-0015", []))
+        self.assertEqual(
+            path.read_text(encoding="utf-8"), "R: 7\nW: 7\nADR: 15\nP: 0\n"
         )
         self.assertEqual(ids.check(self.root), [])
 
-    def test_retire_rejects_a_live_id(self):
+    def test_next_id_starts_above_the_highest_live_id_when_no_file_exists(self):
         """id: R-13"""
-        self.write("docs/history/H-1.md", "---\nid: H-1\n---\n")
-        errors = ids.retire(self.root, "H-1")
-        self.assertTrue(errors)
+        self.write(
+            "docs/requirements/record.md",
+            "| Id | T | S |\n| --- | --- | --- |\n| R-3 | One | Two. |\n",
+        )
+        self.assertEqual(ids.next_id(self.root, "R"), ("R-4", []))
+        path = self.root / "docs" / "ids.yaml"
+        self.assertEqual(path.read_text(encoding="utf-8"), "R: 4\nW: 0\nADR: 0\nP: 0\n")
+        self.assertEqual(ids.check(self.root), [])
+
+    def test_next_id_refuses_a_kind_with_no_counter(self):
+        """id: R-13"""
+        for kind in ("H", "X"):
+            ident, errors = ids.next_id(self.root, kind)
+            self.assertIsNone(ident)
+            self.assertTrue(errors)
+        self.assertFalse((self.root / "docs" / "ids.yaml").exists())
+
+    def test_raise_counter_sets_a_kind_and_never_lowers_it(self):
+        """id: R-13"""
+        self.assertEqual(ids.raise_counter(self.root, "D", 24), [])
+        self.assertEqual(ids.next_id(self.root, "D"), ("D-25", []))
+        errors = ids.raise_counter(self.root, "D", 25)
+        self.assertTrue(any("not below 25" in error for error in errors))
+        self.assertTrue(ids.raise_counter(self.root, "d", 3))
+        path = self.root / "docs" / "ids.yaml"
+        self.assertEqual(
+            path.read_text(encoding="utf-8"), "D: 25\nR: 0\nW: 0\nADR: 0\nP: 0\n"
+        )
 
 
 skill_index = load("skill_index", HERE / "skill_index.py")
@@ -117,13 +207,13 @@ class AdrIndexTest(unittest.TestCase):
             adr.mkdir(parents=True)
             (adr / "ADR-0004.md").write_text(
                 "---\nid: ADR-0004\ntitle: Listen on localhost\nstatus: Accepted\n"
-                "adrs: [ADR-0001]\nskills: [security, review]\ndecisions: [D-12]\n---\n\n# Body\n",
+                "adrs: [ADR-0001]\nskills: [security, review]\nroadmap: [W-12]\n---\n\n# Body\n",
                 encoding="utf-8",
             )
             text = adr_index.render(adr_index.rows(adr))
-            self.assertIn("adr_index[1]{id,status,title,adrs,skills,decisions}:", text)
+            self.assertIn("adr_index[1]{id,status,title,adrs,skills,roadmap}:", text)
             self.assertIn(
-                "ADR-0004,Accepted,Listen on localhost,ADR-0001,security;review,D-12",
+                "ADR-0004,Accepted,Listen on localhost,ADR-0001,security;review,W-12",
                 text,
             )
             self.assertNotIn("Body", text)
@@ -138,19 +228,42 @@ class IndexTargetTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             docs = root / "docs"
-            docs.mkdir()
-            (docs / "REQUIREMENTS.md").write_text(
+            (docs / "requirements").mkdir(parents=True)
+            (docs / "requirements" / "record.md").write_text(
                 "| Id | Title | Statement |\n| --- | --- | --- |\n"
                 "| R-1 | One, two | The long statement. |\n",
                 encoding="utf-8",
             )
             toon.write_indexes(root)
             text = (docs / "requirements-index.toon").read_text(encoding="utf-8")
-            self.assertIn("requirements[1]{id,title}:", text)
-            self.assertIn('R-1,"One, two"', text)
+            self.assertIn("requirements[1]{id,title,status,file,owner}:", text)
+            self.assertIn(
+                'R-1,"One, two",in force,docs/requirements/record.md,record', text
+            )
             self.assertNotIn("The long statement.", text)
             self.assertFalse((docs / "adr").exists())
             self.assertTrue((docs / "skill-index.toon").is_file())
+
+    def test_the_index_shows_which_rows_are_planned(self):
+        """id: R-6"""
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            docs = root / "docs"
+            (docs / "requirements").mkdir(parents=True)
+            (docs / "requirements" / "record.md").write_text(
+                "| Id | Title | Status | Statement |\n| --- | --- | --- | --- |\n"
+                "| R-1 | One | in force | A statement. |\n",
+                encoding="utf-8",
+            )
+            (docs / "requirements" / "plan.md").write_text(
+                "| Id | Title | Status | Statement |\n| --- | --- | --- | --- |\n"
+                "| R-2 | Two | planned | Open work. |\n",
+                encoding="utf-8",
+            )
+            toon.write_indexes(root)
+            text = (docs / "requirements-index.toon").read_text(encoding="utf-8")
+            self.assertIn("R-1,One,in force,docs/requirements/record.md,record", text)
+            self.assertIn("R-2,Two,planned,docs/requirements/plan.md,plan", text)
 
     def test_a_product_repository_still_gets_an_adr_index(self):
         """id: R-6"""
@@ -175,7 +288,8 @@ class IndexTargetTest(unittest.TestCase):
                 "---\nid: ADR-0004\ntitle: Listen\nstatus: Accepted\n---\n",
                 encoding="utf-8",
             )
-            (root / "docs" / "REQUIREMENTS.md").write_text(
+            (root / "docs" / "requirements").mkdir()
+            (root / "docs" / "requirements" / "record.md").write_text(
                 "| Id | Statement |\n| --- | --- |\n| R-1 | One. |\n",
                 encoding="utf-8",
             )
@@ -186,7 +300,6 @@ class IndexTargetTest(unittest.TestCase):
 
 
 skill_index = load("skill_index", HERE / "skill_index.py")
-decision_log = load("decision_log", HERE / "decision_log.py")
 
 
 def write_file(root, relative, text):
@@ -252,87 +365,6 @@ class SkillNameTest(unittest.TestCase):
         self.assertEqual(skill_index.name_errors(HERE.parents[2]), [])
 
 
-class DecisionLogTest(unittest.TestCase):
-    def test_the_log_lists_rules_choices_and_replaced_rules(self):
-        """id: R-62"""
-        with tempfile.TemporaryDirectory() as tmp:
-            root = Path(tmp)
-            write_file(
-                root,
-                "docs/adr/ADR-0002.md",
-                "---\nid: ADR-0002\ntitle: Listen on a socket\nstatus: Superseded\n---\n",
-            )
-            write_file(
-                root,
-                "docs/adr/ADR-0003.md",
-                "---\nid: ADR-0003\ntitle: Listen on localhost\nstatus: Accepted\n"
-                "skills: [security, review]\nsupersedes: [ADR-0002]\n---\n\n"
-                "# Listen on localhost\n\n## Rule\n\nThe server binds 127.0.0.1.\n\n"
-                "## Why\n\nNo other host needs it.\n",
-            )
-            write_file(
-                root,
-                "docs/DECISIONS.md",
-                "---\nid: D-1\nstatus: decided\n---\n\nKeep the host make.\n\n"
-                "---\nid: D-2\nstatus: open\n---\n\nWhich port.\n",
-            )
-            text = decision_log.render(root)
-            rules = text.split("## Rules in force", 1)[1].split("## Choices", 1)[0]
-            self.assertIn(
-                '### <a id="adr-0003"></a>ADR-0003 Listen on localhost', rules
-            )
-            self.assertIn("Rule: The server binds 127.0.0.1.", rules)
-            self.assertIn("Why: No other host needs it.", rules)
-            self.assertIn("Skills: security, review", rules)
-            self.assertNotIn("ADR-0002", rules)
-            self.assertIn('- <a id="d-1"></a>D-1. Keep the host make.', text)
-            open_choices = text.split("## Open choices", 1)[1]
-            self.assertIn('- <a id="d-2"></a>D-2. Which port.', open_choices)
-            self.assertIn(
-                '- <a id="adr-0002"></a>ADR-0002 Listen on a socket. '
-                "Replaced by [ADR-0003](#adr-0003).",
-                text,
-            )
-            self.assertIn("Hand-editing this file is a defect.", text)
-
-    def test_the_log_has_the_title_and_the_sentence_of_a_decision_block(self):
-        """id: R-62"""
-        with tempfile.TemporaryDirectory() as tmp:
-            root = Path(tmp)
-            write_file(
-                root,
-                "docs/DECISIONS.md",
-                "---\nid: D-1\ntitle: Slug format\nstatus: decided\n---\n\n"
-                "A slug has lowercase letters,\ndigits, and hyphens.\n",
-            )
-            text = decision_log.render(root)
-            self.assertIn(
-                '- <a id="d-1"></a>D-1. Slug format A slug has lowercase letters, digits, and hyphens.',
-                text,
-            )
-
-    def test_a_requirements_list_is_in_the_log_when_there_is_no_adr_file(self):
-        """id: R-62"""
-        with tempfile.TemporaryDirectory() as tmp:
-            root = Path(tmp)
-            write_file(
-                root,
-                "docs/REQUIREMENTS.md",
-                "| Id | Title | Statement |\n| --- | --- | --- |\n"
-                "| R-1 | Tests name a requirement | A test names its id. |\n",
-            )
-            write_file(
-                root,
-                "docs/DECISIONS.md",
-                "| Id | Status | Choice |\n| --- | --- | --- |\n"
-                "| D-3 | Decided | One list. |\n",
-            )
-            text = decision_log.render(root)
-            self.assertIn('### <a id="r-1"></a>R-1 Tests name a requirement', text)
-            self.assertIn("A test names its id.", text)
-            self.assertIn('- <a id="d-3"></a>D-3. One list.', text)
-
-
 class TableIdTest(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
@@ -350,31 +382,35 @@ class TableIdTest(unittest.TestCase):
 
     def test_a_known_issue_row_is_a_live_id(self):
         """id: R-13"""
+        self.write("docs/ids.yaml", "W: 1\nR: 1\n")
         self.write(
-            "docs/KNOWN_ISSUES.md",
-            "| Id | Defect |\n| --- | --- |\n| K-1 | One. |\n",
+            "docs/ROADMAP.md",
+            "| Id | Defect |\n| --- | --- |\n| W-1 | One. |\n",
         )
         self.assertEqual(ids.check(self.root), [])
-        self.assertEqual(
-            ids.retire(self.root, "K-1"),
-            [
-                "K-1 is still in use: "
-                + str(self.root / "docs" / "KNOWN_ISSUES.md")
-                + ":3"
-            ],
-        )
-        self.write("docs/history/extra.md", "---\nid: K-1\n---\n")
-        self.assertTrue(any("K-1" in error for error in ids.check(self.root)))
+        self.write("docs/history/extra.md", "---\nid: W-1\n---\n")
+        self.assertTrue(any("W-1" in error for error in ids.check(self.root)))
 
-    def test_a_table_id_is_live_and_a_repeat_fails(self):
+    def test_a_requirements_file_of_the_old_single_path_fails(self):
         """id: R-13"""
+        self.write("docs/ids.yaml", "R: 1\n")
         self.write(
             "docs/REQUIREMENTS.md",
             "| Id | Statement |\n| --- | --- |\n| R-1 | One. |\n",
         )
+        errors = ids.check(self.root)
+        self.assertTrue(any("move its rows to docs/requirements/" in e for e in errors))
+
+    def test_a_table_id_is_live_and_a_repeat_fails(self):
+        """id: R-13"""
+        self.write("docs/ids.yaml", "W: 1\nR: 1\n")
         self.write(
-            "docs/DECISIONS.md",
-            "| Id | Status | Choice |\n| --- | --- | --- |\n| D-1 | Open | Later. |\n",
+            "docs/requirements/record.md",
+            "| Id | Statement |\n| --- | --- |\n| R-1 | One. |\n",
+        )
+        self.write(
+            "docs/ROADMAP.md",
+            "| Id | Kind | Title |\n| --- | --- | --- |\n| W-1 | Open | Later. |\n",
         )
         self.assertEqual(ids.check(self.root), [])
         self.write("docs/history/extra.md", "---\nid: R-1\n---\n")
@@ -382,7 +418,7 @@ class TableIdTest(unittest.TestCase):
         self.assertTrue(any("R-1" in error for error in errors))
 
 
-ANCHORED = '| Id | Status | Choice |\n| --- | --- | --- |\n| <a id="d-9"></a>D-9 | Decided | See R-1. |\n'
+ANCHORED = '| Id | Kind | Title |\n| --- | --- | --- |\n| <a id="w-9"></a>W-9 | feature | See R-1. |\n'
 
 
 def tree(root, files):
@@ -393,118 +429,118 @@ def tree(root, files):
 class LinkTest(unittest.TestCase):
     def test_a_link_in_a_code_span_or_a_code_block_is_an_example_and_stays(self):
         """id: R-69"""
-        found = {"D-9": ("docs/DECISIONS.md", "d-9")}
+        found = {"W-9": ("docs/ROADMAP.md", "w-9")}
         text = (
-            "The form is `[D-9](../DECISIONS.md#d-9)`. See [D-9](wrong.md).\n"
-            "```\n[D-9](example.md)\n```\n"
+            "The form is `[W-9](../ROADMAP.md#w-9)`. See [W-9](wrong.md).\n"
+            "```\n[W-9](example.md)\n```\n"
         )
         result = links.link_text(text, found, "docs/history")
-        self.assertIn("`[D-9](../DECISIONS.md#d-9)`", result)
-        self.assertIn("See [D-9](../DECISIONS.md#d-9).", result)
-        self.assertIn("```\n[D-9](example.md)\n```", result)
+        self.assertIn("`[W-9](../ROADMAP.md#w-9)`", result)
+        self.assertIn("See [W-9](../ROADMAP.md#w-9).", result)
+        self.assertIn("```\n[W-9](example.md)\n```", result)
         self.assertEqual(
-            links.unlink("[D-9](x.md) and `[D-9](y.md)`"), "D-9 and `[D-9](y.md)`"
+            links.unlink("[W-9](x.md) and `[W-9](y.md)`"), "W-9 and `[W-9](y.md)`"
         )
 
     FOUND = {
-        "D-9": ("docs/DECISIONS.md", "d-9"),
+        "W-9": ("docs/ROADMAP.md", "w-9"),
         "H-2026-11-20-go-skill": ("docs/history/H-2026-11-20-go-skill.md", ""),
     }
 
-    def test_targets_cover_a_table_id_and_a_frontmatter_id_and_skip_a_retired_id(self):
+    def test_targets_cover_a_table_id_and_a_frontmatter_id_and_skip_a_deleted_id(self):
         """id: R-69"""
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             tree(
                 root,
                 {
-                    "docs/DECISIONS.md": ANCHORED + "| D-1 | Decided | Gone. |\n",
+                    "docs/ROADMAP.md": ANCHORED,
                     "docs/history/H-2026-11-20-go-skill.md": "---\nid: H-2026-11-20-go-skill\n---\n",
-                    "docs/ids.yaml": "retired:\n- D-1\n",
+                    "docs/ids.yaml": "W: 9\n",
                 },
             )
             found = links.targets(root)
-            self.assertEqual(found["D-9"], ("docs/DECISIONS.md", "d-9"))
+            self.assertEqual(found["W-9"], ("docs/ROADMAP.md", "w-9"))
             self.assertEqual(
                 found["H-2026-11-20-go-skill"],
                 ("docs/history/H-2026-11-20-go-skill.md", ""),
             )
-            self.assertNotIn("D-1", found)
+            self.assertNotIn("W-1", found)
 
     def test_link_text_links_a_prose_id_with_a_relative_path(self):
         """id: R-69"""
         text = links.link_text(
-            "See D-9 and H-2026-11-20-go-skill.", self.FOUND, "docs/history"
+            "See W-9 and H-2026-11-20-go-skill.", self.FOUND, "docs/history"
         )
         self.assertEqual(
             text,
-            "See [D-9](../DECISIONS.md#d-9) and "
+            "See [W-9](../ROADMAP.md#w-9) and "
             "[H-2026-11-20-go-skill](H-2026-11-20-go-skill.md).",
         )
         self.assertEqual(
-            links.link_text("D-9", self.FOUND, "build"),
-            "[D-9](../docs/DECISIONS.md#d-9)",
+            links.link_text("W-9", self.FOUND, "build"),
+            "[W-9](../docs/ROADMAP.md#w-9)",
         )
         self.assertEqual(
-            links.link_text("D-9", self.FOUND, "docs", "docs/DECISIONS.md"),
-            "[D-9](#d-9)",
+            links.link_text("W-9", self.FOUND, "docs", "docs/ROADMAP.md"),
+            "[W-9](#w-9)",
         )
 
     def test_link_text_leaves_code_links_comments_frontmatter_headings_and_cells(self):
         """id: R-69"""
         cases = [
-            "A `D-9` span.",
-            "```\nD-9\n```",
-            "A [see D-9](https://example.com/D-9) link.",
-            "---\nid: D-9\ntitle: D-9\n---",
-            "# Heading D-9",
-            "<!-- D-9 -->",
-            "<!--\nD-9\n-->",
-            "| D-9 | text |",
-            "| Id | D-9 |\n| D-9 | text |",
-            "Path docs/history/D-9.md here.",
+            "A `W-9` span.",
+            "```\nW-9\n```",
+            "A [see W-9](https://example.com/W-9) link.",
+            "---\nid: W-9\ntitle: W-9\n---",
+            "# Heading W-9",
+            "<!-- W-9 -->",
+            "<!--\nW-9\n-->",
+            "| W-9 | text |",
+            "| Id | W-9 |\n| W-9 | text |",
+            "Path docs/history/W-9.md here.",
         ]
         for case in cases:
             with self.subTest(case=case):
                 text = links.link_text(case, self.FOUND, "docs")
                 self.assertEqual(
-                    text.replace("| Id | [D-9](DECISIONS.md#d-9) |", "| Id | D-9 |"),
+                    text.replace("| Id | [W-9](ROADMAP.md#w-9) |", "| Id | W-9 |"),
                     case,
                 )
 
     def test_link_text_links_a_later_cell_and_leaves_an_unknown_id_plain(self):
         """id: R-69"""
-        text = links.link_text("| R-2 | D-9 and D-77 |", self.FOUND, "docs")
-        self.assertEqual(text, "| R-2 | [D-9](DECISIONS.md#d-9) and D-77 |")
+        text = links.link_text("| R-2 | W-9 and W-77 |", self.FOUND, "docs")
+        self.assertEqual(text, "| R-2 | [W-9](ROADMAP.md#w-9) and W-77 |")
 
     def test_unlink_restores_the_bare_id_and_keeps_other_links(self):
         """id: R-69"""
-        text = "[D-9](../DECISIONS.md#d-9) and [docs](a.md) and [D-9 here](b.md)"
+        text = "[W-9](../ROADMAP.md#w-9) and [docs](a.md) and [W-9 here](b.md)"
         self.assertEqual(
-            links.unlink(text), "D-9 and [docs](a.md) and [D-9 here](b.md)"
+            links.unlink(text), "W-9 and [docs](a.md) and [W-9 here](b.md)"
         )
         linked = links.link_text(text, self.FOUND, "docs/history")
         self.assertEqual(links.unlink(linked), links.unlink(text))
 
     def test_anchor_rows_adds_the_anchor_once(self):
         """id: R-69"""
-        row = "| D-9 | Decided | One. |"
+        row = "| W-9 | feature | One. |"
         once = links.anchor_rows(row)
-        self.assertEqual(once, '| <a id="d-9"></a>D-9 | Decided | One. |')
+        self.assertEqual(once, '| <a id="w-9"></a>W-9 | feature | One. |')
         self.assertEqual(links.anchor_rows(once), once)
-        self.assertEqual(links.strip_anchor('<a id="d-9"></a>D-9 '), "D-9")
+        self.assertEqual(links.strip_anchor('<a id="w-9"></a>W-9 '), "W-9")
         self.assertEqual(links.anchor_rows("| Id | Status |"), "| Id | Status |")
 
     def sample(self, root):
         tree(
             root,
             {
-                "docs/DECISIONS.md": "# Decisions\n\n| Id | Status | Choice |\n| --- | --- | --- |\n"
-                "| D-9 | Decided | D-9 and R-1 and D-1. |\n",
-                "docs/REQUIREMENTS.md": "| Id | Title | Statement |\n| --- | --- | --- |\n"
-                "| R-1 | One | See D-9. |\n",
-                "docs/history/H-2026-11-20-x.md": "---\nid: H-2026-11-20-x\n---\n\n# X\n\nSee D-9 and `R-1`.\n",
-                "docs/ids.yaml": "retired:\n- D-1\n",
+                "docs/ROADMAP.md": "# Roadmap\n\n| Id | Kind | Title |\n| --- | --- | --- |\n"
+                "| W-9 | feature | W-9 and R-1 and W-1. |\n",
+                "docs/requirements/record.md": "| Id | Title | Statement |\n| --- | --- | --- |\n"
+                "| R-1 | One | See W-9. |\n",
+                "docs/history/H-2026-11-20-x.md": "---\nid: H-2026-11-20-x\n---\n\n# X\n\nSee W-9 and `R-1`.\n",
+                "docs/ids.yaml": "W: 9\nR: 1\n",
             },
         )
 
@@ -517,20 +553,20 @@ class LinkTest(unittest.TestCase):
             self.assertEqual(
                 changed,
                 [
-                    "docs/DECISIONS.md",
-                    "docs/REQUIREMENTS.md",
+                    "docs/ROADMAP.md",
                     "docs/history/H-2026-11-20-x.md",
+                    "docs/requirements/record.md",
                 ],
             )
-            decisions = (root / "docs" / "DECISIONS.md").read_text(encoding="utf-8")
+            roadmap = (root / "docs" / "ROADMAP.md").read_text(encoding="utf-8")
             self.assertIn(
-                '| <a id="d-9"></a>D-9 | Decided | D-9 and [R-1](REQUIREMENTS.md#r-1) and D-1. |',
-                decisions,
+                '| <a id="w-9"></a>W-9 | feature | W-9 and [R-1](requirements/record.md#r-1) and W-1. |',
+                roadmap,
             )
             history = (root / "docs/history/H-2026-11-20-x.md").read_text(
                 encoding="utf-8"
             )
-            self.assertIn("See [D-9](../DECISIONS.md#d-9) and `R-1`.", history)
+            self.assertIn("See [W-9](../ROADMAP.md#w-9) and `R-1`.", history)
             self.assertEqual(links.rewrite(root), [])
 
     def test_problems_report_an_unlinked_id_and_none_after_rewrite(self):
@@ -540,8 +576,29 @@ class LinkTest(unittest.TestCase):
             self.sample(root)
             errors = links.problems(root)
             self.assertIn("docs/history/H-2026-11-20-x.md: run make links", errors)
-            self.assertTrue(any("without a link: D-9" in error for error in errors))
+            self.assertTrue(any("without a link: W-9" in error for error in errors))
             links.rewrite(root)
+            self.assertEqual(links.problems(root), [])
+
+    def test_a_row_links_to_a_row_in_another_requirement_file(self):
+        """id: R-69"""
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            header = "| Id | Title | Statement |\n| --- | --- | --- |\n"
+            tree(
+                root,
+                {
+                    "docs/requirements/plan.md": header + "| R-1 | One | See R-2. |\n",
+                    "docs/requirements/record.md": header
+                    + "| R-2 | Two | See R-1. |\n",
+                    "docs/ids.yaml": "R: 2\n",
+                },
+            )
+            links.rewrite(root)
+            plan = (root / "docs/requirements/plan.md").read_text(encoding="utf-8")
+            record = (root / "docs/requirements/record.md").read_text(encoding="utf-8")
+            self.assertIn("See [R-2](record.md#r-2).", plan)
+            self.assertIn("See [R-1](plan.md#r-1).", record)
             self.assertEqual(links.problems(root), [])
 
     def test_ids_check_finds_a_repeat_when_the_row_has_an_anchor(self):
@@ -551,47 +608,151 @@ class LinkTest(unittest.TestCase):
             tree(
                 root,
                 {
-                    "docs/DECISIONS.md": ANCHORED,
-                    "docs/history/extra.md": "---\nid: D-9\n---\n",
+                    "docs/ROADMAP.md": ANCHORED,
+                    "docs/history/extra.md": "---\nid: W-9\n---\n",
                 },
             )
-            self.assertTrue(any("D-9" in error for error in ids.check(root)))
+            self.assertTrue(any("W-9" in error for error in ids.check(root)))
 
-    def test_the_index_and_the_log_read_an_anchored_row(self):
-        """id: R-69"""
-        with tempfile.TemporaryDirectory() as tmp:
-            root = Path(tmp)
-            tree(
-                root,
-                {
-                    "docs/REQUIREMENTS.md": "| Id | Title | Statement |\n| --- | --- | --- |\n"
-                    '| <a id="r-1"></a>R-1 | One | See D-9. |\n',
-                    "docs/DECISIONS.md": ANCHORED,
-                },
-            )
-            found = requirements_index.rows(root / "docs" / "REQUIREMENTS.md")
-            self.assertEqual(found, [("R-1", "One")])
-            text = decision_log.render(root)
-            self.assertIn('### <a id="r-1"></a>R-1 One', text)
-            self.assertIn("See [D-9](#d-9).", text)
-            self.assertIn('- <a id="d-9"></a>D-9. See [R-1](#r-1).', text)
 
-    def test_the_log_links_an_item_that_is_not_in_the_log_to_its_source(self):
-        """id: R-69"""
-        with tempfile.TemporaryDirectory() as tmp:
-            root = Path(tmp)
-            tree(
-                root,
-                {
-                    "docs/DECISIONS.md": "| Id | Status | Choice |\n| --- | --- | --- |\n"
-                    "| D-9 | Decided | After [H-2026-11-20-x](../h.md). |\n",
-                    "docs/history/H-2026-11-20-x.md": "---\nid: H-2026-11-20-x\n---\n",
-                },
-            )
-            text = decision_log.render(root)
+req = load("req", HERE / "req.py")
+
+HEADER = "| Id | Title | Status | Statement |\n| --- | --- | --- | --- |\n"
+
+
+class ReqTest(unittest.TestCase):
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.root = Path(self.tmp.name)
+        tree(
+            self.root,
+            {
+                "docs/requirements/record.md": HEADER
+                + '| <a id="r-1"></a>R-1 | Ids | in force | Podman holds the ids. |\n'
+                + "| R-2 | Index | planned | Write the index. |\n",
+                "docs/requirements/plan.md": HEADER
+                + "| R-3 | Grill | in force | Ask one question. Use PODMAN never. |\n",
+            },
+        )
+
+    def tearDown(self):
+        self.tmp.cleanup()
+
+    def test_an_id_prints_the_whole_row(self):
+        """id: R-84"""
+        text, errors, code = req.run(self.root, ids="R-1")
+        self.assertEqual(
+            text,
+            "R-1\ntitle: Ids\nstatus: in force\nfile: docs/requirements/record.md\n"
+            "owner: record\nstatement: Podman holds the ids.",
+        )
+        self.assertEqual((errors, code), ([], 0))
+
+    def test_two_ids_print_two_rows_and_an_unknown_id_fails(self):
+        """id: R-84"""
+        text, errors, code = req.run(self.root, ids="R-3 R-2")
+        self.assertTrue(text.startswith("R-3\n"))
+        self.assertIn("\n\nR-2\n", text)
+        self.assertEqual(code, 0)
+        text, errors, code = req.run(self.root, ids="R-1 R-99")
+        self.assertTrue(text.startswith("R-1\n"))
+        self.assertEqual((errors, code), (["req: R-99 not found"], 1))
+
+    def test_a_word_lists_id_title_and_file_of_each_match_in_any_case(self):
+        """id: R-84"""
+        text, errors, code = req.run(self.root, word="podman")
+        self.assertEqual(
+            text.splitlines(),
+            [
+                "R-3 | Grill | docs/requirements/plan.md",
+                "R-1 | Ids | docs/requirements/record.md",
+            ],
+        )
+        self.assertNotIn("Podman holds", text)
+        self.assertEqual(code, 0)
+
+    def test_full_adds_the_statement_to_a_list(self):
+        """id: R-84"""
+        text, _, _ = req.run(self.root, word="index", full=True)
+        self.assertEqual(
+            text, "R-2 | Index | docs/requirements/record.md\n  Write the index."
+        )
+
+    def test_an_owner_and_a_status_list_rows_and_filters_combine(self):
+        """id: R-84"""
+        text, _, _ = req.run(self.root, owner="record")
+        self.assertEqual(len(text.splitlines()), 2)
+        text, _, _ = req.run(self.root, status="planned")
+        self.assertEqual(text, "R-2 | Index | docs/requirements/record.md")
+        text, _, _ = req.run(self.root, owner="plan", status="planned")
+        self.assertEqual(text, "")
+        _, errors, code = req.run(self.root, owner="plan", status="planned")
+        self.assertEqual((errors, code), (["req: no item matches"], 1))
+
+    def test_no_filter_or_an_id_with_a_filter_is_refused(self):
+        """id: R-84"""
+        self.assertEqual(req.run(self.root)[2], 2)
+        self.assertEqual(req.run(self.root, ids="R-1", word="x")[2], 2)
+
+    def test_adrs_are_read_by_id_and_by_word_and_have_no_owner(self):
+        """id: R-84"""
+        write_file(
+            self.root,
+            "docs/adr/ADR-0001.md",
+            "---\nid: ADR-0001\ntitle: Listen on localhost\nstatus: Accepted\n---\n\n"
+            "## Rule\n\nBind to 127.0.0.1 only.\n",
+        )
+        text, _, _ = req.run(self.root, ids="ADR-0001")
+        self.assertIn("title: Listen on localhost", text)
+        self.assertIn("file: docs/adr/ADR-0001.md", text)
+        self.assertIn("Bind to 127.0.0.1 only.", text)
+        self.assertNotIn("owner:", text)
+        text, _, _ = req.run(self.root, word="127.0.0.1")
+        self.assertEqual(text, "ADR-0001 | Listen on localhost | docs/adr/ADR-0001.md")
+        text, _, _ = req.run(self.root, status="accepted")
+        self.assertEqual(text, "ADR-0001 | Listen on localhost | docs/adr/ADR-0001.md")
+        text, _, _ = req.run(self.root, owner="record")
+        self.assertNotIn("ADR-0001", text)
+
+    def test_main_prints_the_text_and_the_errors_and_returns_the_status(self):
+        """id: R-84"""
+        write_file(self.root, "docs/adr/note.md", "No frontmatter, so no id.\n")
+        previous = Path.cwd()
+        os.chdir(self.root)
+        try:
+            out, err = io.StringIO(), io.StringIO()
+            with redirect_stdout(out), redirect_stderr(err):
+                code = req.main(["req.py", "--id", "R-3 R-99", "--full"])
+            self.assertEqual(code, 1)
+            self.assertTrue(out.getvalue().startswith("R-3\ntitle: Grill\n"))
+            self.assertEqual(err.getvalue(), "req: R-99 not found\n")
+            out = io.StringIO()
+            with redirect_stdout(out):
+                code = req.main(["req.py", "--q", "grill", "--full"])
+            self.assertEqual(code, 0)
             self.assertIn(
-                "After [H-2026-11-20-x](../docs/history/H-2026-11-20-x.md).", text
+                "R-3 | Grill | docs/requirements/plan.md\n  Ask", out.getvalue()
             )
+        finally:
+            os.chdir(previous)
+
+    def test_the_module_finds_its_sibling_scripts_when_the_path_lacks_them(self):
+        """id: R-84"""
+        here = str(HERE)
+        saved = list(sys.path)
+        sys.path[:] = [entry for entry in sys.path if entry != here]
+        sys.modules.pop("adr_index", None)
+        try:
+            self.assertTrue(hasattr(req.sibling("adr_index"), "frontmatter"))
+        finally:
+            sys.path[:] = saved
+
+    def test_the_target_passes_each_variable_to_the_script(self):
+        """id: R-84"""
+        text = (HERE.parent / "index.mk").read_text(encoding="utf-8")
+        for flag in ("--id", "--q", "--owner", "--status", "--full"):
+            self.assertIn(flag, text)
+        self.assertIn("$(origin OWNER)", text)
 
 
 if __name__ == "__main__":

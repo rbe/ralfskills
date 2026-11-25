@@ -13,7 +13,12 @@ PYTHON_IMAGE ?= docker.io/library/python:3.13-slim
 PYTHON_UID := $(shell id -u)
 PYTHON_GID := $(shell id -g)
 
-PYTHON = podman run --rm --user $(PYTHON_UID):$(PYTHON_GID) \
+# Rootless Podman on Linux maps --user to a sub-uid that cannot write the
+# mounted tree. keep-id keeps the user of the host. On macOS and as root
+# this stays empty.
+PYTHON_USERNS := $(shell [ "$$(uname -s)" = Linux ] && [ "$$(podman info --format '{{.Host.Security.Rootless}}' 2>/dev/null)" = true ] && echo --userns=keep-id)
+
+PYTHON = podman run --rm $(PYTHON_USERNS) --user $(PYTHON_UID):$(PYTHON_GID) \
 	-e PYTHONDONTWRITEBYTECODE=1 -e PYTHONPATH=/work/src \
 	-v "$(CURDIR)":/work:Z -w /work \
 	$(PYTHON_IMAGE) python3

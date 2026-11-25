@@ -82,18 +82,6 @@ def numbered_steps(text: str, tag: str, heading: str) -> list[str]:
     return steps
 
 
-def content_lines(path: Path) -> list[str]:
-    """The list lines of a document. The text above the list is not a line."""
-    if not path.is_file():
-        return []
-    lines = []
-    for line in path.read_text(encoding="utf-8").splitlines():
-        stripped = line.strip()
-        if stripped.startswith("- "):
-            lines.append(stripped[2:].strip())
-    return lines
-
-
 def cell(text: str) -> str:
     return text.replace("|", "/")
 
@@ -114,7 +102,8 @@ def superseded(item) -> bool:
 
 def linker(requirements, extra=()):
     """A function that links the known ids in a text."""
-    known = {item.id for item in requirements} | set(extra)
+    known = {ident: "" for ident in extra}
+    known.update({item.id: item.path for item in requirements})
     module = sibling("report_links")
     return lambda text: module.link_text(text, known)
 
@@ -124,7 +113,9 @@ def format_requirement(item, proofs_found, link) -> str:
     names = "; ".join(proved) if proved else "no test"
     status = item.status or "unspecified"
     title = link((item.title or item.id).rstrip("."))
-    ident = sibling("report_links").link(item.id)
+    ident = sibling("report_links").link(item.id, item.path)
+    if item.kind == "planned":
+        return f"- {ident}, planned. {title}."
     if item.kind not in sibling("requirements").PROVABLE:
         return f"- {ident}, {status}, {item.kind}. {title}."
     return f"- {ident}, {status}, {item.kind}. {title}. Proved by: {names}."
@@ -178,7 +169,7 @@ def append_proof_map(lines: list[str], requirements, proofs_found) -> None:
         proved = tests_for(item.id, proofs_found)
         names = "; ".join(proved) if proved else "no test"
         lines.append(
-            f"| {cell(ident_link(item.id))} | {cell(item.kind)} | {cell(item.status)} | {cell(names)} |"
+            f"| {cell(ident_link(item.id, item.path))} | {cell(item.kind)} | {cell(item.status)} | {cell(names)} |"
         )
     lines.append("")
     lines.append("### Ids with no test")
@@ -192,7 +183,7 @@ def append_proof_map(lines: list[str], requirements, proofs_found) -> None:
         lines.append("None.")
     else:
         for item in gaps:
-            lines.append(f"- {ident_link(item.id)} ({item.kind})")
+            lines.append(f"- {ident_link(item.id, item.path)} ({item.kind})")
     lines.append("")
     lines.append("### Tests with no id")
     lines.append("")
@@ -220,7 +211,7 @@ def render_product(root: Path, requirements, proofs_found) -> str:
         "",
         "## Requirements",
         "",
-        "The id is an ADR id or a decision id. A roadmap line and a known issue are work, not rules.",
+        "The id is an ADR id or a row of a file in `docs/requirements/`. A roadmap row is work, not a rule.",
         "The test names that id with `id:` in its header or metadata.",
         "",
     ]
@@ -228,7 +219,7 @@ def render_product(root: Path, requirements, proofs_found) -> str:
     lines.append("## Architecture review")
     lines.append("")
     lines.append(
-        "Drawn from the ADRs, the roadmap, known issues, and the checks in `plan` and `review`."
+        "Drawn from the ADRs, the roadmap, and the checks in `plan` and `review`."
     )
     lines.append("")
     lines.append("### ADRs")
@@ -236,32 +227,26 @@ def render_product(root: Path, requirements, proofs_found) -> str:
     append_requirements(lines, requirements, proofs_found, "adr", link)
     lines.append("### Roadmap")
     lines.append("")
-    append_lines(lines, content_lines(root / "docs" / "ROADMAP.md"), link)
-    lines.append("### Known issues")
-    lines.append("")
-    append_requirements(lines, requirements, proofs_found, "issue", link)
+    append_requirements(lines, requirements, proofs_found, "roadmap", link)
     lines.append("### Checks")
     lines.append("")
     append_checks(lines, root, ARCHITECTURE_CHECKS)
     lines.append("## Development review")
     lines.append("")
     lines.append(
-        "Drawn from the ADRs, the decisions, the roadmap, known issues, "
+        "Drawn from the ADRs, the roadmap, the planned requirements, "
         "and the checks in `develop`, `review`, `release`, and `project-setup`."
     )
     lines.append("")
     lines.append("### ADRs")
     lines.append("")
     append_requirements(lines, requirements, proofs_found, "adr", link)
-    lines.append("### Decisions")
-    lines.append("")
-    append_requirements(lines, requirements, proofs_found, "decision", link)
     lines.append("### Roadmap")
     lines.append("")
-    append_lines(lines, content_lines(root / "docs" / "ROADMAP.md"), link)
-    lines.append("### Known issues")
+    append_requirements(lines, requirements, proofs_found, "roadmap", link)
+    lines.append("### Planned requirements")
     lines.append("")
-    append_requirements(lines, requirements, proofs_found, "issue", link)
+    append_requirements(lines, requirements, proofs_found, "planned", link)
     lines.append("### Checks")
     lines.append("")
     append_checks(lines, root, DEVELOPMENT_CHECKS)
@@ -269,9 +254,7 @@ def render_product(root: Path, requirements, proofs_found) -> str:
 
 
 def render_requirements_list(root: Path, requirements, proofs_found) -> str:
-    requirements_module = sibling("requirements")
-    choices = requirements_module.decision_rows(root)
-    link = linker(requirements, [choice.id for choice in choices])
+    link = linker(requirements)
     lines = [
         "# Project report",
         "",
@@ -279,13 +262,13 @@ def render_requirements_list(root: Path, requirements, proofs_found) -> str:
         "",
         "## Requirements",
         "",
-        "The id is a row in `docs/REQUIREMENTS.md`.",
+        "The id is a row in a file in `docs/requirements/`. A planned row is open work, not a rule in force.",
         "The test names that id with `id:` in its header or metadata.",
         "",
     ]
     ident_link = sibling("report_links").link
     for item in requirements:
-        lines.append(f"- {ident_link(item.id)}. {link(item.title)}")
+        lines.append(f"- {ident_link(item.id, item.path)}. {link(item.title)}")
     lines.append("")
     append_proof_map(lines, requirements, proofs_found)
     lines.append("## Architecture review")
@@ -301,21 +284,13 @@ def render_requirements_list(root: Path, requirements, proofs_found) -> str:
     lines.append("## Development review")
     lines.append("")
     lines.append(
-        "This collection records choices in `docs/DECISIONS.md`. "
+        "The open work of this collection is the planned rows of the files in `docs/requirements/`. "
         "The checks in `develop`, `review`, `release`, and `project-setup` still apply."
     )
     lines.append("")
-    lines.append("### Decisions")
+    lines.append("### Planned requirements")
     lines.append("")
-    if not choices:
-        lines.append("None.")
-        lines.append("")
-    else:
-        for choice in choices:
-            text = choice.choice if choice.choice.endswith(".") else f"{choice.choice}."
-            ident = sibling("report_links").link(choice.id)
-            lines.append(f"- {ident}, {choice.status}. {link(text)}")
-        lines.append("")
+    append_requirements(lines, requirements, proofs_found, "planned", link)
     lines.append("### Checks")
     lines.append("")
     append_checks(lines, root, DEVELOPMENT_CHECKS)

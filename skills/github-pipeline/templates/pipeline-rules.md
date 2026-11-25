@@ -8,7 +8,7 @@ The Make contract is the project-setup skill. Make is the only interface. A pers
 
 The GitHub contract is the github-pipeline skill. Podman is the only container engine. The toolchain runs in a pinned image, so the host needs make, Podman, and git. The GitHub CLI runs in Podman, in the image of `make gh-image`. The Node template pins Node 24. A Gradle project uses the JDK in its template. A project diverges by toolchain and writes that down. The project Makefile sets `IMAGE`, `PACKAGE`, and `KEEP_VERSIONS`, includes `.claude/skills/github-pipeline/sdlc.mk` before any target, and defines the project targets. That include already provides `help`, so this repository leaves `project.mk` out. There is no root copy of `sdlc.mk`.
 
-There is one workflow, `.github/workflows/ci.yml`. A step is a checkout, an artifact upload or download, or `run: make <target>`. Jobs, in order: `setup`, then `build`, `test`, and `docs` beside each other, then `publish-container` (needs `build` and `test`), then `report`. A repository that releases a JAR adds `publish-github`, which also needs `build` and `test`. Each job runs the make target with its name.
+There is one workflow, `.github/workflows/ci.yml`. A step is a checkout, an artifact upload or download, or `run: make <target>`. Jobs, in order: `setup`, then `build` and `test` beside each other (and `docs`, only when the repository renders docs), then `publish-container` (needs `build` and `test`), then `report`. A repository that releases a JAR adds `publish-github`, which also needs `build` and `test`. Each job runs the make target with its name.
 
 `publish-*` runs on a push to the default branch and when `workflow_dispatch` selects it. A tag push does not start a run. Any other branch runs through `report` and does not publish. A manual publish runs `build` and `test` first. In-progress runs are cancelled only off the default branch.
 
@@ -22,16 +22,16 @@ Packages and images contain the tested build only: a binary or a container image
 
 ## This repository
 
-This repository is the shared skill collection. The Node 24 line is the Node template only. A Gradle project uses the JDK in its template. A project diverges by toolchain and writes that down. A project that copies this file replaces this section with its own facts.
+Replace each bracket with a fact of this repository.
 
 | | |
 | --- | --- |
-| Image | `ghcr.io/OWNER/NAME` |
-| Default branch | `main` |
-| Toolchain | The toolchain this project uses. Node template: Node 24 in the image. Gradle template: the JDK in that template. |
+| Image | `ghcr.io/[owner]/[name]` |
+| Default branch | [the default branch] |
+| Toolchain | [the toolchain and the image of this project] |
 
 ## Divergences
 
 Each entry names the shared rule, what differs, and why. A toolchain difference belongs here.
 
-- Rule: …. Here: …. Why: ….
+- Rule: [the shared rule]. Here: [what differs]. Why: [the reason].

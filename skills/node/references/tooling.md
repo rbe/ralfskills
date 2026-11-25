@@ -10,7 +10,7 @@
 
 `make node-tooling` sets up a new project, or a project with no Prettier and no ESLint, in one run. It does these things:
 
-1. It creates `package.json` with the name, the version `0.1.0`, and `type=module`. The name is the variable `NAME`. The default is the directory name.
+1. It creates `package.json` with the name, the version `0.1.0`, and `type=module`. The name is the variable `NAME`. The default is the repository name of the remote `origin`, else the directory name.
 2. It adds the dev tools in the variable `NODE_DEV_TOOLS` as exact versions.
 3. It writes `.prettierignore`, `eslint.config.mjs`, and `.editorconfig`.
 4. It adds `node_modules/` and `coverage/` to `.gitignore`.

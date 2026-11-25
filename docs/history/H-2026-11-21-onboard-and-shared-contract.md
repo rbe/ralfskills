@@ -21,15 +21,15 @@ Pattern: one shared file for the contract targets, which both entry makefiles in
 
 ## Develop
 
-`contract.mk` in `project-setup` holds the contract targets that were in `project.mk`. `project.mk` keeps the help target and includes `contract.mk`. [R-71](../REQUIREMENTS.md#r-71) states it.
+`contract.mk` in `project-setup` holds the contract targets that were in `project.mk`. `project.mk` keeps the help target and includes `contract.mk`. [R-71](../requirements/project-setup.md#r-71) states it.
 
-`sdlc.mk` includes `contract.mk` and `container.mk` unless the project sets `SDLC_OWN_CONTRACT = 1`. The Node and Gradle templates set it, because they write their own recipes. [D-13](../DECISIONS.md#d-13) records the choice.
+`sdlc.mk` includes `contract.mk` and `container.mk` unless the project sets `SDLC_OWN_CONTRACT = 1`. The Node and Gradle templates set it, because they write their own recipes. D-13 records the choice.
 
 `container.mk` has `image`, `image-ci`, and `publish-container`, and does not depend on the language. `image-ci` deletes the old tar before `podman save`, so a second run does not fail. The Node template has the same line.
 
 New templates: `Containerfile.python`, `Containerfile.go`, `Makefile.image`, and `ci.make.yml`. `contract-report.md` has a row that checks the recipes of `setup`, `build`, and `test` after the include.
 
-`onboard` is the new skill. It has ten steps and a `Do not` list. [R-70](../REQUIREMENTS.md#r-70) states it. The README has a `Start` section, and `CLAUDE.md` names the skill.
+`onboard` is the new skill. It has ten steps and a `Do not` list. [R-70](../requirements/onboard.md#r-70) states it. The README has a `Start` section, and `CLAUDE.md` names the skill.
 
 One unit test read `project.mk` for the `project-report:` target. It now reads `contract.mk`.
 
@@ -51,4 +51,4 @@ No finding. Left alone: no fresh agent ran `report and integrate` with `onboard`
 
 ## Release
 
-Committed on the working branch. The merge into the default branch waits for the owner.
+Committed on the working branch. This slice does not merge it.

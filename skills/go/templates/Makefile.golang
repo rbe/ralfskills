@@ -14,8 +14,8 @@
 # lint, test, and build fail until the first Go file exists. coverage
 # and test-changed fail until the first unit test exists.
 
-# The module path of a new project, and the name of its directory.
-NAME ?= $(notdir $(CURDIR))
+# The module path of a new project. NAME comes from project.mk: the
+# repository name of the remote origin, else the directory name.
 MODULE ?= example.com/$(NAME)
 GO_IMAGE ?= docker.io/library/golang:1.25-bookworm
 # The Go caches are volumes of this project. Two projects on one machine
@@ -48,7 +48,7 @@ INTEGRATION_CMD = true
 # file. It does not walk a directory, so it does not read .claude/ when
 # the root of the repository is a package.
 GO_FILES = go list -f "{{\$$d := .Dir}}{{range .GoFiles}}{{\$$d}}/{{.}} {{end}}{{range .TestGoFiles}}{{\$$d}}/{{.}} {{end}}{{range .XTestGoFiles}}{{\$$d}}/{{.}} {{end}}" ./...
-FORMAT_CMD = $(GO_RUN) sh -c 'files=$$(gofmt -l $$($(GO_FILES))); if [ -n "$$files" ]; then printf "%s\n" "gofmt would change:" "$$files"; exit 1; fi'
+FORMAT_CMD = $(GO_RUN) sh -c 'files=$$(gofmt -l $$($(GO_FILES))) || exit 1; if [ -n "$$files" ]; then printf "%s\n" "gofmt would change:" "$$files"; exit 1; fi'
 FORMAT_FIX_CMD = $(GO_RUN) sh -c 'gofmt -w $$($(GO_FILES))'
 LINT_CMD = $(GO) vet ./...
 COVERAGE_CMD = set -eu; \
@@ -65,7 +65,7 @@ TEST_CHANGED_CMD = chosen=$$($(PYTHON) .claude/skills/project-report/scripts/cha
 
 include .claude/skills/project-setup/project.mk
 
-# Project targets and overrides.
+# Project targets.
 
 .PHONY: go
 go: ## Run go in Podman on this machine. Set ARGS.

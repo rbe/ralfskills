@@ -14,7 +14,7 @@ DOCS_CMD = node scripts/render-docs.mjs docs build/docs
 PUBLISH_IMAGE = 1
 include .claude/skills/project-setup/project.mk
 
-# Project targets and overrides.
+# Project targets. A target of the Make contract is not defined again here.
 ```
 
 Make reads `RENDER_DOCS` and `PUBLISH_IMAGE` while it parses `project.mk`. Set them above the include.
@@ -35,7 +35,7 @@ Make reads `RENDER_DOCS` and `PUBLISH_IMAGE` while it parses `project.mk`. Set t
 | `integration` | Always | Runs the one integration entry |
 | `coverage` | Always | Writes the diff-cover report of the lines that this change touched |
 | `test-changed` | Always | Runs the tests that cover the files in the diff |
-| `old-board` | Always | Prints each path of the old board that exists. Fails when one exists |
+| `old-board` | Always | Prints each path of the old board that exists, and a `docs/ROADMAP.md` in the old line form. Fails when one of these nine checks finds something |
 | `skills-install` | Always | Installs the skills that `apm.yml` names. `DRY_RUN=1` prints the plan and changes nothing |
 | `skills-update` | Always | Updates the skills to the version that `apm.yml` allows. `DRY_RUN=1` prints the plan and changes nothing |
 | `apm` | Always | Runs any other APM command: `make apm ARGS='...'` |
@@ -67,7 +67,7 @@ Make reads `RENDER_DOCS` and `PUBLISH_IMAGE` while it parses `project.mk`. Set t
 | `DOCS_CMD` | The renderer. Empty fails `docs` |
 | `PUBLISH_IMAGE` | `1` when an image is published. Otherwise there is no `login` target |
 | `REGISTRY` | The registry host of `login`. Default `ghcr.io` |
-| `DEFAULT_BRANCH` | The default branch, when it is not `main` |
+| `DEFAULT_BRANCH` | The default branch. Make finds it: the origin default branch, else `main`, else `master` |
 | `PYTHON_IMAGE` | The image of `$(PYTHON)`. Default `docker.io/library/python:3.13-slim` |
 | `APM_IMAGE` | The image that runs APM. It has git and Python. Default `docker.io/library/python:3.13` |
 | `APM_VERSION` | The APM version of `skills-install` and `skills-update`. Default `0.36.1` |

@@ -24,13 +24,12 @@ This skill owns the Make contract: the Makefile, the standard targets, `CLAUDE.m
 8. Make each item of `<checks>` true, in order. Stop at the first item that cannot be made true.
    - Write a missing `.editorconfig` from `templates/editorconfig`.
    - Set `FORMAT_CMD`, `FORMAT_FIX_CMD`, `LINT_CMD`, and `INTEGRATION_CMD` as step 3 says. Leave an integration test out of `TEST_CMD`.
-   - Set `DEFAULT_BRANCH` if that branch is not `main`.
    - If a test has no id, read `references/setup-cases.md`, "A test with no id".
 9. If each required command variable is set, or the Makefile defines that target, run `make setup`. Otherwise leave the run for later and name the empty variable.
 10. Commit every file that this mode wrote, and each of these that exists: the manifest and its lockfile, `.claude/skills/`, `apm.yml`, and `apm.lock.yaml`. Push.
 </steps>
 <rules>
-- Do not define `setup`, `build`, or `test` again after the include.
+- Do not define a target of the Make contract again after the include. Those targets are `setup`, `build`, `test`, `editorconfig`, `format`, `format-fix`, `lint`, `integration`, `coverage`, `test-changed`, `help`, and `doctor`. To change what one does, set its command variable before the include.
 - Do not add `sdlc.mk` or a workflow. Version tags, GHCR, and cleanup are `github-pipeline`.
 - If a `project.mk` is at the repository root, leave its bytes and name it in the report.
 </rules>
@@ -64,7 +63,7 @@ This skill owns the Make contract: the Makefile, the standard targets, `CLAUDE.m
 - The standard targets, and when each exists, are in `references/makefile.md`.
 - A target does the same thing on a laptop and in CI. A command that only makes sense on a laptop gets its own name, such as `dev` or `verify`.
 - A target is filled in when its command variable has a non-empty value, or when the Makefile of the project gives that target a recipe. `true` is a filled-in value.
-- A target that the project adds after the include is the project's. A target repeated there with a recipe replaces the included recipe.
+- A target that the project adds after the include is the project's. A target of the Make contract is not repeated there, because Make is the only interface.
 - The project includes the installed `project.mk`. Do not keep a copy at the repository root or elsewhere.
 - If the Makefile lacks the include of `project.mk` or `sdlc.mk`, run `make -f .claude/skills/<skill>/<file>.mk <target>`.
 - Podman: `make build` and `make test` call Podman. `make run` exists only where a language template defines it. Docker is not a second engine. A recipe calls `git`, `podman`, and the tools of POSIX `sh`, such as `sed`, `awk`, `grep`, `find`, and `tar`. `setup` runs `make doctor`, then `SETUP_CMD`.

@@ -11,7 +11,7 @@ A path that starts with `templates/`, and `sdlc.mk` and `container.mk`, are file
 | `templates/Makefile.node`, `templates/ci.node.yml` | Node toolchain. A Node app, image only. Node 24 is the toolchain of this template only |
 | `templates/Makefile.gradle`, `templates/ci.gradle.yml` | Gradle toolchain. A Gradle app, image plus a JAR release. The JDK image in the template is its toolchain |
 | `templates/ci.make.yml`, `templates/Makefile.image` | The workflow and the image block of a project on the Makefile of its language skill: Python, Go, or another language |
-| `templates/Containerfile.node`, `templates/Containerfile.gradle`, `templates/Containerfile.python`, `templates/Containerfile.go` | The source of `Containerfile`, by toolchain |
+| `templates/Containerfile.node`, `templates/Containerfile.gradle`, `templates/Containerfile.python`, `templates/Containerfile.golang` | The source of `Containerfile`, by toolchain |
 | `templates/pipeline-rules.md` | The source of `docs/pipeline-rules.md` |
 | `templates/containerignore`, `templates/gitignore` | The source of `.containerignore` and `.gitignore` |
 | `templates/contract-report.md` | The skeleton of report mode |
@@ -28,16 +28,16 @@ If the Makefile includes `project.mk` or `.claude/skills/project-setup/project.m
 
 `sdlc.mk` provides `help`, and it includes `contract.mk`, the contract targets of `project-setup`: `setup`, `build`, `test`, `format`, `lint`, `coverage`, and the others. The command variables of the language Makefile therefore keep their effect.
 
-If a project has no `project.mk` include and writes its own recipes for those targets, it sets `SDLC_OWN_CONTRACT = 1` before the include. The Node template and the Gradle template do this.
-
+A project never defines a contract target again. The Node template and the Gradle template set the command variables of `project-setup` (`SETUP_CMD`, `BUILD_CMD`, `TEST_CMD`, `FORMAT_CMD`, `FORMAT_FIX_CMD`, `LINT_CMD`, `INTEGRATION_CMD`, `COVERAGE_CMD`, `TEST_CHANGED_CMD`, `DOCS_CMD`) before the include, like the language templates do. They add the variables of the pipeline: the image variables of `container.mk`, `RENDER_DOCS`, and `PUBLISH_IMAGE`. They do not include the language template, because that one includes `project.mk` and `sdlc.mk` already defines `help`. The commands differ from the language templates, because these templates run `npm test` and `npm run integration`, pack the dependencies for the next job, and build the image.
 ## The image block of a language Makefile
 
-A project on the Makefile of the `python` skill or the `go` skill does these steps:
+A project on the Makefile of the `python` skill, the `go` skill, or the `node` skill does these steps. A Gradle project that ships an image uses `templates/Makefile.gradle` instead: run `make jvm-tooling` of the `jvm` skill once first, because `templates/Makefile.gradle` has no `jvm-tooling` and no `wrapper` target.
 
 1. Take the image block of `templates/Makefile.image`.
 2. Leave `OWNER` and `NAME` unset. They default to the owner and the repository name in `git remote get-url origin`. Set them only if the project has no remote or has another name.
 3. Copy the `Containerfile` template of the language. Change `PACKAGE` or `NAME` in it.
 4. Use `templates/ci.make.yml` as `.github/workflows/ci.yml`.
+5. `templates/Containerfile.golang` needs `cmd/<name>/` and copies `cmd/` and `internal/`. Change its `COPY` lines for another layout. `templates/Containerfile.node` runs `npm run build` and starts `dist/server.js`. A Node project with no build script changes both. The `BUILD_CMD` of the `node` skill runs `npm pack`. An app that is no library replaces it with `true` before the image line.
 
 `make build` then builds the image, runs the smoke check, and saves the image tar.
 

@@ -13,7 +13,7 @@ issues: []
 
 ## Plan
 
-`plan` was not invoked. The request names the two Open rows [D-10](../DECISIONS.md#d-10) and [D-11](../DECISIONS.md#d-11).
+`plan` was not invoked. The request names the two Open rows D-10 and D-11.
 
 Boundary: `project-setup` owns the order of setup mode. `go` owns its Makefile template.
 
@@ -25,7 +25,7 @@ Setup mode asks how the project ships in step 1. It copies the Makefile template
 
 The Go template has the variable `BIN`. With `BIN` set, `make build` writes `build/<name>` from `./cmd/<name>`, and `BIN_PKG` names another package. With `BIN` empty, `make build` compiles every package, as before. `make run ARGS='...'` compiles and runs the program in the Go container, with a terminal when Make has one. `GOOS` and `GOARCH` on the `make build` line give the binary of another machine.
 
-[D-10](../DECISIONS.md#d-10) and [D-11](../DECISIONS.md#d-11) are Decided rows now. Each states the choice. [R-60](../REQUIREMENTS.md#r-60) and [R-68](../REQUIREMENTS.md#r-68) have the new rules.
+D-10 and D-11 are Decided rows now. Each states the choice. [R-60](../requirements/project-setup.md#r-60) and [R-68](../requirements/go.md#r-68) have the new rules.
 
 Shell is the language skill.
 

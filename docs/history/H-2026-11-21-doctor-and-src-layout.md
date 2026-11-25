@@ -21,7 +21,7 @@ Pattern: `doctor` is its own file that both entry makefiles include, because the
 
 ## Develop
 
-`doctor.mk` has `make doctor`. It checks Make, Git, and `podman info`. When the project has a workflow it also checks the remote `origin` and `gh`. A missing `gh` is a warning. [R-73](../REQUIREMENTS.md#r-73) states it.
+`doctor.mk` has `make doctor`. It checks Make, Git, and `podman info`. When the project has a workflow it also checks the remote `origin` and `gh`. A missing `gh` is a warning. [R-73](../requirements/project-setup.md#r-73) states it.
 
 `make setup` runs `make doctor` first in `contract.mk`, and in `_setup` of the Node and Gradle templates.
 
@@ -47,4 +47,4 @@ No finding. Left alone: no unit test covers `doctor.mk`, because the unit tests 
 
 ## Release
 
-The branch is committed. The merge into the default branch waits for the owner.
+The branch is committed. This slice does not merge it.

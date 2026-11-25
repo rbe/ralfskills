@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Make every document id in running text a link.
 
-An id is defined by a table row in docs/REQUIREMENTS.md,
-docs/DECISIONS.md, or docs/KNOWN_ISSUES.md, or by `id:` in the
+An id is defined by a table row in a file of docs/requirements/,
+in docs/ROADMAP.md, or by `id:` in the
 frontmatter of a Markdown file. A table row gets an anchor. Every other
 mention of the id in running text links to the definition.
 """
@@ -25,7 +25,13 @@ SPANS = re.compile(
     r"|\[[^\]]*\]\[[^\]]*\]"
     r"|<[A-Za-z/][^>\n]*>"
 )
-TABLE_FILES = ("REQUIREMENTS.md", "DECISIONS.md", "KNOWN_ISSUES.md")
+
+
+def table_paths(root: Path) -> list[Path]:
+    """The files whose table rows define an id: the roadmap and each requirement file."""
+    docs = root / "docs"
+    listed = sorted((docs / "requirements").glob("*.md"))
+    return [*listed, docs / "ROADMAP.md"]
 
 
 def repo_root(start: Path) -> Path:
@@ -34,15 +40,6 @@ def repo_root(start: Path) -> Path:
         if (candidate / "docs").is_dir():
             return candidate
     return current
-
-
-def retired(path: Path) -> set[str]:
-    here = str(Path(__file__).resolve().parent)
-    if here not in sys.path:
-        sys.path.insert(0, here)
-    import ids
-
-    return set(ids.retired_ids(path))
 
 
 def strip_anchor(cell: str) -> str:
@@ -212,27 +209,25 @@ def anchor_rows(text: str) -> str:
 
 
 def targets(root: Path) -> dict[str, tuple[str, str]]:
-    """Each defined id that is not retired, with its file and anchor."""
+    """Each defined id, with its file and anchor. A deleted id has no target."""
     docs = root / "docs"
     found: dict[str, tuple[str, str]] = {}
     if not docs.is_dir():
         return found
-    gone = retired(docs / "ids.yaml")
-    for name in TABLE_FILES:
-        path = docs / name
+    for path in table_paths(root):
         if not path.is_file():
             continue
         relative = path.relative_to(root).as_posix()
         for line in path.read_text(encoding="utf-8").splitlines():
             match = ROW.match(line)
-            if match and match.group(2) not in gone:
+            if match:
                 found.setdefault(match.group(2), (relative, match.group(2).lower()))
     for path in sorted(docs.rglob("*.md")):
         relative = path.relative_to(root).as_posix()
         lines = path.read_text(encoding="utf-8").splitlines()
         for line, flag in zip(lines, skipped(lines, front=False)):
             match = None if flag else ID_LINE.match(line.strip())
-            if match is None or match.group(1) in gone:
+            if match is None:
                 continue
             if WHOLE.fullmatch(match.group(1)):
                 found.setdefault(match.group(1), (relative, ""))
@@ -240,7 +235,7 @@ def targets(root: Path) -> dict[str, tuple[str, str]]:
 
 
 def prepared(root: Path, path: Path, text: str) -> str:
-    if path.parent == root / "docs" and path.name in TABLE_FILES:
+    if path in table_paths(root):
         return anchor_rows(text)
     return text
 

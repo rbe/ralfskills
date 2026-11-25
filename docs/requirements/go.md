@@ -1,0 +1,7 @@
+# Requirements of go
+
+The rows that the skill `go` owns. `collection.md` says what the status means.
+
+| Id | Title | Status | Statement |
+| --- | --- | --- | --- |
+| <a id="r-68"></a>R-68 | Go | in force | `go` applies when it is installed and the files are Go. Its `files` are `go`, and its `names` are `go.mod` and `go.sum`. Do not run `go` or `gofmt` on the host. `$(GO)` runs Go in Podman, and the Go caches are container volumes. `make go ARGS=...` is a one-off command, and `make go-tooling` creates `go.mod` for a new project. The formatter is gofmt, and it reads only the package directories of the project. The linter is `go vet`. `make coverage` runs the tests of each package with a cover profile. `go_cover_map.py` writes the Cobertura file that diff-cover reads and the coverage map. A project that ships a binary sets `BIN`. `make build` then writes `build/<name>`, and with `BIN` empty it compiles every package and writes no file. `make run ARGS=...` runs the program in Podman and is how an agent runs it. The file in `build/` is a Linux binary, and `GOOS` and `GOARCH` on the `make build` line give the binary of another machine. The unit of selection for `make test-changed` is the package. A package with tests is in the coverage map with its own test files, also when its tests ran no statement of the project. A Go test file ends with `_test.go` and carries its `id:` line as [R-63](project-report.md#r-63) says. This applies to a product repository that installs `go`. `go` owns these rules. |

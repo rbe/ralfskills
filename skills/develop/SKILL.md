@@ -1,6 +1,6 @@
 ---
 name: develop
-description: Implements a closed slice plan with its tests, using the installed language skill for the files in hand. Use after plan, or when a request names a source file, a failing test, or a known issue. A fix starts here.
+description: Implements a closed slice plan with its tests, using the installed language skill for the files in hand. Use after plan, or when a request names a source file, a failing test, or a defect row of the roadmap. A fix starts here.
 ---
 
 The general rules in `CLAUDE.md` apply.
@@ -18,12 +18,13 @@ The general rules in `CLAUDE.md` apply.
    Stop when a file set has no matching row.
    A document, such as `README.md` or a file under `docs/`, needs no language row.
 3. Read `docs/adr/index.toon`. Open each ADR whose status is `Accepted` and whose `skills` names a skill that this slice uses.
+   In a repository with no `docs/adr/`, read `docs/requirements-index.toon` and run `make req ID=<ids>` for each row that names a part that this slice touches.
    Stop when the change would break one of them.
 4. If the files in hand have two languages, split them into two disjoint file sets. Finish one set before you edit the other.
 5. Write the change, and write a unit test for each behaviour change.
    Stop when one target runs both unit tests and integration tests.
 6. Give each test its `id:` line. The test rules of `record` state which id the line names and the form of the line in each language.
-   If a test has no ADR and no Decided row to name, ask `record` to write the Decided row.
+   If a test has no ADR and no requirement row to name, ask `record` where the choice goes, and name the new id.
 7. Compare the change with the general rules on tests, fixtures, methods, and names. Stop when the change breaks one.
 8. Run `make coverage`, then `make test-changed`.
    `make coverage` writes the coverage map, and `test-changed` selects the tests from that map. A green `test-changed` does not replace `make test`.

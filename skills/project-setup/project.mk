@@ -73,6 +73,7 @@ include $(PROJECT_MK_DIR)contract.mk
 
 -include .claude/skills/record/index.mk
 -include .claude/skills/migrate-docs/migrate.mk
+-include .claude/skills/board-merge-report/merge-report.mk
 
 # After the fragments this file includes. A fragment must not replace it.
 .DEFAULT_GOAL := help
