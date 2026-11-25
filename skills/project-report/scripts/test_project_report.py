@@ -485,7 +485,7 @@ class GeneralRulesTest(unittest.TestCase):
 
     def test_the_entry_file_and_its_template_stay_within_their_word_limits(self):
         """id: R-76"""
-        limits = {"CLAUDE.md": 824, "skills/project-setup/templates/CLAUDE.md": 894}
+        limits = {"CLAUDE.md": 845, "skills/project-setup/templates/CLAUDE.md": 915}
         for name, limit in limits.items():
             text = (ROOT / name).read_text(encoding="utf-8")
             self.assertLessEqual(len(text.split()), limit, name)
@@ -511,6 +511,11 @@ class GeneralRulesTest(unittest.TestCase):
         for text in general_rules():
             self.assertIn("Type only `make <target>` and Git commands.", text)
             self.assertIn("The host needs only Make, Git, and Podman.", text)
+            self.assertIn(
+                "A typed tool of POSIX `sh`, such as `tail` or `grep`, "
+                "may only shorten or search output, and writes no file.",
+                text,
+            )
             self.assertIn("Run `make old-board` before the first skill.", text)
             self.assertIn("the only skill is `migrate-docs`", text)
             self.assertIn("`record` writes every id and every board document.", text)
