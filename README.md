@@ -73,7 +73,7 @@ The host needs GNU Make 3.81 or newer, Git, and Podman. It needs no other tool: 
 
 1. It checks that Make, Git, and Podman run on the machine, with `make -f .claude/skills/project-setup/doctor.mk doctor`. Once the Makefile has the include, `make doctor` is the same check, and `make setup` runs it first.
 2. It reads the project: the language, the old board, the remote, and the tests. It asks you only what the files do not tell, such as how the project ships.
-3. It runs `migrate-docs` when `docs/BUGS.md`, `docs/WAVES.md`, `docs/FEATURES.md`, `docs/DECISIONS.md`, `docs/KNOWN_ISSUES.md`, or their directories, or `AGENTS.md` exist, and commits the new board. `make old-board` tests those eight paths and a `docs/ROADMAP.md` in the old line form, which has a line that starts with `- `. It fails when one of these nine checks finds something.
+3. It runs `migrate-docs` when `docs/BUGS.md`, `docs/WAVES.md`, `docs/FEATURES.md`, `docs/DECISIONS.md`, `docs/KNOWN_ISSUES.md`, or their directories, or `AGENTS.md` exist, and commits the new board. `make old-board` tests those eight paths and a `docs/ROADMAP.md` in the old line form, which has a line that starts with `- `. It fails when one of these nine checks finds something. In a project with an old board, `make old-board` fails first, as designed, and the only skill is then `migrate-docs`.
 4. It runs `project-setup` in report mode, then in setup mode. Setup mode asks how the project ships, copies the Makefile template of the language, and runs the tooling target of that language: `make node-tooling`, `make python-tooling`, `make jvm-tooling`, or `make go-tooling`. It writes `CLAUDE.md`, `.editorconfig`, and `.gitignore`, and commits with `.claude/skills/`, `apm.yml`, and `apm.lock.yaml`.
 5. When the project publishes through GitHub, it runs `github-pipeline`: one workflow, a `Containerfile`, and the targets of the pipeline.
 6. It records each rule the project already follows as an ADR or a requirement row, and gives each existing test the `id:` of the row it proves.
@@ -93,7 +93,9 @@ To take a newer version:
 4. Run the gates of `CLAUDE.md`, and `make ci` when the project has a workflow.
 5. Commit `.claude/skills/`, `apm.yml`, and `apm.lock.yaml` together, on the default branch.
 
-APM 0.36.1 does not overwrite a skill file that a person changed in `.claude/skills/`. If such a file exists, `make skills-update` fails and names the file. Restore the file with `git restore <file>`, then run the target again. Keep project rules in a project skill or in `CLAUDE.md`, not in an installed file. A new Makefile template does not change the `Makefile` of the project. Run `project-setup` in report mode to see what a new version adds.
+APM 0.36.1 does not overwrite a skill file that a person changed in `.claude/skills/`. If such a file exists, `make skills-update` fails and names the file. Restore the file with `git restore <file>`, then run the target again. The target can also refuse when `.claude/skills/` holds files that APM did not install. APM calls them unmanaged. Run `make apm ARGS='install --force'`. That overwrites those files with the files of the collection. Keep project rules in a project skill or in `CLAUDE.md`, not in an installed file. A new Makefile template does not change the `Makefile` of the project. Run `project-setup` in report mode to see what a new version adds.
+
+A project may hold documents with ids above the counters of `docs/ids.yaml`. Then `make ids` fails. Raise the counter of each such kind with `make id-raise KIND=<kind> TO=<n>`, where `<n>` is the highest number that a document uses.
 
 ## Test the collection in a test repository
 
@@ -129,7 +131,7 @@ The workflow of `github-pipeline` runs on a push to any branch. Its `setup` job 
    make skills-update
    ```
 
-   The dry run prints the plan with the old and the new commit. If `make skills-update` refuses and names a file in `.claude/skills/` that APM does not manage, run `make apm ARGS='install --force'`. That command overwrites such files with the files of the branch. `apm.lock.yaml` then holds the commit of the branch as `resolved_commit`. Run `make toon` and `make links`. Commit `apm.yml`, `apm.lock.yaml`, and `.claude/skills/` on `claude/framework-test`.
+   The dry run prints the plan with the old and the new commit. If `make skills-update` refuses and names a file in `.claude/skills/` that APM does not manage, run `make apm ARGS='install --force'`, as the Update section says. The files of the branch then replace such files. `apm.lock.yaml` then holds the commit of the branch as `resolved_commit`. Run `make toon` and `make links`. Commit `apm.yml`, `apm.lock.yaml`, and `.claude/skills/` on `claude/framework-test`.
 
 3. Run the test on the work branch. The pull request targets read the base branch from `DEFAULT_BRANCH`. Without it, they use the default branch of the repository and would open the pull request into `main`. A value on the command line replaces the value that Make finds. Set `GH_TOKEN` or `GITHUB_TOKEN` in the environment.
 
