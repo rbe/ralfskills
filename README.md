@@ -79,7 +79,7 @@ The host needs GNU Make 3.81 or newer, Git, and Podman. It needs no other tool: 
 6. It records each rule the project already follows as an ADR or a requirement row, and gives each existing test the `id:` of the row it proves.
 7. It runs every gate. It stops when one fails.
 
-Then the first slice starts with `plan`. From here on, a person and the agent type only `make <target>` and Git commands.
+Then the first slice starts with `plan`. From here on, a person and the agent type only `make <target>` and Git commands. A typed tool of POSIX `sh`, such as `tail` or `grep`, may only shorten or search output, and writes no file.
 
 ## Update
 
