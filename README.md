@@ -95,6 +95,81 @@ To take a newer version:
 
 APM 0.36.1 does not overwrite a skill file that a person changed in `.claude/skills/`. If such a file exists, `make skills-update` fails and names the file. Restore the file with `git restore <file>`, then run the target again. Keep project rules in a project skill or in `CLAUDE.md`, not in an installed file. A new Makefile template does not change the `Makefile` of the project. Run `project-setup` in report mode to see what a new version adds.
 
+## Test the collection in a test repository
+
+The owner runs this test before a version tag of the collection. It runs the skills of a branch of this collection in a real project, in a repository that the owner may change. The Update section describes how a project takes a tagged version. This section describes how to try an untagged branch first.
+
+Two branches of the test repository carry the test:
+
+- `claude/framework-test-base` stands for the default branch. The pull request of the test merges into it.
+- `claude/framework-test` is the work branch. The skills are installed on it, and every commit of the test goes on it.
+
+The limits hold for every step:
+
+- Never push to or change the default branch (`main`) of the test repository.
+- Never delete a release, a tag, or a package version for real. Run a cleanup target only with `DRY_RUN=1`.
+- Work only on the two test branches.
+
+The workflow of `github-pipeline` runs on a push to any branch. Its `setup` job runs `make cleanup-actions-artifacts`, which deletes the Actions artifacts that are one hour old or older, except the artifacts `report` and `docs`. Its publish job runs only on the default branch of the repository, so neither test branch publishes. Do not dispatch `publish-container` on a test branch.
+
+1. Create the branches. Run this in a clone of the test repository. `origin/main` is the default branch. The commands create two new branches and do not change `main`.
+
+   ```sh
+   git fetch origin
+   git switch -c claude/framework-test-base origin/main
+   git push -u origin claude/framework-test-base
+   git switch -c claude/framework-test
+   git push -u origin claude/framework-test
+   ```
+
+2. Install the branch of the collection on the work branch. APM reads the branch from GitHub, so push that branch of the collection first. Set `ref: <branch of the collection>` under the `git: rbe/ralfskills` line of `apm.yml`. Then run:
+
+   ```sh
+   make skills-update DRY_RUN=1
+   make skills-update
+   ```
+
+   The dry run prints the plan with the old and the new commit. If `make skills-update` refuses and names a file in `.claude/skills/` that APM does not manage, run `make apm ARGS='install --force'`. That command overwrites such files with the files of the branch. `apm.lock.yaml` then holds the commit of the branch as `resolved_commit`. Run `make toon` and `make links`. Commit `apm.yml`, `apm.lock.yaml`, and `.claude/skills/` on `claude/framework-test`.
+
+3. Run the test on the work branch. The pull request targets read the base branch from `DEFAULT_BRANCH`. Without it, they use the default branch of the repository and would open the pull request into `main`. A value on the command line replaces the value that Make finds. Set `GH_TOKEN` or `GITHUB_TOKEN` in the environment.
+
+   ```sh
+   make old-board
+   make editorconfig
+   make format
+   make lint
+   make test
+   make integration
+   make coverage
+   git push origin claude/framework-test
+   make ci-status WAIT=1
+   make pull-request DEFAULT_BRANCH=claude/framework-test-base
+   make pull-request-merge WAIT=1 DEFAULT_BRANCH=claude/framework-test-base
+   ```
+
+   If `make old-board` fails, run the skill `migrate-docs` first, as `CLAUDE.md` says. `make ci-status WAIT=1` fails unless the run of the pushed commit passed. `make pull-request-merge` merges only when every check of the pull request passed. The merge is a push to the base branch, so it starts a second run. Pass `DEFAULT_BRANCH=claude/framework-test-base` to `make coverage` and `make test-changed` too when you want them to compare with the base branch.
+
+4. Use the branches again for the next test:
+
+   ```sh
+   git fetch origin
+   git switch claude/framework-test-base
+   git merge origin/main
+   git push origin claude/framework-test-base
+   git switch claude/framework-test
+   git merge claude/framework-test-base
+   ```
+
+   The first merge brings the base branch up to the default branch. The second merge brings the work branch up to the base branch. Install the newer collection as in step 2, run step 3 again, and commit before the push. The old pull request is closed after its merge, and `make pull-request` looks only for an open one, so it opens a new pull request.
+
+5. Remove the branches when the test is over:
+
+   ```sh
+   git switch main
+   git push origin --delete claude/framework-test claude/framework-test-base
+   git branch -D claude/framework-test claude/framework-test-base
+   ```
+
 ## How APM loads them
 
 The `apm.yml` of a project needs `name` and `version`. APM refuses the file without them. `apm install` reads every `skills/<name>/` directory and copies it to `.claude/skills/<name>/`, including makefiles, `references/`, `scripts/`, and `templates/` inside the skills. That was tested with APM 0.36.1: nine skills installed into a sample project, and `make toon`, `make ids`, and `make project-report` ran there. This collection itself has no root `apm.yml`. APM does not need one in a skill collection.

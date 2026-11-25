@@ -1146,6 +1146,29 @@ class MakeAndPodmanInterfaceTest(unittest.TestCase):
         self.assertNotIn("Run `apm update`", readme)
         self.assertNotIn("run `apm install`", readme)
 
+    def test_the_readme_defines_the_test_in_a_test_repository(self):
+        """id: R-100"""
+        readme = (ROOT / "README.md").read_text(encoding="utf-8")
+        self.assertIn("## Test the collection in a test repository", readme)
+        for branch in ("claude/framework-test-base", "claude/framework-test"):
+            self.assertIn(f"`{branch}`", readme)
+        self.assertIn(
+            "Never push to or change the default branch (`main`) of the test repository.",
+            readme,
+        )
+        self.assertIn(
+            "Never delete a release, a tag, or a package version for real."
+            " Run a cleanup target only with `DRY_RUN=1`.",
+            readme,
+        )
+        self.assertIn("Work only on the two test branches.", readme)
+        self.assertIn(
+            "make pull-request-merge WAIT=1 DEFAULT_BRANCH=claude/framework-test-base",
+            readme,
+        )
+        sdlc = (self.PIPELINE / "sdlc.mk").read_text(encoding="utf-8")
+        self.assertIn('-f base="$(DEFAULT_BRANCH)"', sdlc)
+
     def test_old_board_is_a_target_and_migrate_docs_types_no_host_command(self):
         """id: R-21"""
         board = (self.SETUP / "old-board.mk").read_text(encoding="utf-8")
