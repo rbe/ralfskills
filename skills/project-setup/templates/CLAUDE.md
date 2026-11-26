@@ -4,7 +4,7 @@
 
 `CLAUDE.md` is the only entry file. The skills are under `.claude/skills/`.
 
-Stages, in order: `plan`, `develop`, `review`, `release`. A new or vague request starts at `plan`. A request that names a source file, a failing test, or a roadmap defect starts at `develop`. Other skills: `record`, `project-report`, `project-setup`[, `onboard`, `migrate-docs`, `github-pipeline`, `system-state-report` (say `state report`), `board-merge-report`, `board-merge`: keep each only when installed]. Language skills: [the installed ones of `node`, `python`, `shell`, `jvm`, `go`]. Subskills `plan` asks and `review` checks: [the installed ones of `security`, `privacy`, `ux-ui-design`, `api-design`, `observability`, `performance`]. A project skill is an extra name listed here. [Name each project skill, or write none.]
+Stages, in order: `plan`, `develop`, `review`, `release`. A new or vague request starts at `plan`. A request that names a source file, a failing test, or a roadmap defect starts at `develop`. Other skills: `record`, `project-report`, `project-setup`[, `onboard`, `migrate-docs`, `github-pipeline`, `system-state-report` (say `state report`), `board-merge-report`, `board-merge`, `component-upgrade`/`upgrade-<language>-components`: keep each only when installed]. Language skills: [the installed ones of `node`, `python`, `shell`, `jvm`, `go`]. Subskills `plan` asks and `review` checks: [the installed ones of `security`, `privacy`, `ux-ui-design`, `api-design`, `observability`, `performance`]. A project skill is an extra name listed here. [Name each project skill, or none.]
 
 This project ships [as a binary, with `make <target>` / as a container image, with the merge into the default branch / as a library package, with `make build` / with the merge only].
 

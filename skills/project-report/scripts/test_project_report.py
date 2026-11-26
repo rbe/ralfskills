@@ -599,7 +599,7 @@ def tag_problems(lines):
 class SkillShapeTest(unittest.TestCase):
     def test_each_skill_refers_to_the_general_rules_in_one_line(self):
         """id: R-76"""
-        self.assertEqual(len(skill_files()), 24)
+        self.assertEqual(len(skill_files()), 29)
         for path in skill_files():
             text = path.read_text(encoding="utf-8")
             self.assertEqual(text.count(ONE_LINE), 1, path)
@@ -1229,6 +1229,26 @@ class MakeAndPodmanInterfaceTest(unittest.TestCase):
         ):
             self.assertIn(sentence, text)
         self.assertEqual(text.count("contrast"), 1)
+
+    def test_upgrade_skills_update_one_component_with_a_baseline(self):
+        """id: R-104"""
+        text = self.skill_text("component-upgrade")
+        for sentence in (
+            "- One slice updates one component.",
+            "2. If the component is this skill collection, follow the Update section"
+            " of the README and stop here.",
+            "5. Run the gates before the change. Keep the result as the baseline.",
+            "- A pin names an exact version. A pin never names `latest`.",
+            "- If the update is a major version step, `plan` runs first,"
+            " because the step can change a rule.",
+            "`upgrade-<language>-components`",
+        ):
+            self.assertIn(sentence, text)
+        for language in ("node", "python", "java", "go"):
+            name = f"upgrade-{language}-components"
+            text = self.skill_text(name)
+            self.assertIn(f"name: {name}\n", text)
+            self.assertIn("component-upgrade", text)
 
     def test_observability_skill_asks_and_checks(self):
         """id: R-102"""

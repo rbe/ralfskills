@@ -33,6 +33,11 @@ The diagram is `docs/diagrams/collection-map.svg`. A change that alters what it 
 | [system-state-report](skills/system-state-report/SKILL.md) | A plain-language report on what the system does now, the decisions that shaped it, and the decisions that wait for the owner. Say `state report` |
 | [board-merge-report](skills/board-merge-report/SKILL.md) | Reports which board rows, ADRs, and closed history files repeat text and can merge, shrink, or go. Writes nothing. Numbers come from `make board-numbers` |
 | [board-merge](skills/board-merge/SKILL.md) | Does what the owner chose by id from that report. One commit for each finding |
+| [component-upgrade](skills/component-upgrade/SKILL.md) | Updates one component to a newer version in one slice, with the gates before and after. Covers a library, a runtime, a base image, a tool pin, and this collection |
+| [upgrade-node-components](skills/upgrade-node-components/SKILL.md) | Gives the Node facts for `component-upgrade`: where each version is pinned and the known traps |
+| [upgrade-python-components](skills/upgrade-python-components/SKILL.md) | Gives the Python facts for `component-upgrade`: where each version is pinned and the known traps |
+| [upgrade-java-components](skills/upgrade-java-components/SKILL.md) | Gives the Java, Groovy, Grails, and Gradle facts for `component-upgrade`: where each version is pinned and the known traps |
+| [upgrade-go-components](skills/upgrade-go-components/SKILL.md) | Gives the Go facts for `component-upgrade`: where each version is pinned and the known traps |
 | [project-report](skills/project-report/SKILL.md) | Generated requirements map, architecture review, and development review |
 | [migrate-docs](skills/migrate-docs/SKILL.md) | The only skill that reads an old board. Other skills stop until it has deleted those files |
 | [project-setup](skills/project-setup/SKILL.md) | Writes `CLAUDE.md` from its template when the file is missing. Make is the only interface. `help` is the default goal. EditorConfig, one formatter, one linter, unit tests, one integration entry, and a diff-cover report are targets |
@@ -228,6 +233,8 @@ dependencies:
         - system-state-report   # the plain-language report for the owner
         - board-merge-report    # finds repeated board text
         - board-merge           # applies the findings the owner chose
+        - component-upgrade     # updates one component to a newer version
+        - upgrade-node-components   # or python, java, go: install the one of each language the project uses
         - github-pipeline   # when the project publishes through GitHub
         - migrate-docs      # when the old board is still present
         - node              # or python, jvm, go: the language skills the project uses
