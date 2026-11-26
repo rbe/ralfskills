@@ -25,6 +25,7 @@ endif
 .PHONY: project-report
 
 # Generated. Hand-editing build/project-report.md is a defect.
+# help-group: Board
 project-report: ## Write the requirements map and the reviews
 	mkdir -p build
 	rm -f build/project-report.md

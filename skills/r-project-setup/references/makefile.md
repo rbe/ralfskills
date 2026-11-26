@@ -49,11 +49,14 @@ Make reads `RENDER_DOCS` and `PUBLISH_IMAGE` while it parses `project.mk`. Set t
 
 `help` lists `setup`, `build`, `test`, `test-changed`, and `project-report`. It lists `docs` and `login` only when those targets exist.
 
+`help` prints the targets in groups. The groups are `Gates`, `Project`, `Board`, `Delivery`, and `Tools`, in that order, and `HELP_GROUPS` holds the order. In a makefile, the line `# help-group: <Name>` puts the targets that follow it in that group. The first line of each file starts in `Project`, so a target of the product Makefile is listed there. A group that `HELP_GROUPS` does not name prints after those, and a group with no target prints no heading. A makefile of this collection that defines a target with a `##` comment has the marker before its first target.
+
 ## Variables
 
 | Variable | Meaning |
 | --- | --- |
 | `HELP_LEAD` | The first line of `make help`. `project.mk` has a default |
+| `HELP_GROUPS` | The groups of `make help`, in print order. Default `Gates Project Board Delivery Tools` |
 | `SETUP_CMD` | How this project resolves dependencies. Empty fails `setup` |
 | `BUILD_CMD` | How this project produces the artifact. Empty fails `build` |
 | `TEST_CMD` | How this project runs the unit tests. Empty fails `test` |
@@ -82,6 +85,7 @@ The language skill names the tool of `FORMAT_CMD`, `LINT_CMD`, `COVERAGE_CMD`, a
 | File | Provides |
 | --- | --- |
 | `project.mk` | `help`, and the includes of every file below |
+| `help.mk` | `HELP_GROUPS` and `HELP_LIST`, the awk command that `help` runs. `project.mk` and `sdlc.mk` include it |
 | `contract.mk` | `setup`, `build`, `test`, the quality targets, `project-report`, and `docs` and `login` when the variables say so |
 | `doctor.mk` | `doctor` |
 | `skills.mk` | `skills-install`, `skills-update`, `apm` |

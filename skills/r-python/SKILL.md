@@ -31,7 +31,7 @@ This skill gives the Make targets and the code rules for Python files.
 </rules>
 
 <references>
-- `references/tooling.md`: read it before `make python-tooling` runs.
+- `references/tooling.md`: read it before `make python-tooling` runs, or when you change `python.mk`.
 - `references/frameworks.md` and a file named by a framework: read them when `CLAUDE.md` names that framework.
 - `references/makefile.md`: read it when the change touches a command variable, `PYTHON_IMAGE`, a target of the Makefile, or a `src/` layout.
 </references>

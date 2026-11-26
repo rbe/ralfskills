@@ -42,7 +42,7 @@ The project sets the command variables of `r-project-setup` above the include. I
 
 | Target | Contract |
 | --- | --- |
-| `help` | The default goal. It lists every target that has a `##` comment. One include is sufficient, because `sdlc.mk` defines `help` |
+| `help` | The default goal. It lists every target that has a `##` comment, in the groups of `help.mk` in `r-project-setup`. One include is sufficient, because `sdlc.mk` defines `help` |
 | `version` | Prints `MAJOR.MINOR.PATCH-run` from `git describe`. `PRINT=tag` prints the `vX.Y.Z` tag. Fails when there is no strict tag, when a pre-release tag is nearer, or when `GITHUB_RUN_NUMBER` is not set |
 | `ci` | Runs `SDLC_CI` in order. Does not publish |
 | `report` | Writes `build/report/index.md` from logs, summaries, and `JOB_RESULT_*` |
