@@ -41,6 +41,10 @@ Gates:
 
 </general_rules>
 
+## Agents
+
+A strong model, Fable or Opus, discusses, plans, orchestrates, and reviews. Sonnet implements normal work. Haiku implements mechanical work. Each brief names the files the agent owns and the check that accepts the work. The reviewing model runs the checks itself and re-checks each claim of an agent. If a Sonnet agent fails twice on one step, the orchestrator takes over or asks the owner, and the history file names the escalation. A skill file names no model and has no `model:` field. An agent file in `.claude/agents/` names a model alias.
+
 ## Communication contract
 
 The user reads each reply once, often after a break, has not read the code, remembers no earlier chat, and decides from what you write.

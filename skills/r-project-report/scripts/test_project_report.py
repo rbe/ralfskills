@@ -492,10 +492,40 @@ class GeneralRulesTest(unittest.TestCase):
 
     def test_the_entry_file_and_its_template_stay_within_their_word_limits(self):
         """id: R-76"""
-        limits = {"CLAUDE.md": 847, "skills/r-project-setup/templates/CLAUDE.md": 917}
+        limits = {"CLAUDE.md": 941, "skills/r-project-setup/templates/CLAUDE.md": 1011}
         for name, limit in limits.items():
             text = (ROOT / name).read_text(encoding="utf-8")
             self.assertLessEqual(len(text.split()), limit, name)
+
+    def test_the_entry_file_and_its_template_have_the_agents_section(self):
+        """id: R-109"""
+        for name in ENTRY_FILES:
+            text = (ROOT / name).read_text(encoding="utf-8")
+            self.assertEqual(text.count("\n## Agents\n"), 1, name)
+            self.assertLess(text.index("</general_rules>"), text.index("\n## Agents\n"))
+            self.assertLess(
+                text.index("\n## Agents\n"), text.index("\n## Communication contract\n")
+            )
+            section = text[text.index("\n## Agents\n") :]
+            section = section[: section.index("\n## Communication contract\n")]
+            for phrase in (
+                "Fable or Opus",
+                "Sonnet implements normal work.",
+                "Haiku implements mechanical work.",
+                "re-checks each claim of an agent",
+                "fails twice on one step",
+                "names no model and has no `model:` field",
+                "names a model alias",
+            ):
+                self.assertIn(phrase, section, name)
+
+    def test_no_skill_has_a_model_field(self):
+        """id: R-109"""
+        for path in sorted((ROOT / "skills").glob("r-*/SKILL.md")):
+            text = path.read_text(encoding="utf-8")
+            frontmatter = text[3 : text.index("\n---", 3)]
+            for line in frontmatter.splitlines():
+                self.assertFalse(line.startswith("model:"), str(path))
 
     def test_the_entry_file_and_its_template_hold_the_group_questions(self):
         """id: R-51"""
