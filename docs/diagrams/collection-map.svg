@@ -27,7 +27,7 @@
 
   <rect class="box" x="20" y="30" width="210" height="60" rx="4"/>
   <text class="h" x="125" y="56" text-anchor="middle">CLAUDE.md</text>
-  <text class="m" x="125" y="75" text-anchor="middle">general rules, skill names</text>
+  <text class="m" x="125" y="75" text-anchor="middle">skill names, imports rules.md</text>
 
   <rect class="box" x="430" y="30" width="220" height="60" rx="4"/>
   <text class="h" x="540" y="56" text-anchor="middle">Agent</text>

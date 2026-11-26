@@ -25,9 +25,6 @@ FORMAT_FIX_CMD = podman run --rm -v "$(CURDIR)":/io:Z -w /io $(RUFF_IMAGE) forma
 LINT_CMD = podman run --rm -v "$(CURDIR)":/io:Z -w /io $(RUFF_IMAGE) check --exclude .claude --exclude apm_modules --exclude build --exclude docs --exclude .git --exclude .venv
 TEST_CHANGED_CMD = $(PYTHON) .claude/skills/r-project-report/scripts/changed_tests.py
 COVERAGE_CMD = set -eu; \
-	base=$$(git merge-base HEAD origin/$(DEFAULT_BRANCH) 2>/dev/null || git merge-base HEAD $(DEFAULT_BRANCH) 2>/dev/null || git rev-parse -q --verify HEAD 2>/dev/null || git hash-object -t tree /dev/null); \
-	git add -N .; \
-	git diff "$$base" > build/coverage/change.diff; \
 	podman run --rm -e HOME=/tmp -e PYTHONDONTWRITEBYTECODE=1 $(PODMAN_NET_ARGS) -v "$(CURDIR)":/work:Z -w /work $(PYTHON_IMAGE) sh -c 'set -eu; pip install --disable-pip-version-check --root-user-action=ignore -q --target /tmp/py "coverage==$(COVERAGE_VERSION)"; PYTHONPATH=/tmp/py python3 .claude/skills/r-project-report/scripts/cover_tests.py $(UNIT_TESTS)'; \
 	REPORT=build/coverage/coverage.xml $(DIFF_COVER)
 
