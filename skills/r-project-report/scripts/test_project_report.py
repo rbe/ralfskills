@@ -1956,7 +1956,9 @@ class MakeAndPodmanInterfaceTest(unittest.TestCase):
         paths.append(ROOT / "skills/r-project-setup/test-changed.mk")
         paths.append(ROOT / "Makefile")
         for path in paths:
-            self.assertNotIn("git merge-base", path.read_text(encoding="utf-8"), str(path))
+            self.assertNotIn(
+                "git merge-base", path.read_text(encoding="utf-8"), str(path)
+            )
 
     def test_coverage_writes_the_change_diff_and_stages_no_file(self):
         """id: R-12"""
