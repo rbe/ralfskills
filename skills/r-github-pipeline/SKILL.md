@@ -46,6 +46,7 @@ This skill owns the GitHub delivery contract and `sdlc.mk`, the makefile that im
 - The project Makefile includes the installed `sdlc.mk` before any target. Do not copy `sdlc.mk` to the repository root, and do not edit a file of this skill.
 - The workflow is one file, `.github/workflows/ci.yml`, named `CI`. A step is `actions/checkout`, an artifact upload or download, or `run: make <target>`. A project with `client/package.json` also has `publish-client.yml`. It publishes the client package, not the image, and `ci.yml` does not call it.
 - `publish-*` runs only on a push to the default branch or when `workflow_dispatch` selects that job. It needs `build` and `test`. A tag push publishes nothing.
+- Before a `v*` tag is pushed, `make check-tag TAG=vX.Y.Z` must pass: the tag is new, newer than every strict tag, and at the tip of the default branch.
 - A published version comes only from `make version`. A cleanup does not call it. A cleanup needs no git tag, and it keeps `PUBLISHED_TAG`, else the version in `build/publish-version.txt`, else the newest rolling version that GitHub lists.
 - Every upload sets `retention-days`.
 - The contract allows no second name for one target and no Docker in place of Podman.

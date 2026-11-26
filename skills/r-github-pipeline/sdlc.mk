@@ -119,7 +119,7 @@ THIS_MAKE := $(MAKE)
 
 # setup, build, test, and the publish targets are phony here so a build/
 # directory cannot satisfy the build target.
-.PHONY: help version ci report setup build test docs publish-tags \
+.PHONY: help version check-tag ci report setup build test docs publish-tags \
 	publish-container publish-github image run stop clean gh-image \
 	ci-status pull-request pull-request-merge \
 	cleanup-container-versions cleanup-github-releases cleanup-actions-artifacts
@@ -275,6 +275,23 @@ version: ## Print MAJOR.MINOR.PATCH-run. PRINT=tag prints the vX.Y.Z tag
 	printf '%s\n' "$(GITHUB_RUN_NUMBER)" | grep -Eq '^[1-9][0-9]*$$' \
 	  || { echo "GITHUB_RUN_NUMBER must be a positive integer. Refusing to invent a build number." >&2; exit 1; }; \
 	printf '%s-%s\n' "$${tag#v}" "$(GITHUB_RUN_NUMBER)"
+
+check-tag: ## Fail when TAG is not a new vMAJOR.MINOR.PATCH at the tip of the default branch. Run it before the tag is pushed
+	@set -eu; \
+	tag="$${TAG:-}"; \
+	if [ -z "$$tag" ]; then echo "check-tag: set TAG=vMAJOR.MINOR.PATCH." >&2; exit 1; fi; \
+	printf '%s\n' "$$tag" | grep -Eq '^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$$' \
+	  || { echo "check-tag: '$$tag' is not vMAJOR.MINOR.PATCH." >&2; exit 1; }; \
+	strict=$$(git tag -l 'v[0-9]*' | grep -E '^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$$' || true); \
+	if printf '%s\n' "$$strict" | grep -qx "$$tag"; then echo "check-tag: the tag $$tag exists." >&2; exit 1; fi; \
+	newest=$$(printf '%s\n%s\n' "$$strict" "$$tag" | grep . | sed 's/^v//' | sort -t. -k1,1n -k2,2n -k3,3n | tail -n 1); \
+	if [ "v$$newest" != "$$tag" ]; then echo "check-tag: $$tag is not newer than v$$newest." >&2; exit 1; fi; \
+	branch=$$(git rev-parse --abbrev-ref HEAD); \
+	tip=$$(git rev-parse -q --verify "origin/$(DEFAULT_BRANCH)" || git rev-parse -q --verify "$(DEFAULT_BRANCH)" || true); \
+	if [ "$$branch" != "$(DEFAULT_BRANCH)" ] || [ -z "$$tip" ] || [ "$$(git rev-parse HEAD)" != "$$tip" ]; then \
+	  echo "check-tag: check out the tip of $(DEFAULT_BRANCH) before the tag. HEAD is on '$$branch'." >&2; exit 1; \
+	fi; \
+	printf '%s\n' "check-tag: $$tag is a new tag at the tip of $(DEFAULT_BRANCH)."
 
 ci: ## Run the local CI targets, in order. Does not publish
 	@set -eu; for t in $(SDLC_CI); do \

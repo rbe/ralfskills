@@ -46,6 +46,7 @@ The project sets the command variables of `r-project-setup` above the include. I
 | `version` | Prints `MAJOR.MINOR.PATCH-run` from `git describe`. `PRINT=tag` prints the `vX.Y.Z` tag. Fails when there is no strict tag, when a pre-release tag is nearer, or when `GITHUB_RUN_NUMBER` is not set |
 | `ci` | Runs `SDLC_CI` in order. Does not publish |
 | `report` | Writes `build/report/index.md` from logs, summaries, and `JOB_RESULT_*` |
+| `check-tag` | Run it before the tag is pushed, as `make check-tag TAG=vX.Y.Z`. Fails unless `TAG` is `vMAJOR.MINOR.PATCH`, does not exist, is newer than every strict `v*` tag, and `HEAD` is the tip of the default branch |
 | `publish-tags` | Prints the version. Prints `latest` only when the ref is the default branch or `GITHUB_REF` is not set |
 | `gh-image` | Builds the image of the GitHub CLI, one time |
 | `ci-status` | Prints the result of the CI run for `HEAD`, or for `SHA=<sha>`. Fails when the run failed, did not finish, or does not exist. `WAIT=1` waits for the end |

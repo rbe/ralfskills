@@ -1981,6 +1981,93 @@ def expand_make_recipe(target, variables):
     return re.sub(r"\$\$|\$\((\w+)\)", replace, shell)
 
 
+FAKE_GIT = """\
+case "$*" in
+    "tag -l v[0-9]*") cat tags.txt ;;
+    "rev-parse --abbrev-ref HEAD") cat branch.txt ;;
+    "rev-parse HEAD") cat head.txt ;;
+    "rev-parse -q --verify origin/main") cat tip.txt 2>/dev/null || exit 1 ;;
+    *) exit 1 ;;
+esac
+"""
+
+
+class CheckTagRecipeTest(unittest.TestCase):
+    """Runs the real check-tag recipe of sdlc.mk in sh against a fake git."""
+
+    def check(self, tag, tags=("v0.3.0", "v0.4.0"), branch="main", head="a1", tip="a1"):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "bin").mkdir()
+            (root / "bin" / "git").write_text(FAKE_GIT, encoding="utf-8")
+            (root / "bin" / "git").chmod(0o755)
+            (root / "tags.txt").write_text("".join(f"{t}\n" for t in tags))
+            (root / "branch.txt").write_text(branch + "\n")
+            (root / "head.txt").write_text(head + "\n")
+            if tip:
+                (root / "tip.txt").write_text(tip + "\n")
+            shell = expand_make_recipe("check-tag", {"DEFAULT_BRANCH": "main"})
+            environment = {"PATH": f"{root / 'bin'}:{os.environ['PATH']}"}
+            if tag is not None:
+                environment["TAG"] = tag
+            return subprocess.run(
+                ["sh", "-c", shell],
+                cwd=tmp,
+                env=environment,
+                capture_output=True,
+                text=True,
+            )
+
+    def test_a_new_newer_tag_at_the_tip_of_the_default_branch_passes(self):
+        """id: R-120"""
+        for tag in ("v0.5.0", "v0.4.1", "v1.0.0", "v0.10.0"):
+            result = self.check(tag)
+            self.assertEqual(result.returncode, 0, f"{tag} {result.stderr}")
+        result = self.check("v0.1.0", tags=())
+        self.assertEqual(result.returncode, 0, result.stderr)
+
+    def test_a_bad_old_or_existing_tag_fails_and_names_the_reason(self):
+        """id: R-120"""
+        cases = (
+            (None, "set TAG"),
+            ("0.5.0", "is not vMAJOR.MINOR.PATCH"),
+            ("v0.5", "is not vMAJOR.MINOR.PATCH"),
+            ("v0.5.0-rc1", "is not vMAJOR.MINOR.PATCH"),
+            ("v0.4.0", "exists"),
+            ("v0.3.5", "is not newer than v0.4.0"),
+        )
+        for tag, reason in cases:
+            result = self.check(tag)
+            self.assertNotEqual(result.returncode, 0, f"{tag}")
+            self.assertIn(reason, result.stderr, f"{tag}")
+        # a pre-release tag does not count as the nearest tag
+        result = self.check("v0.3.5", tags=("v0.3.0", "v0.4.0-rc1"))
+        self.assertEqual(result.returncode, 0, result.stderr)
+
+    def test_a_tag_off_the_tip_of_the_default_branch_fails(self):
+        """id: R-120"""
+        for kwargs in (
+            {"branch": "feature"},
+            {"head": "b2"},
+            {"tip": ""},
+        ):
+            result = self.check("v0.5.0", **kwargs)
+            self.assertNotEqual(result.returncode, 0, str(kwargs))
+            self.assertIn("check out the tip of main", result.stderr)
+
+    def test_the_skill_and_the_reference_name_the_target(self):
+        """id: R-120"""
+        skill = (ROOT / "skills" / "r-github-pipeline" / "SKILL.md").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn(
+            "- Before a `v*` tag is pushed, `make check-tag TAG=vX.Y.Z` must pass:",
+            skill,
+        )
+        sdlc = PIPELINE_MK.read_text(encoding="utf-8")
+        self.assertIn(".PHONY: help version check-tag ci", sdlc)
+
+
 class CleanupRecipeTest(unittest.TestCase):
     """Runs the real recipes of sdlc.mk in sh against a fake GitHub CLI."""
 
