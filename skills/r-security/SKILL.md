@@ -19,7 +19,7 @@ The checks keep secrets, listeners, inputs, and commands inside the limits that 
 </questions>
 
 <checks>
-1. A secret is not in the tree, a log, an error, or a fixture.
+1. A secret is not in the tree, a log, or an error.
 2. A listener is the one the accepted ADR names.
 3. Input has a bound on size and on type. For a function that other code calls, a type in the signature is the bound on type.
 4. A command the program runs is the one the slice named.

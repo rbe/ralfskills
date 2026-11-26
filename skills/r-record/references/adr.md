@@ -18,7 +18,7 @@ If no home fits, the agent asks the user. A choice that need not hold has no hom
 
 - `## Rule`: what an agent must do or must not do, in sentences that `r-review` can check.
 - `## Why`: the reason, and the options that were not chosen.
-- `## Divergence`: only in an ADR that replaces a skill rule.
+- `## Divergence`: only in an ADR that replaces a skill rule. A pipeline divergence goes where `r-github-pipeline` says, and every other divergence is an ADR.
 - Keep the ADR short. Do not copy the grill.
 
 ## Status

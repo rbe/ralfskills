@@ -20,7 +20,7 @@ The general rules in `CLAUDE.md` apply.
 3. Ask the owner until the slice is one sentence with an out-of-scope line.
    Architectural patterns are part of these questions.
    Before the slice closes, ask what the result looks like: the output or the interface, the empty case, and the error case. `r-develop` cannot ask the owner later.
-   A question that the owner has not answered is a roadmap row of the kind `question`. It is not in the Plan section.
+   Ask `r-record` for a roadmap row for each question that the owner has not answered.
    If a proposal has no answers, do steps 2 to 4 for it in full now. The proposal keeps its text.
 4. Name the boundary and the pattern for this slice in one sentence: who owns state, and what may call what.
    If the boundary keeps the slice out of a package, name each existing function of that package that the slice needs. Say whether the slice moves it, exports it, or repeats it.
@@ -30,7 +30,6 @@ The general rules in `CLAUDE.md` apply.
 6. If the owner answers a choice that must hold, ask `r-record` where it goes: a requirement row, a sentence in an ADR, or a new ADR.
    A storage format, a protocol, and the interface of a library are expensive to reverse, so each is an ADR. The project is a library when the entry file says it ships as a library package.
    For a library interface, the ADR is the public names and their signatures. What a function does is requirement rows.
-   If the repository keeps `docs/requirements/` and no `docs/adr/`, the answer is a row of the file of its owner there.
    A choice that need not hold is not recorded.
 7. If the Makefile is missing, or if the slice adds or overrides a target, invoke `r-project-setup`.
 8. If the slice needs a language and no `language` row of `docs/skill-index.toon` matches the files, stop. The index lists only installed skills.
@@ -38,7 +37,7 @@ The general rules in `CLAUDE.md` apply.
    Ask `r-record` to write the Plan section: the questions and answers, the boundary and the pattern, the lines of step 2, and each ADR id.
    Each answer that a test must prove becomes a requirement row, or an ADR as step 6 says. `r-develop` names those ids in the tests.
    Develop, Review, and Release read `Not invoked yet.`
-10. If the owner chooses to implement later: ask `r-record` for a proposal id and write `docs/proposals/<id>.md`. Ask `r-record` for the roadmap row that names the proposal. If the repository keeps `docs/requirements/` and no `docs/adr/`, the row is a planned row of the file of its owner there. Create no history file.
+10. If the owner chooses to implement later: ask `r-record` for a proposal id and write `docs/proposals/<id>.md`. Ask `r-record` for the roadmap row that names the proposal. Create no history file.
 </steps>
 
 <rules>

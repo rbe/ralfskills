@@ -20,8 +20,8 @@ This skill gives the Make targets and the code rules for Python files.
 
 <rules>
 - In a recipe, `$(PYTHON)` runs Python in Podman. `make setup` resolves the dependencies.
-- The formatter is Ruff (`ruff format`). The linter is Ruff (`ruff check`). Ruff does not read `.claude/`, `apm_modules/`, or `docs/`.
-- `make coverage` runs coverage.py and then diff-cover.
+- The formatter is Ruff (`ruff format`). The linter is Ruff (`ruff check`).
+- `make coverage` runs coverage.py.
 - `UNIT_TESTS` in the template is every file `tests/test_*.py` and `tests/*/test_*.py`, so `make test` runs a new test file with no change to the Makefile.
 - A test file has no `if __name__ == "__main__":` block, because the diff report counts each line of a test file.
 - A public function has type hints. A change adds the hints to each public function that it touches.

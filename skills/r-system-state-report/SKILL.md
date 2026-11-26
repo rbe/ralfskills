@@ -20,8 +20,7 @@ The report is successful if the reader understands each sentence on the first re
    - The result of `make test`, and of the target that `CLAUDE.md` names for starting the system. Run each only if it changes no data and no external system. Record the real result.
 2. Build the glossary before you write the report.
    - List the things that the report must name: components, data, actors, processes.
-   - Select one name for each thing. Prefer the word of the user, then the identifier in the code, then a plain descriptive phrase.
-   - Replace each label that appears in a chat or a commit message, but not in the code and not in the words of the user, with a selected name, or define it in one sentence.
+   - Select one name for each thing, as the names rules of the communication contract say.
    - Write a table: the name, what it is in one sentence, and its path in the project.
 3. Write the report in the language of the user. Use these sections in this order. If a section has no content, say so in one line.
    1. Summary. Maximum 5 sentences: what the system does now, the largest difference from what was asked, and the number of decisions that wait for the human.
@@ -43,10 +42,8 @@ The report is successful if the reader understands each sentence on the first re
 - Each statement in sections 2 to 6 has a source and a status. If a statement has no source, delete it.
 - A source is `path/to/file:line`, a commit hash, a test name, or a chat passage with a date or a short quote.
 - A status is one of three words. "ran": you executed it in this session and saw the result. "read": you read it in the code and did not execute it. "said": only a chat or a commit message states it. Do not change "read" or "said" into "ran".
-- A sentence that tells the reader to do something has at most 20 words.
 - Use present tense for the current state. Use past tense only for events.
-- Use no abbreviation that the glossary does not define.
-- Do not use these judging words: robust, clean, seamless, simple, powerful, improved, optimized, comprehensive.
+- These words are judging words: robust, clean, seamless, simple, powerful, improved, optimized, comprehensive.
 - A noun chain has at most 3 nouns. In German, break a long compound with a hyphen or rewrite it.
 - Use a list for parallel items, a table for a comparison, and sentences for cause and effect.
 - Change no file other than the report and the rows that `r-record` writes. Do not add a second instruction file: `CLAUDE.md` tells each agent where a decision goes.

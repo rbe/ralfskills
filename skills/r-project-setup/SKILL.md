@@ -53,7 +53,7 @@ This skill owns the Make contract: the Makefile, the standard targets, `CLAUDE.m
 5. `integration` is the one integration entry. No second integration target exists.
 6. `coverage` writes its report through diff-cover, and `COVERAGE_CMD` also writes the coverage map. The language skill names the coverage tool. The diff is the branch against `DEFAULT_BRANCH`. `coverage` and `test-changed` fail until the first unit test exists.
 7. `test-changed` selects the tests from the coverage of the files in the diff, not from a hand-kept list.
-8. The `id:` line of each test names an id, not a path.
+8. Each test follows the test rules of `r-record`.
 9. When `r-project-report` is installed, `make project-report` writes its file.
 </checks>
 
@@ -63,10 +63,10 @@ This skill owns the Make contract: the Makefile, the standard targets, `CLAUDE.m
 - The standard targets, and when each exists, are in `references/makefile.md`.
 - A target does the same thing on a laptop and in CI. A command that only makes sense on a laptop gets its own name, such as `dev` or `verify`.
 - A target is filled in when its command variable has a non-empty value, or when the Makefile of the project gives that target a recipe. `true` is a filled-in value.
-- A target that the project adds after the include is the project's. A target of the Make contract is not repeated there, because Make is the only interface.
+- A target that the project adds after the include is the project's.
 - The project includes the installed `project.mk`. Do not keep a copy at the repository root or elsewhere.
 - If the Makefile lacks the include of `project.mk` or `sdlc.mk`, run `make -f .claude/skills/<skill>/<file>.mk <target>`.
-- Podman: `make build` and `make test` call Podman. `make run` exists only where a language template defines it. Docker is not a second engine. A recipe calls `git`, `podman`, and the tools of POSIX `sh`, such as `sed`, `awk`, `grep`, `find`, and `tar`. `setup` runs `make doctor`, then `SETUP_CMD`.
+- Podman: `make build` and `make test` call Podman. `make run` exists only where a language template defines it. A recipe calls `git`, `podman`, and the tools of POSIX `sh`, such as `sed`, `awk`, `grep`, `find`, and `tar`. `setup` runs `make doctor`, then `SETUP_CMD`.
 - Make 3.81 recipes: the system `make` stays GNU Make 3.81, also on macOS. Use no `.ONESHELL` and no Make 4 function (`$(file ...)`, `$(guile ...)`, `!=`). Each recipe line is one POSIX shell, joined with backslashes. A shell `$` is `$$`. The recipe is the command; add no shell-script wrapper.
 </rules>
 

@@ -18,7 +18,7 @@ The checks limit where a change stores, shows, logs, and exports personal data.
 </questions>
 
 <checks>
-1. Logs, errors, and fixtures contain no personal data.
+1. Logs and errors contain no personal data.
 2. An export is one the user asked for in this slice.
 3. Example data is marked as an example. Real data is not in the tree.
 </checks>
