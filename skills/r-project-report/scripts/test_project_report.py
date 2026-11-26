@@ -1830,6 +1830,26 @@ class MakeAndPodmanInterfaceTest(unittest.TestCase):
         doc = (self.PIPELINE / "references" / "makefile.md").read_text(encoding="utf-8")
         self.assertIn("`SMOKE_PAGE_NEEDLE`", doc)
 
+    def test_the_list_of_the_entry_file_row_is_the_one_list_of_the_skills(self):
+        """id: R-16 R-60"""
+        setup = (ROOT / "docs" / "requirements" / "project-setup.md").read_text(
+            encoding="utf-8"
+        )
+        row = [line for line in setup.splitlines() if '<a id="r-60">' in line][0]
+        sentence = row.split("The skills of the collection are ")[1].split(
+            ". This list is the one list"
+        )[0]
+        listed = re.findall(r"`(r-[a-z-]+)`", sentence)
+        self.assertEqual(len(listed), len(set(listed)))
+        folders = sorted(path.name for path in (ROOT / "skills").glob("r-*"))
+        self.assertEqual(sorted(listed), folders)
+        collection = (ROOT / "docs" / "requirements" / "collection.md").read_text(
+            encoding="utf-8"
+        )
+        row16 = [line for line in collection.splitlines() if '<a id="r-16">' in line][0]
+        self.assertIn("[R-60](project-setup.md#r-60)", row16)
+        self.assertEqual(re.findall(r"`(r-[a-z-]+)`", row16), [])
+
     def test_jvm_tooling_counts_a_kotlin_build_file_as_present(self):
         """id: R-66"""
         gradle = (
