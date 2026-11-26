@@ -1965,6 +1965,9 @@ class MakeAndPodmanInterfaceTest(unittest.TestCase):
         tools = (ROOT / "skills/r-project-setup/tools.mk").read_text(encoding="utf-8")
         self.assertIn("CHANGE_DIFF = ", tools)
         self.assertIn("git ls-files --others --exclude-standard", tools)
+        self.assertIn("> build/change.diff", tools)
+        self.assertIn("--diff-file build/change.diff", tools)
+        self.assertNotIn("build/coverage/change.diff", tools)
         contract = (ROOT / "skills/r-project-setup/contract.mk").read_text(
             encoding="utf-8"
         )
