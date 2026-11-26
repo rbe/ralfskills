@@ -30,6 +30,9 @@ HOST_PORT ?= 8173
 CURL_IMAGE ?= docker.io/curlimages/curl:8.17.0
 SMOKE_PATH ?= /api/health
 SMOKE_NEEDLE ?= ok
+# The page at / of a single-page app holds this text, such as the root
+# element of the app shell. Empty turns the page check off.
+SMOKE_PAGE_NEEDLE ?= id="root"
 DATA_DIR ?= data
 DATA_ENV ?= APP_DATA
 
@@ -103,6 +106,7 @@ SMOKE_CMD = name=$(NAME)-smoke; \
 	  if podman run --rm --network "container:$$name" $(CURL_IMAGE) -fsSk "https://127.0.0.1:$(PORT)$(SMOKE_PATH)" 2>/dev/null | grep -qF '$(SMOKE_NEEDLE)'; then ok=1; break; fi; \
 	  i=$$((i + 1)); sleep 1; \
 	done; \
+	if [ "$$ok" = 1 ] && [ -n '$(SMOKE_PAGE_NEEDLE)' ] && ! podman run --rm --network "container:$$name" $(CURL_IMAGE) -fsSk "https://127.0.0.1:$(PORT)/" 2>/dev/null | grep -qF '$(SMOKE_PAGE_NEEDLE)'; then ok=0; printf '%s\n' 'smoke: the page / lacks SMOKE_PAGE_NEEDLE' >&2; fi; \
 	podman rm -f "$$name" >/dev/null 2>&1 || true; \
 	test "$$ok" = 1
 

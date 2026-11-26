@@ -1811,6 +1811,25 @@ class MakeAndPodmanInterfaceTest(unittest.TestCase):
         )
         self.assertIn("# SMOKE_ARGS = --help", image)
 
+    def test_the_web_smoke_check_looks_for_the_page_root_and_the_api_needle(self):
+        """id: R-119"""
+        node = (self.PIPELINE / "templates" / "Makefile.node").read_text(
+            encoding="utf-8"
+        )
+        self.assertRegex(node, r'(?m)^SMOKE_PAGE_NEEDLE \?= id="root"$')
+        self.assertRegex(node, r"(?m)^SMOKE_NEEDLE \?= ok$")
+        smoke = node.split("\nSMOKE_CMD = ")[1].split("\n\n")[0]
+        self.assertIn('"https://127.0.0.1:$(PORT)$(SMOKE_PATH)"', smoke)
+        self.assertIn("grep -qF '$(SMOKE_NEEDLE)'", smoke)
+        self.assertIn('"https://127.0.0.1:$(PORT)/"', smoke)
+        self.assertIn("grep -qF '$(SMOKE_PAGE_NEEDLE)'", smoke)
+        self.assertIn("[ -n '$(SMOKE_PAGE_NEEDLE)' ]", smoke)
+        self.assertLess(
+            smoke.index("SMOKE_PAGE_NEEDLE"), smoke.index('test "$$ok" = 1')
+        )
+        doc = (self.PIPELINE / "references" / "makefile.md").read_text(encoding="utf-8")
+        self.assertIn("`SMOKE_PAGE_NEEDLE`", doc)
+
     def test_jvm_tooling_counts_a_kotlin_build_file_as_present(self):
         """id: R-66"""
         gradle = (

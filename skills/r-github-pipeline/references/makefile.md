@@ -24,6 +24,7 @@ The project sets the command variables of `r-project-setup` above the include. I
 | `SDLC_JOBS` | The jobs that the pipeline report lists. Add `publish-github` when that job exists |
 | `SDLC_CI` | The targets that `ci` runs, in order. The default is `setup build editorconfig format lint test integration coverage docs report`. Remove `docs` when there is no docs target |
 | `SDLC_KEEP_ARTIFACTS` | The artifact names that the hourly cleanup does not delete. The default is `report,docs` |
+| `SMOKE_PATH`, `SMOKE_NEEDLE`, `SMOKE_PAGE_NEEDLE` | In `templates/Makefile.node`: the API path and its needle, and the text that the page at `/` must hold. The defaults are `/api/health`, `ok`, and `id="root"`. An empty `SMOKE_PAGE_NEEDLE` turns the page check off |
 | `PORT`, `HOST_PORT` | In `templates/Makefile.node`: the port inside the container, and the port of the host that `make run` binds. `HOST_PORT` stays above 1024 and `run` fails below it |
 | `HELP_LEAD` | The first line of `make help` |
 | `GH_BASE_IMAGE`, `GH_VERSION` | The base image and the release of the GitHub CLI image |
