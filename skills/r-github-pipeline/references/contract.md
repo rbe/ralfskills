@@ -22,7 +22,7 @@ The test of the repository reads the workflow, the Makefile, and `sdlc.mk`. Repo
 - the workflows are not `ci.yml` alone, or `ci.yml` and `publish-client.yml` for a project with `client/package.json`, or the job ids and `needs` differ from the graph in `references/workflow.md`
 - a `run:` step is not `make <target>`. This includes a step that runs `./gradlew`, `npm`, `podman login`, `python`, or `tar` in place of `make build`, `make login`, `make setup`, `make test`, `make docs`, or `make publish-container`
 - an upload has no `retention-days`, or an intermediate artifact is kept more than 1 day, or `report` is kept more than 14 days
-- `publish-*` is not limited to the default branch or the dispatch input, or it does not need `build` and `test`
+- `publish-*` is not limited to the dispatch input and to a push to the default branch with `vars.AUTO_PUBLISH == 'true'`, or it does not need `build` and `test`
 - `report` is not the last job or has no `!cancelled()`
 - the Makefile does not include `.claude/skills/r-github-pipeline/sdlc.mk` before any target, or a root `sdlc.mk` is the include
 - `make test`, `make build`, or `make setup` runs no recipe, which means that the include switch lost a contract target

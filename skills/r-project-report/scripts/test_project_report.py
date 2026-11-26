@@ -1850,6 +1850,63 @@ class MakeAndPodmanInterfaceTest(unittest.TestCase):
         self.assertIn("[R-60](project-setup.md#r-60)", row16)
         self.assertEqual(re.findall(r"`(r-[a-z-]+)`", row16), [])
 
+    def test_a_publish_job_runs_on_a_push_only_with_the_flag_and_always_on_dispatch(
+        self,
+    ):
+        """id: R-121"""
+        flag = (
+            "(github.event_name == 'push' && github.ref =="
+            " format('refs/heads/{0}', github.event.repository.default_branch)"
+            " && vars.AUTO_PUBLISH == 'true') ||"
+        )
+        counts = {"ci.node.yml": 1, "ci.make.yml": 1, "ci.gradle.yml": 2}
+        for name, count in counts.items():
+            workflow = (self.PIPELINE / "templates" / name).read_text(encoding="utf-8")
+            jobs = re.findall(
+                r"(?ms)^  (publish-[a-z]+):\n(.*?)(?=^  [a-z-]+:\n)",
+                workflow + "  x:\n",
+            )
+            self.assertEqual(len(jobs), count, name)
+            for job, body in jobs:
+                condition = body.split("    if: >-\n")[1].split("    runs-on:")[0]
+                lines = [line.strip() for line in condition.splitlines()]
+                self.assertEqual(
+                    lines, [flag, f"inputs.job == '{job}'"], f"{name} {job}"
+                )
+                self.assertIn("needs: [build, test]", body)
+        client = (self.PIPELINE / "templates" / "publish-client.yml").read_text(
+            encoding="utf-8"
+        )
+        self.assertNotIn("branches:", client)
+        self.assertNotIn("AUTO_PUBLISH", client)
+        sdlc = PIPELINE_MK.read_text(encoding="utf-8")
+        container = (self.PIPELINE / "container.mk").read_text(encoding="utf-8")
+        self.assertNotIn("AUTO_PUBLISH", sdlc + container)
+        ci = re.search(r"(?m)^SDLC_CI \?= (.+)$", sdlc).group(1)
+        self.assertNotIn("publish", ci)
+        for name in ("Makefile.node", "Makefile.gradle", "Makefile.image"):
+            text = (self.PIPELINE / "templates" / name).read_text(encoding="utf-8")
+            for line in re.findall(r"(?m)^SDLC_CI \??= (.+)$", text):
+                self.assertNotIn("publish", line, name)
+        skill = (self.PIPELINE / "SKILL.md").read_text(encoding="utf-8")
+        self.assertIn(
+            "- By default only a human publishes a large artifact, such as a"
+            " container image, to a registry, with `workflow_dispatch`.",
+            skill,
+        )
+        self.assertIn("`AUTO_PUBLISH` set to `true`", skill)
+        for path in (
+            self.PIPELINE / "references" / "workflow.md",
+            self.PIPELINE / "references" / "contract.md",
+            self.PIPELINE / "templates" / "pipeline-rules.md",
+            ROOT / "skills" / "r-release" / "SKILL.md",
+        ):
+            self.assertIn("AUTO_PUBLISH", path.read_text(encoding="utf-8"), path.name)
+        setup = ROOT / "skills" / "r-project-setup" / "templates" / "CLAUDE.md"
+        self.assertNotIn(
+            "with the merge into the default branch", setup.read_text(encoding="utf-8")
+        )
+
     def test_jvm_tooling_counts_a_kotlin_build_file_as_present(self):
         """id: R-66"""
         gradle = (
