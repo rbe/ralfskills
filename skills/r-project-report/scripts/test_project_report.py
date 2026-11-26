@@ -527,6 +527,46 @@ class StageRoutingTest(unittest.TestCase):
                 self.assertNotIn(f"`{name}`", steps, f"{stage} names {name}")
 
 
+class ReviewRulesTest(unittest.TestCase):
+    def skill(self, name):
+        return (ROOT / "skills" / name / "SKILL.md").read_text(encoding="utf-8")
+
+    def test_the_defect_report_form_has_eight_parts_with_one_owner(self):
+        """id: R-113"""
+        form = (ROOT / "skills/r-record/references/defect-report.md").read_text(
+            encoding="utf-8"
+        )
+        for number, part in enumerate(
+            (
+                "Location:",
+                "Mechanism:",
+                "Evidence:",
+                "Not a regression:",
+                "The rule it contradicts:",
+                "Fix options:",
+                "Acceptance check:",
+                "Documents to update:",
+            ),
+            1,
+        ):
+            self.assertIn(f"\n{number}. {part}", form)
+        self.assertIn("references/defect-report.md", self.skill("r-record"))
+        review = self.skill("r-review")
+        self.assertIn("the defect report form of `r-record`", review)
+        self.assertNotIn("the mechanism", review)
+
+    def test_only_the_release_skill_states_the_staging_rule(self):
+        """id: R-114"""
+        rule = "Never run `git add -A`, `git add .`, or `git commit -a`."
+        self.assertIn(
+            "Stage only the files of the change, by name.", self.skill("r-release")
+        )
+        self.assertIn(rule, self.skill("r-release"))
+        for path in (ROOT / "skills").glob("r-*/SKILL.md"):
+            if path.parent.name != "r-release":
+                self.assertNotIn("git add -A", path.read_text(encoding="utf-8"))
+
+
 class GeneralRulesTest(unittest.TestCase):
     def test_the_entry_file_and_its_template_have_the_same_general_rules(self):
         """id: R-76"""

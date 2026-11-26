@@ -25,7 +25,7 @@ The general rules in `CLAUDE.md` apply.
 </steps>
 
 <rules>
-- A finding states the location, the mechanism, the evidence, whether it predates this change, and the check that proves the fix.
+- A finding follows the defect report form of `r-record`.
 - An accepted ADR replaces a skill rule only if the ADR is a divergence. An ADR that differs from a skill rule and does not name the three parts of a divergence is a finding.
 - A divergence that the contract reference of `r-github-pipeline` lists as not allowed is a finding, also when an ADR records it.
 - `r-plan` chose the pattern. Do not name a different pattern.
