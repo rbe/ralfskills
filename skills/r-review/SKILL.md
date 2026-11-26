@@ -10,7 +10,7 @@ The general rules in `CLAUDE.md` apply.
 </purpose>
 
 <steps>
-1. Read `docs/skill-index.toon`. For each row whose `kind` is `check`, in file order, read that skill and run its checks. Write the line with the result, as `security: no secret in the diff, input checked.` If a check does not apply to this change, the line says why.
+1. Read `docs/skill-index.toon`. For each row whose `stages` names `r-review`, in file order, read that skill and run its checks. Write the line with the result, as `security: no secret in the diff, input checked.` If a check does not apply to this change, the line says why.
 2. Read `docs/adr/index.toon`. Open the ADRs that step 3 of `r-develop` selects. A change that breaks one of them is a finding.
 3. Run `make lint` and `make test`.
 4. Check each test of the change against the test-id rule in `r-record`. If a test has an id in a path, stop.

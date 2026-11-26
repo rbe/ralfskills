@@ -3,6 +3,7 @@ name: r-jvm
 description: Java, Groovy, Grails, and Gradle. Applies the JVM rules to a change. Use when r-jvm is installed and the files in hand are Java, Groovy, Grails, or Gradle. The stage skill still applies.
 kind: language
 files: [java, groovy, gradle, kts]
+stages: [r-develop]
 ---
 
 The general rules in `CLAUDE.md` apply.

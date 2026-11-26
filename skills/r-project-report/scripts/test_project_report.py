@@ -31,6 +31,7 @@ changed_tests = load("changed_tests", HERE / "changed_tests.py")
 node_cover_map = load("node_cover_map", HERE / "node_cover_map.py")
 jacoco_cover_map = load("jacoco_cover_map", HERE / "jacoco_cover_map.py")
 go_cover_map = load("go_cover_map", HERE / "go_cover_map.py")
+skill_index = load("skill_index", ROOT / "skills/r-record/scripts/skill_index.py")
 
 
 def write(root, relative, text):
@@ -495,6 +496,35 @@ class AgentAgnosticTextTest(unittest.TestCase):
             text = path.read_text(encoding="utf-8")
             for name in names:
                 self.assertNotIn(name, text, str(path))
+
+
+class StageRoutingTest(unittest.TestCase):
+    def test_every_check_and_language_skill_names_the_stages_that_load_it(self):
+        """id: R-110"""
+        found = skill_index.rows(ROOT)
+        self.assertTrue(found)
+        self.assertIn("stages", skill_index.render(found).splitlines()[0])
+        for row in found:
+            self.assertTrue(row["stages"], row["name"])
+            expected = (
+                ["r-plan", "r-review"] if row["kind"] == "check" else ["r-develop"]
+            )
+            self.assertEqual(row["stages"], expected, row["name"])
+            for stage in row["stages"]:
+                self.assertTrue((ROOT / "skills" / stage / "SKILL.md").is_file(), stage)
+
+    def test_a_stage_reads_the_stages_column_and_names_no_subskill(self):
+        """id: R-110"""
+        names = [row["name"] for row in skill_index.rows(ROOT)]
+        for stage, column in (
+            ("r-plan", "`stages` names `r-plan`"),
+            ("r-review", "`stages` names `r-review`"),
+            ("r-develop", "`stages` names `r-develop`"),
+        ):
+            steps = (ROOT / "skills" / stage / "SKILL.md").read_text(encoding="utf-8")
+            self.assertIn(column, steps)
+            for name in names:
+                self.assertNotIn(f"`{name}`", steps, f"{stage} names {name}")
 
 
 class GeneralRulesTest(unittest.TestCase):

@@ -4,6 +4,7 @@ description: Go. Applies the Go rules to a change. Use when go is installed and 
 kind: language
 files: [go]
 names: [go.mod, go.sum]
+stages: [r-develop]
 ---
 
 The general rules in `CLAUDE.md` apply.
