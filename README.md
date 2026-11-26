@@ -1,22 +1,22 @@
 # ralfskills
 
-Skills for [Microsoft APM](https://github.com/microsoft/apm). This repository is a [skill collection](https://microsoft.github.io/apm/reference/package-types/#skill-collection-skillsnameskillmd): each skill is `skills/<name>/SKILL.md`. There is no `SKILL.md` at the repository root, so APM does not treat the repository as one skill.
+Skills for [Microsoft APM](https://github.com/microsoft/apm). This repository is a [skill collection](https://microsoft.github.io/apm/reference/package-types/#skill-collection-skillsnameskillmd): each skill is `skills/r-<name>/SKILL.md`. There is no `SKILL.md` at the repository root, so APM does not treat the repository as one skill.
 
-Install so the files land in `.claude/skills/`. That is the APM target `claude`. Make includes `project.mk` from that path, or `sdlc.mk` when `github-pipeline` is installed. `CLAUDE.md` is the only entry file in a project that uses these skills.
+Install so the files land in `.claude/skills/`. That is the APM target `claude`. Make includes `project.mk` from that path, or `sdlc.mk` when `r-github-pipeline` is installed. `CLAUDE.md` is the only entry file in a project that uses these skills.
 
 ## How the parts work together
 
-![The agent reads CLAUDE.md and loads a skill. The skill tells the agent to type make targets and Git commands. Make runs every tool in a Podman image. record writes the board under docs. A Git push starts the GitHub workflow, and the workflow runs the same make targets.](docs/diagrams/collection-map.svg)
+![The agent reads CLAUDE.md and loads a skill. The skill tells the agent to type make targets and Git commands. Make runs every tool in a Podman image. r-record writes the board under docs. A Git push starts the GitHub workflow, and the workflow runs the same make targets.](docs/diagrams/collection-map.svg)
 
 An agent reads `CLAUDE.md`, loads the skill that the task needs, and types only `make` and Git. Make runs every tool in a Podman image. GitHub Actions runs the same Make targets. The orange box is the one point that every command passes. So a gate gives the same result on a laptop and on GitHub. The dashed arrow means that the makefiles come from the installed skills.
 
 1. You ask for a change. The agent reads `CLAUDE.md`, which holds the general rules and the names of the skills.
-2. The agent runs `make old-board`. If old documents such as `docs/DECISIONS.md` exist, the only skill is `migrate-docs`.
-3. `plan` asks you questions, one at a time, and names the boundary of the change. A request that names a file or a failing test starts at `develop`.
-4. `develop` changes the code and the tests with the language skill. It runs `make lint`, `make test`, and `make coverage`. Each target starts a Podman image.
-5. `review` runs the gates again and checks the change against the accepted rules of the board.
-6. `release` commits and pushes. The push starts the workflow, and the workflow runs the same targets. `make ci-status` reads the result.
-7. In each stage, `record` writes the ids and the board documents under `docs/`.
+2. The agent runs `make old-board`. If old documents such as `docs/DECISIONS.md` exist, the only skill is `r-migrate-docs`.
+3. `r-plan` asks you questions, one at a time, and names the boundary of the change. A request that names a file or a failing test starts at `r-develop`.
+4. `r-develop` changes the code and the tests with the language skill. It runs `make lint`, `make test`, and `make coverage`. Each target starts a Podman image.
+5. `r-review` runs the gates again and checks the change against the accepted rules of the board.
+6. `r-release` commits and pushes. The push starts the workflow, and the workflow runs the same targets. `make ci-status` reads the result.
+7. In each stage, `r-record` writes the ids and the board documents under `docs/`.
 
 The diagram is `docs/diagrams/collection-map.svg`. A change that alters what it shows updates it in the same commit.
 
@@ -24,72 +24,72 @@ The diagram is `docs/diagrams/collection-map.svg`. A change that alters what it 
 
 | Skill | What it covers |
 | --- | --- |
-| [plan](skills/plan/SKILL.md) | Grill. Ask one question at a time. Write a history file to start now, or a roadmap row with a proposal to implement later |
-| [develop](skills/develop/SKILL.md) | Implement the slice with the installed language skill |
-| [review](skills/review/SKILL.md) | Gates and the installed subskills, after the change |
-| [release](skills/release/SKILL.md) | Commit, push, merge when CI passed, and close the task. Invokes `github-pipeline` when delivery changes |
-| [record](skills/record/SKILL.md) | Ids, the board, the history file, the ADRs and their status, the ADR index, and this collection's requirements index |
-| [onboard](skills/onboard/SKILL.md) | The order of the other skills for a project that adopts this collection. Say `report and integrate` |
-| [system-state-report](skills/system-state-report/SKILL.md) | A plain-language report on what the system does now, the decisions that shaped it, and the decisions that wait for the owner. Say `state report` |
-| [board-merge-report](skills/board-merge-report/SKILL.md) | Reports which board rows, ADRs, and closed history files repeat text and can merge, shrink, or go. Writes nothing. Numbers come from `make board-numbers` |
-| [board-merge](skills/board-merge/SKILL.md) | Does what the owner chose by id from that report. One commit for each finding |
-| [component-upgrade](skills/component-upgrade/SKILL.md) | Updates one component to a newer version in one slice, with the gates before and after. Covers a library, a runtime, a base image, a tool pin, and this collection |
-| [upgrade-node-components](skills/upgrade-node-components/SKILL.md) | Gives the Node facts for `component-upgrade`: where each version is pinned and the known traps |
-| [upgrade-python-components](skills/upgrade-python-components/SKILL.md) | Gives the Python facts for `component-upgrade`: where each version is pinned and the known traps |
-| [upgrade-java-components](skills/upgrade-java-components/SKILL.md) | Gives the Java, Groovy, Grails, and Gradle facts for `component-upgrade`: where each version is pinned and the known traps |
-| [upgrade-go-components](skills/upgrade-go-components/SKILL.md) | Gives the Go facts for `component-upgrade`: where each version is pinned and the known traps |
-| [project-report](skills/project-report/SKILL.md) | Generated requirements map, architecture review, and development review |
-| [migrate-docs](skills/migrate-docs/SKILL.md) | The only skill that reads an old board. Other skills stop until it has deleted those files |
-| [project-setup](skills/project-setup/SKILL.md) | Writes `CLAUDE.md` from its template when the file is missing. Make is the only interface. `help` is the default goal. EditorConfig, one formatter, one linter, unit tests, one integration entry, and a diff-cover report are targets |
-| [github-pipeline](skills/github-pipeline/SKILL.md) | One GitHub workflow. Versions from a `vMAJOR.MINOR.PATCH` tag plus the run number |
-| [security](skills/security/SKILL.md) | Questions before a slice, checks after |
-| [privacy](skills/privacy/SKILL.md) | Personal data, before and after |
-| [ux-ui-design](skills/ux-ui-design/SKILL.md) | Interaction. Product tokens stay in a project skill |
-| [api-design](skills/api-design/SKILL.md) | HTTP, and the public API of a module or a library. The route list stays in a project skill |
-| [observability](skills/observability/SKILL.md) | What the program prints on start, what the user sees on a failure, and what a log line holds |
-| [performance](skills/performance/SKILL.md) | The largest input, one read for each file or row, and a measured baseline for each claim |
-| [node](skills/node/SKILL.md) | JavaScript and TypeScript |
-| [python](skills/python/SKILL.md) | Python |
-| [shell](skills/shell/SKILL.md) | POSIX shell inside a recipe |
-| [jvm](skills/jvm/SKILL.md) | Java, Groovy, Grails, and Gradle |
-| [go](skills/go/SKILL.md) | Go |
+| [r-plan](skills/r-plan/SKILL.md) | Grill. Ask one question at a time. Write a history file to start now, or a roadmap row with a proposal to implement later |
+| [r-develop](skills/r-develop/SKILL.md) | Implement the slice with the installed language skill |
+| [r-review](skills/r-review/SKILL.md) | Gates and the installed subskills, after the change |
+| [r-release](skills/r-release/SKILL.md) | Commit, push, merge when CI passed, and close the task. Invokes `r-github-pipeline` when delivery changes |
+| [r-record](skills/r-record/SKILL.md) | Ids, the board, the history file, the ADRs and their status, the ADR index, and this collection's requirements index |
+| [r-onboard](skills/r-onboard/SKILL.md) | The order of the other skills for a project that adopts this collection. Say `report and integrate` |
+| [r-system-state-report](skills/r-system-state-report/SKILL.md) | A plain-language report on what the system does now, the decisions that shaped it, and the decisions that wait for the owner. Say `state report` |
+| [r-board-merge-report](skills/r-board-merge-report/SKILL.md) | Reports which board rows, ADRs, and closed history files repeat text and can merge, shrink, or go. Writes nothing. Numbers come from `make board-numbers` |
+| [r-board-merge](skills/r-board-merge/SKILL.md) | Does what the owner chose by id from that report. One commit for each finding |
+| [r-component-upgrade](skills/r-component-upgrade/SKILL.md) | Updates one component to a newer version in one slice, with the gates before and after. Covers a library, a runtime, a base image, a tool pin, and this collection |
+| [r-upgrade-node-components](skills/r-upgrade-node-components/SKILL.md) | Gives the Node facts for `r-component-upgrade`: where each version is pinned and the known traps |
+| [r-upgrade-python-components](skills/r-upgrade-python-components/SKILL.md) | Gives the Python facts for `r-component-upgrade`: where each version is pinned and the known traps |
+| [r-upgrade-java-components](skills/r-upgrade-java-components/SKILL.md) | Gives the Java, Groovy, Grails, and Gradle facts for `r-component-upgrade`: where each version is pinned and the known traps |
+| [r-upgrade-go-components](skills/r-upgrade-go-components/SKILL.md) | Gives the Go facts for `r-component-upgrade`: where each version is pinned and the known traps |
+| [r-project-report](skills/r-project-report/SKILL.md) | Generated requirements map, architecture review, and development review |
+| [r-migrate-docs](skills/r-migrate-docs/SKILL.md) | The only skill that reads an old board. Other skills stop until it has deleted those files |
+| [r-project-setup](skills/r-project-setup/SKILL.md) | Writes `CLAUDE.md` from its template when the file is missing. Make is the only interface. `help` is the default goal. EditorConfig, one formatter, one linter, unit tests, one integration entry, and a diff-cover report are targets |
+| [r-github-pipeline](skills/r-github-pipeline/SKILL.md) | One GitHub workflow. Versions from a `vMAJOR.MINOR.PATCH` tag plus the run number |
+| [r-security](skills/r-security/SKILL.md) | Questions before a slice, checks after |
+| [r-privacy](skills/r-privacy/SKILL.md) | Personal data, before and after |
+| [r-ux-ui-design](skills/r-ux-ui-design/SKILL.md) | Interaction. Product tokens stay in a project skill |
+| [r-api-design](skills/r-api-design/SKILL.md) | HTTP, and the public API of a module or a library. The route list stays in a project skill |
+| [r-observability](skills/r-observability/SKILL.md) | What the program prints on start, what the user sees on a failure, and what a log line holds |
+| [r-performance](skills/r-performance/SKILL.md) | The largest input, one read for each file or row, and a measured baseline for each claim |
+| [r-node](skills/r-node/SKILL.md) | JavaScript and TypeScript |
+| [r-python](skills/r-python/SKILL.md) | Python |
+| [r-shell](skills/r-shell/SKILL.md) | POSIX shell inside a recipe |
+| [r-jvm](skills/r-jvm/SKILL.md) | Java, Groovy, Grails, and Gradle |
+| [r-go](skills/r-go/SKILL.md) | Go |
 
-The `name` in each skill's frontmatter matches its directory. A project installs the stages, `record`, `project-setup`, `project-report`, the language skills it uses, and the subskills it wants. It installs `github-pipeline` when it publishes through GitHub. It installs `migrate-docs` when the old board is still present, and it runs that skill before the others.
+The `name` in each skill's frontmatter matches its directory. A project installs the stages, `r-record`, `r-project-setup`, `r-project-report`, the language skills it uses, and the subskills it wants. It installs `r-github-pipeline` when it publishes through GitHub. It installs `r-migrate-docs` when the old board is still present, and it runs that skill before the others.
 
-`project-setup` and `github-pipeline` each have setup mode and report mode, written in the skill. Setup mode changes only what is missing or off the contract. Report mode names what matches and what is missing, and it changes nothing.
+`r-project-setup` and `r-github-pipeline` each have setup mode and report mode, written in the skill. Setup mode changes only what is missing or off the contract. Report mode names what matches and what is missing, and it changes nothing.
 
 The rules that hold for every skill stand once, in the `<general_rules>` block of `CLAUDE.md`: the interface, the start of a task, the board, and the gates. Each `SKILL.md` starts with the line ``The general rules in `CLAUDE.md` apply.`` and states only what the skill adds. The body is XML tags: `purpose`, `steps`, `rules`, `output`, and `references`, with `mode` for a skill that has modes, and `questions` and `checks` for a subskill. A table, a sample, or a rule for one condition is in `references/` beside the skill. The agent reads such a file only when a step names it.
 
-`make toon` writes the ADR index and the skill index for a product repository. In this collection it writes `docs/requirements-index.toon`, with the file and the owner of each row, and the skill index, and it does not create `docs/adr/`. `project.mk` and `sdlc.mk` include these targets from `record` when the skill is installed, and `make setup` runs `make toon` after `make doctor`. Every Python command, including a one-off `make py ARGS='...'`, runs in Podman on the machine where Make runs. Set `PYTHON_IMAGE` before the include to pick the version. The host does not need Python.
+`make toon` writes the ADR index and the skill index for a product repository. In this collection it writes `docs/requirements-index.toon`, with the file and the owner of each row, and the skill index, and it does not create `docs/adr/`. `project.mk` and `sdlc.mk` include these targets from `r-record` when the skill is installed, and `make setup` runs `make toon` after `make doctor`. Every Python command, including a one-off `make py ARGS='...'`, runs in Podman on the machine where Make runs. Set `PYTHON_IMAGE` before the include to pick the version. The host does not need Python.
 
 ## The cycle
 
-A request goes through `plan`, `develop`, `review`, and `release`. A new or vague request starts at `plan`. A fix that names a source file, a failing test, or a roadmap defect starts at `develop`. `release` commits the slice on one branch, pushes it, merges it into the default branch when CI passed, and asks `record` to close the task. With `github-pipeline` installed, that merge publishes.
+A request goes through `r-plan`, `r-develop`, `r-review`, and `r-release`. A new or vague request starts at `r-plan`. A fix that names a source file, a failing test, or a roadmap defect starts at `r-develop`. `r-release` commits the slice on one branch, pushes it, merges it into the default branch when CI passed, and asks `r-record` to close the task. With `r-github-pipeline` installed, that merge publishes.
 
-![You bring an idea to plan. The stages plan, develop, review, and release follow in order. Each stage asks record to write the board: the roadmap, the history file, and the rules. develop writes code and tests. A test names the rule that it proves.](docs/diagrams/board-map.svg)
+![You bring an idea to plan. The stages r-plan, r-develop, r-review, and r-release follow in order. Each stage asks r-record to write the board: the roadmap, the history file, and the rules. r-develop writes code and tests. A test names the rule that it proves.](docs/diagrams/board-map.svg)
 
-A product repository keeps three kinds of document beside the code. The roadmap lists the things to do. The rules say what must hold. The history reports what was done. The code and the tests are the current state. An arrow from a stage or from `record` is a write. Each stage box names what the stage reads. A stage never writes a board document itself. It asks `record`.
+A product repository keeps three kinds of document beside the code. The roadmap lists the things to do. The rules say what must hold. The history reports what was done. The code and the tests are the current state. An arrow from a stage or from `r-record` is a write. Each stage box names what the stage reads. A stage never writes a board document itself. It asks `r-record`.
 
-1. Idea. You name a feature, a defect, or an open question. `plan` asks `record` for a row in `docs/ROADMAP.md`. A large item gets a detailed plan in `docs/proposals/`.
-2. Plan. `plan` reads the roadmap and the rules and asks you one question at a time. It names the slice: what changes, who owns the state, and which pattern applies. `record` starts the history file with the Plan section.
-3. Decide. If the plan makes a choice that must hold later, `record` writes it as a rule: a requirement row, a sentence in a fitting ADR, or a new ADR.
-4. Implement. `develop` reads the rules, writes the code, and writes the tests. Each test names the rule that it proves in a line `id:`. The history file gets the Develop section.
-5. Review. `review` runs the gates and the installed checks and compares the change with the rules. A finding goes to the history file. A defect that stays open becomes a new roadmap row.
-6. Release. `release` commits, pushes, and merges when CI passed. `record` closes the slice: the history file gets the status `closed`, the roadmap row is deleted, and the proposal gets the status `done`. Only `board-merge` deletes a closed history file, and only when the owner chooses it.
+1. Idea. You name a feature, a defect, or an open question. `r-plan` asks `r-record` for a row in `docs/ROADMAP.md`. A large item gets a detailed plan in `docs/proposals/`.
+2. Plan. `r-plan` reads the roadmap and the rules and asks you one question at a time. It names the slice: what changes, who owns the state, and which pattern applies. `r-record` starts the history file with the Plan section.
+3. Decide. If the plan makes a choice that must hold later, `r-record` writes it as a rule: a requirement row, a sentence in a fitting ADR, or a new ADR.
+4. Implement. `r-develop` reads the rules, writes the code, and writes the tests. Each test names the rule that it proves in a line `id:`. The history file gets the Develop section.
+5. Review. `r-review` runs the gates and the installed checks and compares the change with the rules. A finding goes to the history file. A defect that stays open becomes a new roadmap row.
+6. Release. `r-release` commits, pushes, and merges when CI passed. `r-record` closes the slice: the history file gets the status `closed`, the roadmap row is deleted, and the proposal gets the status `done`. Only `r-board-merge` deletes a closed history file, and only when the owner chooses it.
 
 The diagram is `docs/diagrams/board-map.svg`. A change that alters what it shows updates it in the same commit.
 
-`record` writes every board document. Each document has one job:
+`r-record` writes every board document. Each document has one job:
 
 | Document | Holds |
 | --- | --- |
-| `docs/ROADMAP.md` | The things to do, one row each: id, kind (feature, defect, or question), title, and proposal. A row is not done. `record` deletes it when the slice closes |
+| `docs/ROADMAP.md` | The things to do, one row each: id, kind (feature, defect, or question), title, and proposal. A row is not done. `r-record` deletes it when the slice closes |
 | `docs/proposals/<id>.md` | The detailed plan of one roadmap row |
 | `docs/adr/` and `docs/requirements/` | The rules in force. A product repository keeps ADRs and may keep requirement rows. This collection keeps only `docs/requirements/`, one file `<skill>.md` for each skill that owns rows, and `collection.md` for the rows with no owning skill. A row is `planned` (open work) or `in force`. `make req ID=R-45` prints one row, and `make req Q=<word>` finds rows |
 | `docs/history/<id>.md` | The report of one slice. It is complete at any time and holds nothing that waits for a decision or for work |
 | Code and tests | The current state. A test names the rule it proves with `id:` |
 
-A choice that must hold becomes a requirement row, a sentence in an ADR, or a new ADR, as `record` decides. `develop` and `review` open each accepted ADR that names a skill the slice uses, so an agent follows the rules of this one project. Each id in a document is a link to its item, written by `make links`.
+A choice that must hold becomes a requirement row, a sentence in an ADR, or a new ADR, as `r-record` decides. `r-develop` and `r-review` open each accepted ADR that names a skill the slice uses, so an agent follows the rules of this one project. Each id in a document is a link to its item, written by `make links`.
 
 ## Start
 
@@ -103,19 +103,19 @@ The host needs GNU Make 3.81 or newer, Git, and Podman. It needs no other tool: 
 
    Behind a proxy with its own CA, add `-v <CA file>:/ca.crt:ro -e GIT_SSL_CAINFO=/ca.crt -e SSL_CERT_FILE=/ca.crt` to the `podman run` arguments. For a private repository, add `-e GITHUB_APM_PAT`. These flags change only that one line. `PODMAN_NET_ARGS` holds the same arguments for the Make targets.
 
-2. Tell the agent: `report and integrate`. The [onboard](skills/onboard/SKILL.md) skill carries the order, for a new project and for an existing one.
+2. Tell the agent: `report and integrate`. The [r-onboard](skills/r-onboard/SKILL.md) skill carries the order, for a new project and for an existing one.
 
-`onboard` does these steps, and each one is a skill that you can also start alone:
+`r-onboard` does these steps, and each one is a skill that you can also start alone:
 
-1. It checks that Make, Git, and Podman run on the machine, with `make -f .claude/skills/project-setup/doctor.mk doctor`. Once the Makefile has the include, `make doctor` is the same check, and `make setup` runs it first.
+1. It checks that Make, Git, and Podman run on the machine, with `make -f .claude/skills/r-project-setup/doctor.mk doctor`. Once the Makefile has the include, `make doctor` is the same check, and `make setup` runs it first.
 2. It reads the project: the language, the old board, the remote, and the tests. It asks you only what the files do not tell, such as how the project ships.
-3. It runs `migrate-docs` when `docs/BUGS.md`, `docs/WAVES.md`, `docs/FEATURES.md`, `docs/DECISIONS.md`, `docs/KNOWN_ISSUES.md`, or their directories, or `AGENTS.md` exist, and commits the new board. `make old-board` tests those eight paths and a `docs/ROADMAP.md` in the old line form, which has a line that starts with `- `. It fails when one of these nine checks finds something. In a project with an old board, `make old-board` fails first, as designed, and the only skill is then `migrate-docs`.
-4. It runs `project-setup` in report mode, then in setup mode. Setup mode asks how the project ships, copies the Makefile template of the language, and runs the tooling target of that language: `make node-tooling`, `make python-tooling`, `make jvm-tooling`, or `make go-tooling`. It writes `CLAUDE.md`, `.editorconfig`, and `.gitignore`, and commits with `.claude/skills/`, `apm.yml`, and `apm.lock.yaml`.
-5. When the project publishes through GitHub, it runs `github-pipeline`: one workflow, a `Containerfile`, and the targets of the pipeline.
+3. It runs `r-migrate-docs` when `docs/BUGS.md`, `docs/WAVES.md`, `docs/FEATURES.md`, `docs/DECISIONS.md`, `docs/KNOWN_ISSUES.md`, or their directories, or `AGENTS.md` exist, and commits the new board. `make old-board` tests those eight paths and a `docs/ROADMAP.md` in the old line form, which has a line that starts with `- `. It fails when one of these nine checks finds something. In a project with an old board, `make old-board` fails first, as designed, and the only skill is then `r-migrate-docs`.
+4. It runs `r-project-setup` in report mode, then in setup mode. Setup mode asks how the project ships, copies the Makefile template of the language, and runs the tooling target of that language: `make node-tooling`, `make python-tooling`, `make jvm-tooling`, or `make go-tooling`. It writes `CLAUDE.md`, `.editorconfig`, and `.gitignore`, and commits with `.claude/skills/`, `apm.yml`, and `apm.lock.yaml`.
+5. When the project publishes through GitHub, it runs `r-github-pipeline`: one workflow, a `Containerfile`, and the targets of the pipeline.
 6. It records each rule the project already follows as an ADR or a requirement row, and gives each existing test the `id:` of the row it proves.
 7. It runs every gate. It stops when one fails.
 
-Then the first slice starts with `plan`. From here on, a person and the agent type only `make <target>` and Git commands. A typed tool of POSIX `sh`, such as `tail` or `grep`, may only shorten or search output, and writes no file.
+Then the first slice starts with `r-plan`. From here on, a person and the agent type only `make <target>` and Git commands. A typed tool of POSIX `sh`, such as `tail` or `grep`, may only shorten or search output, and writes no file.
 
 ## Update
 
@@ -124,12 +124,12 @@ This collection has tags named `vMAJOR.MINOR.PATCH`. A project that wants a fixe
 To take a newer version:
 
 1. Change `ref` to the new tag. Skip this step when the project has no `ref`.
-2. Run `make skills-update`. `make skills-update DRY_RUN=1` shows the plan and changes nothing. The target runs `apm update --yes` in Podman, so it asks no question. `APM_VERSION` and `APM_IMAGE` in `tools.mk` of `project-setup` pin APM. `apm install --update` is deprecated in APM 0.36.1.
+2. Run `make skills-update`. `make skills-update DRY_RUN=1` shows the plan and changes nothing. The target runs `apm update --yes` in Podman, so it asks no question. `APM_VERSION` and `APM_IMAGE` in `tools.mk` of `r-project-setup` pin APM. `apm install --update` is deprecated in APM 0.36.1.
 3. Run `make toon` and `make links`, because a new skill can add rows to the indexes and the links.
 4. Run the gates of `CLAUDE.md`, and `make ci` when the project has a workflow.
 5. Commit `.claude/skills/`, `apm.yml`, and `apm.lock.yaml` together, on the default branch.
 
-APM 0.36.1 does not overwrite a skill file that a person changed in `.claude/skills/`. If such a file exists, `make skills-update` fails and names the file. Restore the file with `git restore <file>`, then run the target again. The target can also refuse when `.claude/skills/` holds files that APM did not install. APM calls them unmanaged. Run `make apm ARGS='install --force'`. That overwrites those files with the files of the collection. Keep project rules in a project skill or in `CLAUDE.md`, not in an installed file. A new Makefile template does not change the `Makefile` of the project. Run `project-setup` in report mode to see what a new version adds.
+APM 0.36.1 does not overwrite a skill file that a person changed in `.claude/skills/`. If such a file exists, `make skills-update` fails and names the file. Restore the file with `git restore <file>`, then run the target again. The target can also refuse when `.claude/skills/` holds files that APM did not install. APM calls them unmanaged. Run `make apm ARGS='install --force'`. That overwrites those files with the files of the collection. Keep project rules in a project skill or in `CLAUDE.md`, not in an installed file. A new Makefile template does not change the `Makefile` of the project. Run `r-project-setup` in report mode to see what a new version adds.
 
 A project may hold documents with ids above the counters of `docs/ids.yaml`. Then `make ids` fails. Raise the counter of each such kind with `make id-raise KIND=<kind> TO=<n>`, where `<n>` is the highest number that a document uses.
 
@@ -148,7 +148,7 @@ The limits hold for every step:
 - Never delete a release, a tag, or a package version for real. Run a cleanup target only with `DRY_RUN=1`.
 - Work only on the two test branches.
 
-The workflow of `github-pipeline` runs on a push to any branch. Its `setup` job runs `make cleanup-actions-artifacts`, which deletes the Actions artifacts that are one hour old or older, except the artifacts `report` and `docs`. Its publish job runs only on the default branch of the repository, so neither test branch publishes. Do not dispatch `publish-container` on a test branch.
+The workflow of `r-github-pipeline` runs on a push to any branch. Its `setup` job runs `make cleanup-actions-artifacts`, which deletes the Actions artifacts that are one hour old or older, except the artifacts `report` and `docs`. Its publish job runs only on the default branch of the repository, so neither test branch publishes. Do not dispatch `publish-container` on a test branch.
 
 1. Create the branches. Run this in a clone of the test repository. `origin/main` is the default branch. The commands create two new branches and do not change `main`.
 
@@ -185,7 +185,7 @@ The workflow of `github-pipeline` runs on a push to any branch. Its `setup` job 
    make pull-request-merge WAIT=1 DEFAULT_BRANCH=claude/framework-test-base
    ```
 
-   If `make old-board` fails, run the skill `migrate-docs` first, as `CLAUDE.md` says. `make ci-status WAIT=1` fails unless the run of the pushed commit passed. `make pull-request-merge` merges only when every check of the pull request passed. The merge is a push to the base branch, so it starts a second run. Pass `DEFAULT_BRANCH=claude/framework-test-base` to `make coverage` and `make test-changed` too when you want them to compare with the base branch.
+   If `make old-board` fails, run the skill `r-migrate-docs` first, as `CLAUDE.md` says. `make ci-status WAIT=1` fails unless the run of the pushed commit passed. `make pull-request-merge` merges only when every check of the pull request passed. The merge is a push to the base branch, so it starts a second run. Pass `DEFAULT_BRANCH=claude/framework-test-base` to `make coverage` and `make test-changed` too when you want them to compare with the base branch.
 
 4. Use the branches again for the next test:
 
@@ -210,7 +210,7 @@ The workflow of `github-pipeline` runs on a push to any branch. Its `setup` job 
 
 ## How APM loads them
 
-The `apm.yml` of a project needs `name` and `version`. APM refuses the file without them. `apm install` reads every `skills/<name>/` directory and copies it to `.claude/skills/<name>/`, including makefiles, `references/`, `scripts/`, and `templates/` inside the skills. That was tested with APM 0.36.1: nine skills installed into a sample project, and `make toon`, `make ids`, and `make project-report` ran there. This collection itself has no root `apm.yml`. APM does not need one in a skill collection.
+The `apm.yml` of a project needs `name` and `version`. APM refuses the file without them. `apm install` reads every `skills/r-<name>/` directory and copies it to `.claude/skills/r-<name>/`, including makefiles, `references/`, `scripts/`, and `templates/` inside the skills. That was tested with APM 0.36.1: nine skills installed into a sample project, and `make toon`, `make ids`, and `make project-report` ran there. This collection itself has no root `apm.yml`. APM does not need one in a skill collection.
 
 ```yaml
 name: my-project
@@ -222,28 +222,28 @@ dependencies:
     - git: rbe/ralfskills
       # ref: <tag or commit>   pins the version
       skills:
-        - plan
-        - develop
-        - review
-        - release
-        - record
-        - project-report
-        - project-setup
-        - onboard
-        - system-state-report   # the plain-language report for the owner
-        - board-merge-report    # finds repeated board text
-        - board-merge           # applies the findings the owner chose
-        - component-upgrade     # updates one component to a newer version
-        - upgrade-node-components   # or python, java, go: install the one of each language the project uses
-        - github-pipeline   # when the project publishes through GitHub
-        - migrate-docs      # when the old board is still present
-        - node              # or python, jvm, go: the language skills the project uses
-        - shell
-        - security
+        - r-plan
+        - r-develop
+        - r-review
+        - r-release
+        - r-record
+        - r-project-report
+        - r-project-setup
+        - r-onboard
+        - r-system-state-report   # the plain-language report for the owner
+        - r-board-merge-report    # finds repeated board text
+        - r-board-merge           # applies the findings the owner chose
+        - r-component-upgrade     # updates one component to a newer version
+        - r-upgrade-node-components   # or r-upgrade-python-components, r-upgrade-java-components, r-upgrade-go-components: install the one of each language the project uses
+        - r-github-pipeline   # when the project publishes through GitHub
+        - r-migrate-docs      # when the old board is still present
+        - r-node              # or r-python, r-jvm, r-go: the language skills the project uses
+        - r-shell
+        - r-security
 ```
 
-A Make-only repository leaves `github-pipeline` out. A repository that still has `docs/BUGS.md`, `docs/WAVES.md`, `docs/FEATURES.md`, `docs/DECISIONS.md`, `docs/KNOWN_ISSUES.md`, `docs/bugs/`, `docs/waves/`, or `docs/features/` adds `migrate-docs` and runs it first.
+A Make-only repository leaves `r-github-pipeline` out. A repository that still has `docs/BUGS.md`, `docs/WAVES.md`, `docs/FEATURES.md`, `docs/DECISIONS.md`, `docs/KNOWN_ISSUES.md`, `docs/bugs/`, `docs/waves/`, or `docs/features/` adds `r-migrate-docs` and runs it first.
 
-`apm install` does not write `CLAUDE.md`. `apm compile` for the target `claude` keeps a `CLAUDE.md` that a person wrote and prints a warning. That was tested with APM 0.36.1. `project-setup` owns the entry file. APM adds `apm_modules/` to `.gitignore`. It also creates `.apm-local/`, which has its own `.gitignore`.
+`apm install` does not write `CLAUDE.md`. `apm compile` for the target `claude` keeps a `CLAUDE.md` that a person wrote and prints a warning. That was tested with APM 0.36.1. `r-project-setup` owns the entry file. APM adds `apm_modules/` to `.gitignore`. It also creates `.apm-local/`, which has its own `.gitignore`.
 
-`make skills-install` installs the skills that `apm.yml` names. `make apm ARGS='...'` is a one-off APM command in Podman. Install one skill with `make apm ARGS='install rbe/ralfskills --skill go'`. Repeat the flag to add another. `make apm ARGS="install rbe/ralfskills --skill '*'"` installs every skill again.
+`make skills-install` installs the skills that `apm.yml` names. `make apm ARGS='...'` is a one-off APM command in Podman. Install one skill with `make apm ARGS='install rbe/ralfskills --skill r-go'`. Repeat the flag to add another. `make apm ARGS="install rbe/ralfskills --skill '*'"` installs every skill again.

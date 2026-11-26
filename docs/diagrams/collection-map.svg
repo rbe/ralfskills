@@ -50,22 +50,22 @@
 
   <rect class="box" x="340" y="140" width="400" height="150" rx="4"/>
   <text class="h" x="360" y="164">Skills</text>
-  <text class="c" x="412" y="164">.claude/skills/&lt;name&gt;/SKILL.md</text>
+  <text class="c" x="412" y="164">.claude/skills/r-&lt;name&gt;/SKILL.md</text>
 
   <rect class="pill" x="360" y="178" width="78" height="28" rx="14"/>
-  <text class="t" x="399" y="196" text-anchor="middle">plan</text>
+  <text class="t" x="399" y="196" text-anchor="middle">r-plan</text>
   <rect class="pill" x="454" y="178" width="78" height="28" rx="14"/>
-  <text class="t" x="493" y="196" text-anchor="middle">develop</text>
+  <text class="t" x="493" y="196" text-anchor="middle">r-develop</text>
   <rect class="pill" x="548" y="178" width="78" height="28" rx="14"/>
-  <text class="t" x="587" y="196" text-anchor="middle">review</text>
+  <text class="t" x="587" y="196" text-anchor="middle">r-review</text>
   <rect class="pill" x="642" y="178" width="78" height="28" rx="14"/>
-  <text class="t" x="681" y="196" text-anchor="middle">release</text>
+  <text class="t" x="681" y="196" text-anchor="middle">r-release</text>
   <line class="arr" x1="438" y1="192" x2="452" y2="192" marker-end="url(#ah)"/>
   <line class="arr" x1="532" y1="192" x2="546" y2="192" marker-end="url(#ah)"/>
   <line class="arr" x1="626" y1="192" x2="640" y2="192" marker-end="url(#ah)"/>
 
-  <text class="t" x="360" y="232">record · project-setup · github-pipeline · onboard</text>
-  <text class="t" x="360" y="252">board-merge · languages · security, privacy, …</text>
+  <text class="t" x="360" y="232">r-record · r-project-setup · r-github-pipeline · r-onboard</text>
+  <text class="t" x="360" y="252">r-board-merge · languages · r-security, r-privacy, …</text>
   <text class="m" x="360" y="275">Each skill: numbered steps and rules in XML tags.</text>
 
   <rect class="box" x="20" y="180" width="210" height="120" rx="4"/>
@@ -77,7 +77,7 @@
   <text class="m" x="36" y="288">of the rule that it proves.</text>
 
   <line class="arr" x1="340" y1="232" x2="232" y2="232" marker-end="url(#ah)"/>
-  <text class="l" x="286" y="224" text-anchor="middle">record writes</text>
+  <text class="l" x="286" y="224" text-anchor="middle">r-record writes</text>
   <text class="l" x="286" y="248" text-anchor="middle">ids, documents</text>
 
   <line class="arr" x1="440" y1="290" x2="440" y2="358" marker-end="url(#ah)"/>

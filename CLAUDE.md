@@ -2,7 +2,7 @@
 
 This repository is the skill collection. `CLAUDE.md` is the only entry file.
 
-Stages, in order: `plan`, `develop`, `review`, `release`. Other skills: `record`, `project-report`, `project-setup`, `github-pipeline`, `onboard`, `system-state-report`, `board-merge-report`, `board-merge`, `component-upgrade`/`upgrade-<language>-components`. Language skills: `node`, `python`, `shell`, `jvm`, `go`. Subskills `plan` asks and `review` checks: `security`, `privacy`, `ux-ui-design`, `api-design`, `observability`, `performance`. A project skill is an extra name listed here.
+Stages, in order: `r-plan`, `r-develop`, `r-review`, `r-release`. Other skills: `r-record`, `r-project-report`, `r-project-setup`, `r-github-pipeline`, `r-onboard`, `r-system-state-report`, `r-board-merge-report`, `r-board-merge`, `r-component-upgrade`/`r-upgrade-<language>-components`. Language skills: `r-node`, `r-python`, `r-shell`, `r-jvm`, `r-go`. Subskills `r-plan` asks and `r-review` checks: `r-security`, `r-privacy`, `r-ux-ui-design`, `r-api-design`, `r-observability`, `r-performance`. A project skill is an extra name listed here.
 
 A row of `docs/requirements/*.md` is a requirement. Its status is `planned` (open work) or `in force` (a rule that holds).
 
@@ -15,17 +15,17 @@ A skill states only what it adds to these rules.
 Interface:
 
 - Type only `make <target>` and Git commands. A typed tool of POSIX `sh`, such as `tail` or `grep`, may only shorten or search output, and writes no file. Make runs every other tool in a Podman image, on this machine and in CI. The host needs only Make, Git, and Podman. Push only with a remote `origin`.
-- If no target runs a command that the work needs, `project-setup` adds the target.
+- If no target runs a command that the work needs, `r-project-setup` adds the target.
 - Report mode writes nothing and fills its skeleton in the reply. Setup mode writes only what is missing or off the contract. A request for both runs report mode first.
 
 Start of a task:
 
-- Run `make old-board` before the first skill. If the target fails, the only skill is `migrate-docs`.
+- Run `make old-board` before the first skill. If the target fails, the only skill is `r-migrate-docs`.
 - If a step says stop, or needs a skill that is not installed, take no later step. Tell the user the step, the reason, and the missing skill.
 
 Board:
 
-- `record` writes every id and every board document. Invoke `record` before you create one.
+- `r-record` writes every id and every board document. Invoke `r-record` before you create one.
 - An architecture decision record (ADR) in `docs/adr/` is an architecture or development rule. An ADR with the status `Accepted` is a rule for every change.
 - If the repository keeps `docs/requirements/` and no `docs/adr/`, a row of those files replaces an ADR, and a planned row replaces a roadmap row. Where a step names `docs/adr/index.toon`, read `docs/requirements-index.toon` in such a repository. For each row that names a part that the change touches, run `make req ID=<ids>`.
 - Write one line for each `check` row of `docs/skill-index.toon`, or `checks: none installed`. For a subskill that is not installed, write `<name>: not installed`. A row without a line fails the step.
