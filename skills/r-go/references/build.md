@@ -6,6 +6,7 @@
 - `r-project-setup` sets `BIN` in setup mode, after the owner said how the project ships.
 - With `BIN` set, `make build` writes `build/<name>` from the package `./cmd/<name>`.
 - `BIN_PKG` names a different package. An example is `.` when the root is the main package.
+- With `BIN` set and no `GOOS` or `GOARCH`, `make build` then runs `build/<name> $(BIN_SMOKE_ARGS)` in the Go image. `BIN_SMOKE_ARGS` is `--help`, or `--version` for a program that needs no argument. A non-zero exit fails the build.
 - With `BIN` empty, `make build` compiles every package and writes no file. A library uses this.
 
 ## Binary for another machine

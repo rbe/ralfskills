@@ -1789,6 +1789,28 @@ class MakeAndPodmanInterfaceTest(unittest.TestCase):
         )
         self.assertIn("`.github/workflows/publish-client.yml`", contract)
 
+    def test_a_binary_runs_once_in_the_build_and_an_image_runs_with_smoke_args(self):
+        """id: R-118"""
+        go = (ROOT / "skills" / "r-go" / "templates" / "Makefile.golang").read_text(
+            encoding="utf-8"
+        )
+        self.assertRegex(go, r"(?m)^BIN_SMOKE_ARGS \?= --help$")
+        smoke = re.search(r"(?m)^BIN_SMOKE = (.+)$", go).group(1)
+        self.assertIn("$(GO_RUN) build/$(BIN) $(BIN_SMOKE_ARGS)", smoke)
+        self.assertIn("$(if $(or $(GOOS),$(GOARCH)),,", smoke)
+        build = re.search(r"(?m)^BUILD_CMD = (.+)$", go).group(1)
+        self.assertIn("-o build/$(BIN) $(BIN_PKG) $(BIN_SMOKE),", build)
+        doc = (ROOT / "skills" / "r-go" / "references" / "build.md").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("runs `build/<name> $(BIN_SMOKE_ARGS)` in the Go image", doc)
+        container = (self.PIPELINE / "container.mk").read_text(encoding="utf-8")
+        self.assertIn('podman run --rm "$(CI_IMAGE)" $(SMOKE_ARGS)', container)
+        image = (self.PIPELINE / "templates" / "Makefile.image").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("# SMOKE_ARGS = --help", image)
+
     def test_jvm_tooling_counts_a_kotlin_build_file_as_present(self):
         """id: R-66"""
         gradle = (
