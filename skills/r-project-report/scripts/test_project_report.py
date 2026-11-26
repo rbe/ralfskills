@@ -31,6 +31,7 @@ changed_tests = load("changed_tests", HERE / "changed_tests.py")
 node_cover_map = load("node_cover_map", HERE / "node_cover_map.py")
 jacoco_cover_map = load("jacoco_cover_map", HERE / "jacoco_cover_map.py")
 go_cover_map = load("go_cover_map", HERE / "go_cover_map.py")
+skill_index = load("skill_index", ROOT / "skills/r-record/scripts/skill_index.py")
 
 
 def write(root, relative, text):
@@ -475,6 +476,97 @@ class RequirementFilesTest(unittest.TestCase):
         self.assertNotIn("REQUIREMENTS.md", text)
 
 
+class AgentAgnosticTextTest(unittest.TestCase):
+    def test_no_skill_text_names_an_ai_coding_tool_a_tool_folder_or_a_model(self):
+        """id: R-17"""
+        names = (
+            "Cursor",
+            ".agents/",
+            ".cursor/",
+            "Fable",
+            "Opus",
+            "Sonnet",
+            "Haiku",
+        )
+        files = sorted((ROOT / "skills").glob("r-*/SKILL.md")) + sorted(
+            (ROOT / "skills").glob("r-*/references/**/*.md")
+        )
+        self.assertTrue(files)
+        for path in files:
+            text = path.read_text(encoding="utf-8")
+            for name in names:
+                self.assertNotIn(name, text, str(path))
+
+
+class StageRoutingTest(unittest.TestCase):
+    def test_every_check_and_language_skill_names_the_stages_that_load_it(self):
+        """id: R-110"""
+        found = skill_index.rows(ROOT)
+        self.assertTrue(found)
+        self.assertIn("stages", skill_index.render(found).splitlines()[0])
+        for row in found:
+            self.assertTrue(row["stages"], row["name"])
+            expected = (
+                ["r-plan", "r-review"] if row["kind"] == "check" else ["r-develop"]
+            )
+            self.assertEqual(row["stages"], expected, row["name"])
+            for stage in row["stages"]:
+                self.assertTrue((ROOT / "skills" / stage / "SKILL.md").is_file(), stage)
+
+    def test_a_stage_reads_the_stages_column_and_names_no_subskill(self):
+        """id: R-110"""
+        names = [row["name"] for row in skill_index.rows(ROOT)]
+        for stage, column in (
+            ("r-plan", "`stages` names `r-plan`"),
+            ("r-review", "`stages` names `r-review`"),
+            ("r-develop", "`stages` names `r-develop`"),
+        ):
+            steps = (ROOT / "skills" / stage / "SKILL.md").read_text(encoding="utf-8")
+            self.assertIn(column, steps)
+            for name in names:
+                self.assertNotIn(f"`{name}`", steps, f"{stage} names {name}")
+
+
+class ReviewRulesTest(unittest.TestCase):
+    def skill(self, name):
+        return (ROOT / "skills" / name / "SKILL.md").read_text(encoding="utf-8")
+
+    def test_the_defect_report_form_has_eight_parts_with_one_owner(self):
+        """id: R-113"""
+        form = (ROOT / "skills/r-record/references/defect-report.md").read_text(
+            encoding="utf-8"
+        )
+        for number, part in enumerate(
+            (
+                "Location:",
+                "Mechanism:",
+                "Evidence:",
+                "Not a regression:",
+                "The rule it contradicts:",
+                "Fix options:",
+                "Acceptance check:",
+                "Documents to update:",
+            ),
+            1,
+        ):
+            self.assertIn(f"\n{number}. {part}", form)
+        self.assertIn("references/defect-report.md", self.skill("r-record"))
+        review = self.skill("r-review")
+        self.assertIn("the defect report form of `r-record`", review)
+        self.assertNotIn("the mechanism", review)
+
+    def test_only_the_release_skill_states_the_staging_rule(self):
+        """id: R-114"""
+        rule = "Never run `git add -A`, `git add .`, or `git commit -a`."
+        self.assertIn(
+            "Stage only the files of the change, by name.", self.skill("r-release")
+        )
+        self.assertIn(rule, self.skill("r-release"))
+        for path in (ROOT / "skills").glob("r-*/SKILL.md"):
+            if path.parent.name != "r-release":
+                self.assertNotIn("git add -A", path.read_text(encoding="utf-8"))
+
+
 class GeneralRulesTest(unittest.TestCase):
     def test_the_entry_file_and_its_template_have_the_same_general_rules(self):
         """id: R-76"""
@@ -492,10 +584,53 @@ class GeneralRulesTest(unittest.TestCase):
 
     def test_the_entry_file_and_its_template_stay_within_their_word_limits(self):
         """id: R-76"""
-        limits = {"CLAUDE.md": 847, "skills/r-project-setup/templates/CLAUDE.md": 917}
+        limits = {"CLAUDE.md": 966, "skills/r-project-setup/templates/CLAUDE.md": 1036}
         for name, limit in limits.items():
             text = (ROOT / name).read_text(encoding="utf-8")
             self.assertLessEqual(len(text.split()), limit, name)
+
+    def test_the_entry_file_and_its_template_have_the_agents_section(self):
+        """id: R-109"""
+        for name in ENTRY_FILES:
+            text = (ROOT / name).read_text(encoding="utf-8")
+            self.assertEqual(text.count("\n## Agents\n"), 1, name)
+            self.assertLess(text.index("</general_rules>"), text.index("\n## Agents\n"))
+            self.assertLess(
+                text.index("\n## Agents\n"), text.index("\n## Communication contract\n")
+            )
+            section = text[text.index("\n## Agents\n") :]
+            section = section[: section.index("\n## Communication contract\n")]
+            for phrase in (
+                "Fable or Opus",
+                "Sonnet implements normal work.",
+                "Haiku implements mechanical work.",
+                "re-checks each claim of an agent",
+                "fails twice on one step",
+                "names no model and has no `model:` field",
+                "names a model alias",
+            ):
+                self.assertIn(phrase, section, name)
+
+    def test_no_skill_has_a_model_field(self):
+        """id: R-109"""
+        for path in sorted((ROOT / "skills").glob("r-*/SKILL.md")):
+            text = path.read_text(encoding="utf-8")
+            frontmatter = text[3 : text.index("\n---", 3)]
+            for line in frontmatter.splitlines():
+                self.assertFalse(line.startswith("model:"), str(path))
+
+    def test_the_entry_file_and_its_template_state_the_stage_addendum_once(self):
+        """id: R-112"""
+        sentence = (
+            "If `CLAUDE.md` lists a project skill `<project>-<stage>`, the stage "
+            "reads it after its own steps. The addendum holds only what is true "
+            "for that project."
+        )
+        for name in ENTRY_FILES:
+            text = (ROOT / name).read_text(encoding="utf-8")
+            self.assertEqual(text.count(sentence), 1, name)
+        for path in (ROOT / "skills").glob("r-*/SKILL.md"):
+            self.assertNotIn("<stage>", path.read_text(encoding="utf-8"), str(path))
 
     def test_the_entry_file_and_its_template_hold_the_group_questions(self):
         """id: R-51"""
@@ -935,7 +1070,7 @@ class ProjectReportTest(unittest.TestCase):
         contract = (ROOT / "skills" / "r-project-setup" / "contract.mk").read_text(
             encoding="utf-8"
         )
-        self.assertIn("r-project-report:", contract)
+        self.assertIn("\nproject-report:", contract)
 
     def test_this_repository_report_maps_the_requirements_list(self):
         """id: R-3"""

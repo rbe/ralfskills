@@ -78,6 +78,7 @@ include $(SDLC_MK_DIR)../r-project-setup/doctor.mk
 include $(SDLC_MK_DIR)../r-project-setup/skills.mk
 include $(SDLC_MK_DIR)../r-project-setup/old-board.mk
 include $(SDLC_MK_DIR)../r-project-setup/test-changed.mk
+include $(SDLC_MK_DIR)../r-project-setup/check-docs.mk
 -include .claude/skills/r-project-report/report.mk
 include $(SDLC_MK_DIR)../r-project-setup/contract.mk
 include $(SDLC_MK_DIR)container.mk

@@ -3,6 +3,7 @@ name: r-python
 description: Python. Applies the Python rules to a change. Use when r-python is installed and the files in hand are Python. A framework named in CLAUDE.md is a reference file beside this skill. The stage skill still applies.
 kind: language
 files: [py]
+stages: [r-develop]
 ---
 
 The general rules in `CLAUDE.md` apply.

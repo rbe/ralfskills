@@ -3,6 +3,7 @@ name: r-node
 description: Node and TypeScript. Applies the Node rules to a change. Use when r-node is installed and the files in hand are JavaScript or TypeScript. A framework named in CLAUDE.md is a reference file beside this skill. The stage skill still applies.
 kind: language
 files: [js, jsx, ts, tsx, mjs, cjs]
+stages: [r-develop]
 ---
 
 The general rules in `CLAUDE.md` apply.

@@ -25,6 +25,7 @@ The general rules in `CLAUDE.md` apply.
 </steps>
 
 <rules>
+- Stage only the files of the change, by name. Never run `git add -A`, `git add .`, or `git commit -a`.
 - The first line of a commit message is one sentence that says what the system now does.
 - A library with no package ships with the merge.
 - The owner creates a `v*` tag. This skill creates none.
