@@ -8,7 +8,7 @@
 # No install step. Ruff and editorconfig-checker are container images.
 SETUP_CMD = true
 BUILD_CMD = true
-UNIT_TESTS = skills/r-record/scripts/test_record.py skills/r-project-report/scripts/test_project_report.py skills/r-board-merge-report/scripts/test_board_numbers.py skills/r-project-setup/scripts/test_check_docs.py
+UNIT_TESTS = skills/r-record/scripts/test_record.py skills/r-project-report/scripts/test_project_report.py skills/r-board-merge-report/scripts/test_board_numbers.py skills/r-project-setup/scripts/test_check_docs.py tests/test_hooks.py
 TEST_CMD = $(PYTHON) -m unittest $(UNIT_TESTS)
 TEST_CHANGED_CMD = $(PYTHON) skills/r-project-report/scripts/changed_tests.py
 PROJECT_REPORT_CMD = $(PYTHON) skills/r-project-report/scripts/project_report.py
