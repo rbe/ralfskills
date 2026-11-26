@@ -1304,6 +1304,27 @@ class MakeAndPodmanInterfaceTest(unittest.TestCase):
         ):
             self.assertIn(sentence, text)
 
+    def test_close_deletes_the_proposal_and_shortens_the_history_file(self):
+        """id: R-106"""
+        record = ROOT / "skills" / "r-record"
+        close = (record / "references" / "close.md").read_text(encoding="utf-8")
+        for sentence in (
+            "4. If the slice started from a proposal, delete the file"
+            " `docs/proposals/<id>.md`.",
+            "5. Shorten the history file to at most 150 words below its frontmatter.",
+            "Keep what changed, the ids, the gate results, and what was not run.",
+        ):
+            self.assertIn(sentence, close)
+        self.assertNotIn("status to `done`", close)
+        kinds = (record / "references" / "id-kinds.md").read_text(encoding="utf-8")
+        self.assertIn("The status is `open` or `started`.", kinds)
+        self.assertNotIn("`done`", kinds)
+        merge = self.skill_text("r-board-merge") + self.skill_text(
+            "r-board-merge-report"
+        )
+        self.assertNotIn("150 words", merge)
+        self.assertNotIn("proposal gets the status", merge)
+
     def test_old_board_is_a_target_and_migrate_docs_types_no_host_command(self):
         """id: R-21"""
         board = (self.SETUP / "old-board.mk").read_text(encoding="utf-8")

@@ -75,7 +75,7 @@ A product repository keeps three kinds of document beside the code. The roadmap 
 3. Decide. If the plan makes a choice that must hold later, `r-record` writes it as a rule: a requirement row, a sentence in a fitting ADR, or a new ADR.
 4. Implement. `r-develop` reads the rules, writes the code, and writes the tests. Each test names the rule that it proves in a line `id:`. The history file gets the Develop section.
 5. Review. `r-review` runs the gates and the installed checks and compares the change with the rules. A finding goes to the history file. A defect that stays open becomes a new roadmap row.
-6. Release. `r-release` commits, pushes, and merges when CI passed. `r-record` closes the slice: the history file gets the status `closed`, the roadmap row is deleted, and the proposal gets the status `done`. Only `r-board-merge` deletes a closed history file, and only when the owner chooses it.
+6. Release. `r-release` commits, pushes, and merges when CI passed. `r-record` closes the slice: the history file gets the status `closed`, the roadmap row and the proposal are deleted, and the history file shrinks to at most 150 words. Only `r-board-merge` deletes a closed history file, and only when the owner chooses it.
 
 The diagram is `docs/diagrams/board-map.svg`. A change that alters what it shows updates it in the same commit.
 
