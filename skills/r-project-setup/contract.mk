@@ -85,7 +85,7 @@ else
 	$(INTEGRATION_CMD)
 endif
 
-# The recipe writes build/coverage/change.diff with CHANGE_DIFF of tools.mk,
+# The recipe writes build/change.diff with CHANGE_DIFF of tools.mk,
 # then COVERAGE_CMD writes build/coverage/diff.md. diff-cover is DIFF_COVER.
 coverage: ## Report the lines this change touched
 ifeq ($(strip $(COVERAGE_CMD)),)
