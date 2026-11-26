@@ -72,6 +72,7 @@ ifndef SDLC_MK
 SDLC_MK := 1
 
 SDLC_MK_DIR := $(dir $(lastword $(MAKEFILE_LIST)))
+include $(SDLC_MK_DIR)../r-project-setup/help.mk
 include $(SDLC_MK_DIR)../r-project-setup/podman-python.mk
 include $(SDLC_MK_DIR)../r-project-setup/tools.mk
 include $(SDLC_MK_DIR)../r-project-setup/doctor.mk
@@ -179,6 +180,7 @@ if [ "$$branch" = HEAD ] || [ "$$branch" = "$(DEFAULT_BRANCH)" ]; then \
 fi
 endef
 
+# help-group: Delivery
 publish-tags: ## Print tags to push. latest only on the default branch
 	@set -eu; \
 	tag=$$($(THIS_MAKE) -s --no-print-directory version); \
@@ -186,12 +188,12 @@ publish-tags: ## Print tags to push. latest only on the default branch
 	$(SDLC_ON_DEFAULT); \
 	if [ "$$on_default" -eq 1 ]; then printf '%s\n' latest; fi
 
+# help-group: Tools
 help: ## Show the targets. A "Match CI" line is a target the workflow runs
 	@printf '%s\n' "$(HELP_LEAD)"
 	@printf '%s\n' "make ci runs $(SDLC_CI). It does not publish."
 	@printf '%s\n' "Podman is the only container engine."
-	@printf '%s\n' ""
-	@awk -v docs="$(RENDER_DOCS)" -v login="$(PUBLISH_IMAGE)" 'BEGIN {FS = ":.*## "}; /^# help-docs$$/ { skip = (docs != "1"); next } /^# help-login$$/ { skip = (login != "1"); next } /^endif$$/ { skip = 0; next } skip { next } /^[a-zA-Z][a-zA-Z0-9_-]*:.*## / && !seen[$$1]++ {printf "  %-32s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+	@$(HELP_LIST)
 
 gh-image: ## Build the image of the GitHub CLI, once
 	@set -eu; \
@@ -203,6 +205,7 @@ gh-image: ## Build the image of the GitHub CLI, once
 	  'ENTRYPOINT ["gh"]' \
 	| podman build $(PODMAN_NET_ARGS) --build-arg GH_VERSION="$(GH_VERSION)" -t "$(GH_IMAGE)" -f - . >&2
 
+# help-group: Delivery
 ci-status: ## Print the CI result of HEAD (SHA=<sha>). WAIT=1 waits for the end. Fails unless the run passed
 	@set -eu; \
 	$(SDLC_GH_REPO); \
@@ -293,6 +296,7 @@ check-tag: ## Fail when TAG is not a new vMAJOR.MINOR.PATCH at the tip of the de
 	fi; \
 	printf '%s\n' "check-tag: $$tag is a new tag at the tip of $(DEFAULT_BRANCH)."
 
+# help-group: Gates
 ci: ## Run the local CI targets, in order. Does not publish
 	@set -eu; for t in $(SDLC_CI); do \
 	  $(MAKE) --no-print-directory "$$t"; \
@@ -300,6 +304,7 @@ ci: ## Run the local CI targets, in order. Does not publish
 	  eval "JOB_RESULT_$$key=success; export JOB_RESULT_$$key"; \
 	done
 
+# help-group: Delivery
 report: ## Match CI: write build/report/index.md from logs, summaries, and job results
 	@set -eu; \
 	mkdir -p build/logs build/summaries build/report; \

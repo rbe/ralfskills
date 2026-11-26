@@ -1727,9 +1727,12 @@ class MakeAndPodmanInterfaceTest(unittest.TestCase):
             "r-jvm": ROOT / "skills" / "r-jvm" / "templates" / "Makefile.gradle",
             "r-github-pipeline": self.PIPELINE / "templates" / "Makefile.gradle",
         }
+        jvm = (ROOT / "skills" / "r-jvm" / "jvm.mk").read_text(encoding="utf-8")
+        self.assertRegex(jvm, r"(?m)^PODMAN_SOCKET \?= ")
+        self.assertRegex(jvm, r"(?m)^podman-socket: ")
         for owner, path in templates.items():
             text = path.read_text(encoding="utf-8")
-            self.assertRegex(text, r"(?m)^PODMAN_SOCKET = ", owner)
+            self.assertNotRegex(text, r"(?m)^PODMAN_SOCKET", owner)
             podman = re.search(r"(?m)^GRADLE_PODMAN = (?:.*\\\n)*.*$", text)
             self.assertIsNotNone(podman, owner)
             for part in (
@@ -1739,7 +1742,7 @@ class MakeAndPodmanInterfaceTest(unittest.TestCase):
                 "./gradlew",
             ):
                 self.assertIn(part, podman.group(0), f"{owner} {part}")
-            self.assertRegex(text, r"(?m)^podman-socket: ", owner)
+            self.assertNotRegex(text, r"(?m)^podman-socket: ", owner)
             self.assertNotIn("docker.sock", text, owner)
             self.assertNotRegex(text, r"(?m)^[^#\n]*\bdocker run\b", owner)
         skill = (ROOT / "skills" / "r-jvm" / "SKILL.md").read_text(encoding="utf-8")
@@ -1909,9 +1912,7 @@ class MakeAndPodmanInterfaceTest(unittest.TestCase):
 
     def test_jvm_tooling_counts_a_kotlin_build_file_as_present(self):
         """id: R-66"""
-        gradle = (
-            ROOT / "skills" / "r-jvm" / "templates" / "Makefile.gradle"
-        ).read_text(encoding="utf-8")
+        gradle = (ROOT / "skills" / "r-jvm" / "jvm.mk").read_text(encoding="utf-8")
         recipe = gradle.split("\njvm-tooling: ## ")[1].split("\n\n")[0]
         self.assertIn(
             "if [ ! -f build.gradle ] && [ ! -f build.gradle.kts ]; then cp", recipe
@@ -2309,6 +2310,484 @@ class CleanupRecipeTest(unittest.TestCase):
             recipe = text.split("\n" + target + ": ## ")[1].split("\n\n")[0]
             self.assertIn("$(SDLC_TAG)", recipe)
             self.assertNotIn("-s --no-print-directory version", recipe)
+
+
+HELP_MK = ROOT / "skills" / "r-project-setup" / "help.mk"
+HELP_ORDER = ["Gates", "Project", "Board", "Delivery", "Tools"]
+HELP_GROUP_OF = {
+    "setup": "Gates",
+    "build": "Gates",
+    "test": "Gates",
+    "editorconfig": "Gates",
+    "format": "Gates",
+    "format-fix": "Gates",
+    "lint": "Gates",
+    "integration": "Gates",
+    "coverage": "Gates",
+    "docs": "Gates",
+    "test-changed": "Gates",
+    "check-docs": "Gates",
+    "ci": "Gates",
+    "project-report": "Board",
+    "old-board": "Board",
+    "old-board-delete": "Board",
+    "board-numbers": "Board",
+    "toon": "Board",
+    "ids": "Board",
+    "id": "Board",
+    "id-raise": "Board",
+    "req": "Board",
+    "links": "Board",
+    "links-check": "Board",
+    "version": "Delivery",
+    "check-tag": "Delivery",
+    "publish-tags": "Delivery",
+    "report": "Delivery",
+    "login": "Delivery",
+    "image": "Delivery",
+    "image-ci": "Delivery",
+    "publish-container": "Delivery",
+    "publish-github": "Delivery",
+    "ci-status": "Delivery",
+    "pull-request": "Delivery",
+    "pull-request-merge": "Delivery",
+    "cleanup-container-versions": "Delivery",
+    "cleanup-github-releases": "Delivery",
+    "cleanup-actions-artifacts": "Delivery",
+    "help": "Tools",
+    "py": "Tools",
+    "doctor": "Tools",
+    "podman-start": "Tools",
+    "skills-install": "Tools",
+    "skills-update": "Tools",
+    "apm": "Tools",
+    "gh-image": "Tools",
+    "npm": "Tools",
+    "node-tooling": "Tools",
+    "python-tooling": "Tools",
+    "go": "Tools",
+    "go-tooling": "Tools",
+    "wrapper": "Tools",
+    "jvm-tooling": "Tools",
+    "podman-socket": "Tools",
+}
+TARGET_WITH_HELP = re.compile(r"^([a-zA-Z][a-zA-Z0-9_-]*):.*## ")
+
+
+def included_makefiles(path, found=None):
+    """`path` and the makefiles that it includes, in the order Make reads them."""
+    found = [] if found is None else found
+    if path in found:
+        return found
+    found.append(path)
+    for line in path.read_text(encoding="utf-8").splitlines():
+        match = re.match(r"-?include (\S+)$", line)
+        if not match:
+            continue
+        name = re.sub(r"\$\(\w+_DIR\)", str(path.parent) + "/", match.group(1))
+        if name.startswith(".claude/skills/"):
+            name = str(ROOT / "skills" / name[len(".claude/skills/") :])
+        if "$(" not in name and Path(name).exists():
+            included_makefiles(Path(name).resolve(), found)
+    return found
+
+
+def help_output(makefiles, docs="", login="", groups=None):
+    """The group headings and the targets under them that `make help` prints.
+
+    Make is not in the test image. This takes HELP_LIST from help.mk, expands
+    it as Make does, and runs the awk command on the makefiles.
+    """
+    text = HELP_MK.read_text(encoding="utf-8")
+    body = text.split("\nHELP_LIST ?= ")[1].split("\n\n")[0]
+    body = re.sub(r"\\\n\s*", " ", body).replace("\\#", "#")
+    values = {
+        "RENDER_DOCS": docs,
+        "PUBLISH_IMAGE": login,
+        "HELP_GROUPS": groups
+        or re.search(r"(?m)^HELP_GROUPS \?= (.+)$", text).group(1),
+        "MAKEFILE_LIST": " ".join(str(path) for path in makefiles),
+    }
+    command = re.sub(
+        r"\$\$|\$\((\w+)\)",
+        lambda match: "$" if match.group(1) is None else values[match.group(1)],
+        body,
+    )
+    result = subprocess.run(["sh", "-c", command], capture_output=True, text=True)
+    assert result.returncode == 0, result.stderr
+    order = []
+    rows = {}
+    for line in result.stdout.splitlines():
+        if line.startswith("  "):
+            rows[order[-1]].append(line.split()[0])
+        elif line.endswith(":"):
+            order.append(line[:-1])
+            rows[order[-1]] = []
+        else:
+            assert line == "", f"unexpected help line: {line!r}"
+    return order, rows, result.stdout
+
+
+def targets_with_group(path):
+    """Each target with a help text in a makefile, and the group marker above it."""
+    group = None
+    found = []
+    for line in path.read_text(encoding="utf-8").splitlines():
+        if line.startswith("# help-group: "):
+            group = line[len("# help-group: ") :].strip()
+            continue
+        match = TARGET_WITH_HELP.match(line)
+        if match:
+            found.append((match.group(1), group))
+    return found
+
+
+class HelpGroupsTest(unittest.TestCase):
+    """The groups of `make help`, from help.mk and the markers of the makefiles."""
+
+    SETUP = ROOT / "skills" / "r-project-setup"
+    PIPELINE = ROOT / "skills" / "r-github-pipeline"
+
+    def product(self, tmp, contract):
+        makefile = write(
+            Path(tmp),
+            "Makefile",
+            f"include {contract}\n\ndeploy: ## Deploy the app\n",
+        )
+        return [makefile] + included_makefiles(contract)
+
+    def test_help_prints_the_groups_in_a_fixed_order_with_each_target_in_its_group(
+        self,
+    ):
+        """id: R-11"""
+        with tempfile.TemporaryDirectory() as tmp:
+            files = self.product(tmp, self.PIPELINE / "sdlc.mk")
+            order, rows, _output = help_output(files)
+        self.assertEqual(order, HELP_ORDER)
+        self.assertEqual(rows["Project"], ["deploy"])
+        for group, expected in (
+            (
+                "Gates",
+                "setup build test editorconfig format format-fix lint integration"
+                " coverage test-changed check-docs ci",
+            ),
+            ("Board", "project-report old-board toon ids id req links"),
+            (
+                "Delivery",
+                "version check-tag publish-tags report image image-ci"
+                " publish-container ci-status pull-request pull-request-merge"
+                " cleanup-container-versions cleanup-github-releases"
+                " cleanup-actions-artifacts",
+            ),
+            (
+                "Tools",
+                "help py doctor podman-start skills-install skills-update apm gh-image",
+            ),
+        ):
+            self.assertEqual(
+                sorted(set(expected.split()) - set(rows[group])), [], group
+            )
+        listed = [name for group in order for name in rows[group]]
+        self.assertEqual(len(listed), len(set(listed)))
+
+    def test_help_on_project_mk_has_no_delivery_group_until_an_image_is_published(
+        self,
+    ):
+        """id: R-11"""
+        with tempfile.TemporaryDirectory() as tmp:
+            files = self.product(tmp, self.SETUP / "project.mk")
+            order, rows, _output = help_output(files)
+            self.assertEqual(order, ["Gates", "Project", "Board", "Tools"])
+            order, rows, _output = help_output(files, login="1")
+            self.assertEqual(order, HELP_ORDER)
+            self.assertEqual(rows["Delivery"], ["login"])
+
+    def test_help_hides_docs_and_login_until_the_project_asks_for_them(self):
+        """id: R-11"""
+        with tempfile.TemporaryDirectory() as tmp:
+            files = self.product(tmp, self.PIPELINE / "sdlc.mk")
+            _order, rows, _output = help_output(files)
+            listed = [name for names in rows.values() for name in names]
+            self.assertNotIn("docs", listed)
+            self.assertNotIn("login", listed)
+            self.assertIn("setup", listed)
+            _order, rows, _output = help_output(files, docs="1", login="1")
+            self.assertIn("docs", rows["Gates"])
+            self.assertIn("login", rows["Delivery"])
+            _order, rows, _output = help_output(files, docs="1")
+            self.assertIn("docs", rows["Gates"])
+            self.assertNotIn("login", rows["Delivery"])
+
+    def test_a_group_outside_the_order_prints_after_the_named_groups(self):
+        """id: R-11"""
+        with tempfile.TemporaryDirectory() as tmp:
+            first = write(
+                Path(tmp),
+                "first.mk",
+                "p: ## In project\n"
+                "# help-group: Zeta\nz: ## In zeta\n"
+                "# help-group: Gates\ng: ## Gate\n"
+                "# help-group: Alpha\na: ## In alpha\n",
+            )
+            second = write(
+                Path(tmp),
+                "second.mk",
+                "# help-group: Tools\ng: ## Second\nt: ## In tools\n",
+            )
+            order, rows, output = help_output(
+                [first, second], groups="Gates Missing Tools"
+            )
+        self.assertEqual(order, ["Gates", "Tools", "Project", "Zeta", "Alpha"])
+        self.assertEqual(rows["Gates"], ["g"])
+        self.assertEqual(rows["Tools"], ["t"])
+        self.assertIn("Gate", output)
+        self.assertNotIn("Second", output)
+        self.assertNotIn("Missing", output)
+
+    def test_a_marker_applies_to_its_own_file_and_each_file_starts_in_project(self):
+        """id: R-11"""
+        with tempfile.TemporaryDirectory() as tmp:
+            first = write(Path(tmp), "first.mk", "# help-group: Tools\na: ## One\n")
+            second = write(Path(tmp), "second.mk", "b: ## Two\n")
+            order, rows, _output = help_output([first, second])
+        self.assertEqual(order, ["Project", "Tools"])
+        self.assertEqual(rows, {"Project": ["b"], "Tools": ["a"]})
+
+    def test_a_group_marker_works_inside_a_hidden_block_and_endif_ends_the_hiding(
+        self,
+    ):
+        """id: R-11"""
+        with tempfile.TemporaryDirectory() as tmp:
+            file = write(
+                Path(tmp),
+                "hidden.mk",
+                "ifeq ($(RENDER_DOCS),1)\n# help-docs\n# help-group: Gates\n"
+                "docs: ## Render\nendif\nafter: ## Shown\n",
+            )
+            order, rows, _output = help_output([file])
+            self.assertEqual(rows, {"Gates": ["after"]})
+            order, rows, _output = help_output([file], docs="1")
+            self.assertEqual(rows, {"Gates": ["docs", "after"]})
+
+    def test_project_mk_and_sdlc_mk_run_the_one_list_from_help_mk(self):
+        """id: R-11"""
+        project = (self.SETUP / "project.mk").read_text(encoding="utf-8")
+        sdlc = (self.PIPELINE / "sdlc.mk").read_text(encoding="utf-8")
+        self.assertIn("\ninclude $(PROJECT_MK_DIR)help.mk\n", project)
+        self.assertIn("\ninclude $(SDLC_MK_DIR)../r-project-setup/help.mk\n", sdlc)
+        for name, text in (("project.mk", project), ("sdlc.mk", sdlc)):
+            recipe = text.split("\nhelp: ## ")[1].split("\n\n")[0]
+            self.assertIn("\t@$(HELP_LIST)", recipe, name)
+            self.assertNotIn("awk", recipe, name)
+            self.assertIn("@printf '%s\\n' \"$(HELP_LEAD)\"", recipe, name)
+        self.assertIn(
+            "make ci runs $(SDLC_CI). It does not publish.",
+            sdlc.split("\nhelp: ## ")[1].split("\n\n")[0],
+        )
+        help_mk = HELP_MK.read_text(encoding="utf-8")
+        self.assertIn("\nifndef HELP_MK\nHELP_MK := 1\n", help_mk)
+        self.assertIn("\nHELP_GROUPS ?= Gates Project Board Delivery Tools\n", help_mk)
+        self.assertTrue(help_mk.endswith(".DEFAULT_GOAL := help\n\nendif\n"))
+
+    def test_the_help_command_uses_posix_awk_only(self):
+        """id: R-11"""
+        help_mk = HELP_MK.read_text(encoding="utf-8")
+        body = help_mk.split("\nHELP_LIST ?= ")[1].split("\n\n")[0]
+        self.assertTrue(body.startswith("awk "))
+        self.assertNotRegex(
+            body,
+            r"\b(asort|asorti|gensub|strftime|systime|PROCINFO|BEGINFILE|ENDFILE"
+            r"|IGNORECASE|FPAT|patsplit|switch|length\()",
+        )
+        self.assertNotIn("'", body.split("'", 1)[1].rsplit("'", 1)[0])
+
+    def test_every_target_with_a_help_text_sits_under_the_group_marker_of_its_group(
+        self,
+    ):
+        """id: R-11"""
+        files = [
+            path
+            for path in sorted((ROOT / "skills").glob("*/*.mk"))
+            if path.name != "help.mk"
+        ]
+        self.assertGreater(len(files), 15)
+        found = 0
+        for path in files:
+            for target, group in targets_with_group(path):
+                found += 1
+                self.assertIsNotNone(group, f"{path.name}: {target} has no marker")
+                self.assertIn(group, HELP_ORDER, f"{path.name}: {target}")
+                expected = HELP_GROUP_OF.get(target)
+                self.assertEqual(group, expected, f"{path.name}: {target}")
+        self.assertGreater(found, 45)
+
+
+LANGUAGE_FILES = {
+    "r-node/node.mk": {
+        "targets": ["npm", "node-tooling"],
+        "variables": ["NODE", "NODE_IMAGE", "NODE_VERSION", "NODE_DEV_TOOLS"],
+    },
+    "r-python/python.mk": {"targets": ["python-tooling"], "variables": []},
+    "r-go/go.mk": {
+        "targets": ["go", "go-tooling"],
+        "variables": ["GO_IMAGE", "GO_CACHE", "GO_OPTS", "GO_RUN", "GO", "MODULE"],
+    },
+    "r-jvm/jvm.mk": {
+        "targets": ["wrapper", "jvm-tooling", "podman-socket"],
+        "variables": [
+            "JDK_IMAGE",
+            "GRADLE_VERSION",
+            "GRADLE_IMAGE",
+            "GRADLE_RUN",
+            "PODMAN_SOCKET",
+        ],
+    },
+}
+LANGUAGE_TEMPLATES = (
+    ("r-node/templates/Makefile.node", "r-node/node.mk", "r-project-setup/project.mk"),
+    (
+        "r-python/templates/Makefile.python",
+        "r-python/python.mk",
+        "r-project-setup/project.mk",
+    ),
+    ("r-go/templates/Makefile.golang", "r-go/go.mk", "r-project-setup/project.mk"),
+    ("r-jvm/templates/Makefile.gradle", "r-jvm/jvm.mk", "r-project-setup/project.mk"),
+    (
+        "r-github-pipeline/templates/Makefile.node",
+        "r-node/node.mk",
+        "r-github-pipeline/sdlc.mk",
+    ),
+    (
+        "r-github-pipeline/templates/Makefile.gradle",
+        "r-jvm/jvm.mk",
+        "r-github-pipeline/sdlc.mk",
+    ),
+)
+
+
+class LanguageIncludeFileTest(unittest.TestCase):
+    """The include file of each language skill holds the targets of its language."""
+
+    def read(self, relative):
+        return (ROOT / "skills" / relative).read_text(encoding="utf-8")
+
+    def test_a_language_template_includes_its_file_and_defines_none_of_its_targets(
+        self,
+    ):
+        """id: R-122"""
+        for template, language, contract in LANGUAGE_TEMPLATES:
+            text = self.read(template)
+            spec = LANGUAGE_FILES[language]
+            include = f"\ninclude .claude/skills/{language}\n"
+            self.assertEqual(text.count(include), 1, template)
+            self.assertGreater(
+                text.index(include),
+                text.index(f"\ninclude .claude/skills/{contract}\n"),
+                template,
+            )
+            for target in spec["targets"]:
+                self.assertNotRegex(text, rf"(?m)^{target}:", f"{template} {target}")
+                self.assertNotRegex(
+                    text, rf"(?m)^\.PHONY: {target}$", f"{template} {target}"
+                )
+            self.assertNotRegex(text, r"(?m)^PODMAN_SOCKET", template)
+            if "github-pipeline" not in template:
+                for variable in spec["variables"]:
+                    self.assertNotRegex(
+                        text, rf"(?m)^{variable} \??= ", f"{template} {variable}"
+                    )
+
+    def test_the_go_template_keeps_the_run_target_of_the_project(self):
+        """id: R-122"""
+        text = self.read("r-go/templates/Makefile.golang")
+        self.assertRegex(text, r"(?m)^run: ## ")
+        self.assertRegex(text, r"(?m)^ARGS \?=$")
+
+    def test_the_pipeline_node_template_gives_node_mk_the_image_it_needs(self):
+        """id: R-122"""
+        template = self.read("r-github-pipeline/templates/Makefile.node")
+        node = self.read("r-node/node.mk")
+        self.assertRegex(node, r"(?m)^NODE \?= podman run .*\\$")
+        self.assertIn("$(NODE_IMAGE)", node.split("\nNODE ?= ")[1].split("\n\n")[0])
+        self.assertLess(
+            template.index("\nNODE_IMAGE ?= "),
+            template.index("\ninclude .claude/skills/r-node/node.mk\n"),
+        )
+
+    def test_a_language_file_defines_its_targets_and_its_defaults_with_the_marker(
+        self,
+    ):
+        """id: R-122"""
+        for language, spec in LANGUAGE_FILES.items():
+            text = self.read(language)
+            guard = re.search(r"(?m)^ifndef (\w+_MK)\n\1 := 1$", text)
+            self.assertIsNotNone(guard, language)
+            phony = " ".join(re.findall(r"(?m)^\.PHONY:(.*)$", text)).split()
+            found = targets_with_group(ROOT / "skills" / language)
+            self.assertEqual([name for name, _ in found], spec["targets"], language)
+            for target, group in found:
+                self.assertEqual(group, "Tools", f"{language} {target}")
+                self.assertIn(target, phony, f"{language} {target}")
+            for variable in spec["variables"]:
+                self.assertRegex(
+                    text, rf"(?m)^{variable} \?= ", f"{language} {variable}"
+                )
+                self.assertNotRegex(
+                    text, rf"(?m)^{variable} = ", f"{language} {variable}"
+                )
+            self.assertTrue(text.endswith(".DEFAULT_GOAL := help\n\nendif\n"), language)
+
+    def test_the_gradle_defaults_match_the_template_values_they_replaced(self):
+        """id: R-122"""
+        jvm = self.read("r-jvm/jvm.mk")
+        for line in (
+            "JDK_IMAGE ?= docker.io/library/eclipse-temurin:25-jdk",
+            "GRADLE_VERSION ?= 9.1.0",
+            "GRADLE_IMAGE ?= docker.io/library/gradle:$(GRADLE_VERSION)-jdk25",
+            "PODMAN_SOCKET ?= $$(podman info --format '{{.Host.RemoteSocket.Path}}')",
+        ):
+            self.assertIn("\n" + line + "\n", jvm)
+        node = self.read("r-node/node.mk")
+        self.assertIn("\nNODE_VERSION ?= 24\n", node)
+        self.assertIn(
+            "\nNODE_IMAGE ?= docker.io/library/node:$(NODE_VERSION)-bookworm-slim\n",
+            node,
+        )
+        go = self.read("r-go/go.mk")
+        self.assertIn("\nGO_IMAGE ?= docker.io/library/golang:1.25-bookworm\n", go)
+        self.assertIn("\nGO ?= $(GO_RUN) go\n", go)
+
+    def test_podman_socket_checks_the_socket_in_the_mount_namespace_of_rootless_podman(
+        self,
+    ):
+        """id: R-122"""
+        jvm = self.read("r-jvm/jvm.mk")
+        recipe = jvm.split("\npodman-socket: ## ")[1].split("\n\n")[0]
+        for part in (
+            "{{.Host.ServiceIsRemote}}",
+            "systemctl --user start podman.socket",
+            "podman system service --time=0",
+            'podman unshare test -S "$$sock"',
+            "podman system migrate",
+        ):
+            self.assertIn(part, recipe)
+        self.assertEqual(recipe.count('podman unshare test -S "$$sock"'), 2)
+        self.assertEqual(recipe.count("podman system migrate"), 2)
+
+    def test_the_root_makefile_of_the_collection_includes_no_language_file(self):
+        """id: R-122"""
+        text = (ROOT / "Makefile").read_text(encoding="utf-8")
+        for language in LANGUAGE_FILES:
+            self.assertNotIn(language, text)
+
+    def test_a_language_skill_names_its_include_file(self):
+        """id: R-122"""
+        for language in LANGUAGE_FILES:
+            skill, name = language.split("/")
+            text = self.read(f"{skill}/SKILL.md")
+            self.assertIn(f"`{name}`", text, skill)
+            tooling = self.read(f"{skill}/references/tooling.md")
+            self.assertIn(f"include .claude/skills/{language}", tooling, skill)
 
 
 if __name__ == "__main__":

@@ -18,6 +18,7 @@ CHECK_DOCS_DIR := $(dir $(lastword $(MAKEFILE_LIST)))
 
 .PHONY: check-docs
 
+# help-group: Gates
 check-docs: ## Fail when a skill text names a missing path or a missing Make target
 	$(PYTHON) "$(CHECK_DOCS_DIR)scripts/check_docs.py"
 

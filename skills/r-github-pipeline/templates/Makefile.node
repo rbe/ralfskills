@@ -8,7 +8,8 @@
 # include sdlc.mk from the installed skill before any target. sdlc.mk
 # already defines help, so leave project.mk out. sdlc.mk adds the
 # contract targets, the image targets, version, publish tags, cleanup,
-# and report.
+# and report. node.mk of the r-node skill follows sdlc.mk and adds
+# `make npm` and `make node-tooling`.
 
 NAME ?= app
 OWNER ?= owner
@@ -111,6 +112,7 @@ SMOKE_CMD = name=$(NAME)-smoke; \
 	test "$$ok" = 1
 
 include .claude/skills/r-github-pipeline/sdlc.mk
+include .claude/skills/r-node/node.mk
 
 # Project targets.
 

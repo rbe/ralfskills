@@ -22,6 +22,7 @@ This skill gives the Make targets and the code rules for Go files.
 
 <rules>
 - `$(GO)` runs Go in Podman on this machine. `make setup` downloads the modules.
+- The targets `go` and `go-tooling` are in `go.mk` beside this skill. The Makefile includes it after `project.mk`. The target `run` stays in the Makefile of the project.
 - The formatter is gofmt. The linter is `go vet`.
 - `make format` lists the files that gofmt would change, and it fails when there is one.
 - gofmt owns the layout of a Go file, so `.editorconfig` sets no indent rule for `*.go`.
@@ -33,7 +34,7 @@ This skill gives the Make targets and the code rules for Go files.
 </rules>
 
 <references>
-- `references/tooling.md`: read it before `make go-tooling` runs, or when a Go cache volume is the question.
+- `references/tooling.md`: read it before `make go-tooling` runs, when you change `go.mk`, or when a Go cache volume is the question.
 - `references/coverage.md`: read it when `make coverage`, `make test-changed`, `make format`, or `make run` fails.
 - `references/build.md`: read it when the change touches `BIN`, `BIN_PKG`, `make build`, or a binary for another machine.
 </references>
