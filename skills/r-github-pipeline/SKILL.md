@@ -22,6 +22,7 @@ This skill owns the GitHub delivery contract and `sdlc.mk`, the makefile that im
 </steps>
 <rules>
 - Add no tag trigger.
+- A container uses a standard port inside. A host binding of `make run` uses a port above 1024, for example 8443, so no root privileges are needed.
 - Add no workflow beside `ci.yml` and delete no workflow. Name a second workflow file in the report.
 - Leave the bytes of a root `sdlc.mk` and name it in the report. A root `sdlc.mk` is off the contract.
 </rules>

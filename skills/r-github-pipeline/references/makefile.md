@@ -24,6 +24,7 @@ The project sets the command variables of `r-project-setup` above the include. I
 | `SDLC_JOBS` | The jobs that the pipeline report lists. Add `publish-github` when that job exists |
 | `SDLC_CI` | The targets that `ci` runs, in order. The default is `setup build editorconfig format lint test integration coverage docs report`. Remove `docs` when there is no docs target |
 | `SDLC_KEEP_ARTIFACTS` | The artifact names that the hourly cleanup does not delete. The default is `report,docs` |
+| `PORT`, `HOST_PORT` | In `templates/Makefile.node`: the port inside the container, and the port of the host that `make run` binds. `HOST_PORT` stays above 1024 and `run` fails below it |
 | `HELP_LEAD` | The first line of `make help` |
 | `GH_BASE_IMAGE`, `GH_VERSION` | The base image and the release of the GitHub CLI image |
 | `OWNER`, `NAME` | The GitHub owner and the repository name. `ci-status` passes them as `-R owner/name`, and `pull-request` and `pull-request-merge` put them in the REST route, because the image has no Git |

@@ -1692,6 +1692,35 @@ class MakeAndPodmanInterfaceTest(unittest.TestCase):
         self.assertIn("image-ci", node.split("\nBUILD_CMD = ")[1].split("\n\n")[0])
         self.assertRegex(node, r"(?m)^SMOKE_CMD = ")
 
+    def test_a_template_publishes_no_host_port_of_1024_or_lower(self):
+        """id: R-115"""
+        publish = re.compile(r"(?:-p|--publish)[ =](?:[0-9.]+:)?(\$\(\w+\)|\d+):")
+        found = 0
+        for path in self.makefiles():
+            text = path.read_text(encoding="utf-8")
+            for match in publish.finditer(text):
+                found += 1
+                host = match.group(1)
+                if host.startswith("$("):
+                    name = host[2:-1]
+                    default = re.search(rf"(?m)^{name} \??= (\d+)$", text)
+                    self.assertIsNotNone(default, f"{path.name} {name}")
+                    host = default.group(1)
+                self.assertGreater(int(host), 1024, f"{path.name}: {match.group(0)}")
+        self.assertGreaterEqual(found, 1)
+        node = (self.PIPELINE / "templates" / "Makefile.node").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("-p 127.0.0.1:$(HOST_PORT):$(PORT)", node)
+        self.assertIn('test "$(HOST_PORT)" -gt 1024', node)
+        skill = (self.PIPELINE / "SKILL.md").read_text(encoding="utf-8")
+        self.assertIn(
+            "- A container uses a standard port inside. A host binding of `make run`"
+            " uses a port above 1024, for example 8443, so no root privileges are"
+            " needed.",
+            skill,
+        )
+
     def test_jvm_tooling_counts_a_kotlin_build_file_as_present(self):
         """id: R-66"""
         gradle = (
