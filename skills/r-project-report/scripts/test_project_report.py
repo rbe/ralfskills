@@ -1692,6 +1692,221 @@ class MakeAndPodmanInterfaceTest(unittest.TestCase):
         self.assertIn("image-ci", node.split("\nBUILD_CMD = ")[1].split("\n\n")[0])
         self.assertRegex(node, r"(?m)^SMOKE_CMD = ")
 
+    def test_a_template_publishes_no_host_port_of_1024_or_lower(self):
+        """id: R-115"""
+        publish = re.compile(r"(?:-p|--publish)[ =](?:[0-9.]+:)?(\$\(\w+\)|\d+):")
+        found = 0
+        for path in self.makefiles():
+            text = path.read_text(encoding="utf-8")
+            for match in publish.finditer(text):
+                found += 1
+                host = match.group(1)
+                if host.startswith("$("):
+                    name = host[2:-1]
+                    default = re.search(rf"(?m)^{name} \??= (\d+)$", text)
+                    self.assertIsNotNone(default, f"{path.name} {name}")
+                    host = default.group(1)
+                self.assertGreater(int(host), 1024, f"{path.name}: {match.group(0)}")
+        self.assertGreaterEqual(found, 1)
+        node = (self.PIPELINE / "templates" / "Makefile.node").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("-p 127.0.0.1:$(HOST_PORT):$(PORT)", node)
+        self.assertIn('test "$(HOST_PORT)" -gt 1024', node)
+        skill = (self.PIPELINE / "SKILL.md").read_text(encoding="utf-8")
+        self.assertIn(
+            "- A container uses a standard port inside. A host binding of `make run`"
+            " uses a port above 1024, for example 8443, so no root privileges are"
+            " needed.",
+            skill,
+        )
+
+    def test_gradle_runs_in_podman_and_reaches_the_podman_socket(self):
+        """id: R-116"""
+        templates = {
+            "r-jvm": ROOT / "skills" / "r-jvm" / "templates" / "Makefile.gradle",
+            "r-github-pipeline": self.PIPELINE / "templates" / "Makefile.gradle",
+        }
+        for owner, path in templates.items():
+            text = path.read_text(encoding="utf-8")
+            self.assertRegex(text, r"(?m)^PODMAN_SOCKET = ", owner)
+            podman = re.search(r"(?m)^GRADLE_PODMAN = (?:.*\\\n)*.*$", text)
+            self.assertIsNotNone(podman, owner)
+            for part in (
+                "--network host",
+                "-e CONTAINER_HOST=unix:///run/podman/podman.sock",
+                '-v "$(PODMAN_SOCKET)":/run/podman/podman.sock',
+                "./gradlew",
+            ):
+                self.assertIn(part, podman.group(0), f"{owner} {part}")
+            self.assertRegex(text, r"(?m)^podman-socket: ", owner)
+            self.assertNotIn("docker.sock", text, owner)
+            self.assertNotRegex(text, r"(?m)^[^#\n]*\bdocker run\b", owner)
+        skill = (ROOT / "skills" / "r-jvm" / "SKILL.md").read_text(encoding="utf-8")
+        self.assertIn(
+            "- Gradle runs in a container and reaches Podman through"
+            " `$(GRADLE_PODMAN)`, so the host needs no Java toolchain.",
+            skill,
+        )
+
+    def test_a_client_package_has_one_generic_publish_workflow(self):
+        """id: R-117"""
+        text = (self.PIPELINE / "templates" / "publish-client.yml").read_text(
+            encoding="utf-8"
+        )
+        for part in (
+            "name: Publish client\n",
+            "  workflow_dispatch:\n",
+            '      - "client-v*"\n',
+            "  contents: write\n  packages: write\n",
+            "registry-url: https://npm.pkg.github.com",
+            'scope: "@${{ github.repository_owner }}"',
+            "npm ci",
+            "npm test",
+            "npm pack",
+            "gh release create",
+            "npm publish",
+            "Refusing to invent a version.",
+            'client-v${version}"',
+        ):
+            self.assertIn(part, text)
+        self.assertNotIn("@rbe", text)
+        self.assertNotIn("branches:", text)
+        self.assertNotIn("make ", text.split("jobs:")[1])
+        skill = (self.PIPELINE / "SKILL.md").read_text(encoding="utf-8")
+        self.assertIn(
+            "If the project has `client/package.json` and no"
+            " `.github/workflows/publish-client.yml`, copy"
+            " `templates/publish-client.yml` to that path.",
+            skill,
+        )
+        files = (self.PIPELINE / "references" / "setup-files.md").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("`templates/publish-client.yml`", files)
+        contract = (self.PIPELINE / "references" / "contract.md").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("`.github/workflows/publish-client.yml`", contract)
+
+    def test_a_binary_runs_once_in_the_build_and_an_image_runs_with_smoke_args(self):
+        """id: R-118"""
+        go = (ROOT / "skills" / "r-go" / "templates" / "Makefile.golang").read_text(
+            encoding="utf-8"
+        )
+        self.assertRegex(go, r"(?m)^BIN_SMOKE_ARGS \?= --help$")
+        smoke = re.search(r"(?m)^BIN_SMOKE = (.+)$", go).group(1)
+        self.assertIn("$(GO_RUN) build/$(BIN) $(BIN_SMOKE_ARGS)", smoke)
+        self.assertIn("$(if $(or $(GOOS),$(GOARCH)),,", smoke)
+        build = re.search(r"(?m)^BUILD_CMD = (.+)$", go).group(1)
+        self.assertIn("-o build/$(BIN) $(BIN_PKG) $(BIN_SMOKE),", build)
+        doc = (ROOT / "skills" / "r-go" / "references" / "build.md").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("runs `build/<name> $(BIN_SMOKE_ARGS)` in the Go image", doc)
+        container = (self.PIPELINE / "container.mk").read_text(encoding="utf-8")
+        self.assertIn('podman run --rm "$(CI_IMAGE)" $(SMOKE_ARGS)', container)
+        image = (self.PIPELINE / "templates" / "Makefile.image").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("# SMOKE_ARGS = --help", image)
+
+    def test_the_web_smoke_check_looks_for_the_page_root_and_the_api_needle(self):
+        """id: R-119"""
+        node = (self.PIPELINE / "templates" / "Makefile.node").read_text(
+            encoding="utf-8"
+        )
+        self.assertRegex(node, r'(?m)^SMOKE_PAGE_NEEDLE \?= id="root"$')
+        self.assertRegex(node, r"(?m)^SMOKE_NEEDLE \?= ok$")
+        smoke = node.split("\nSMOKE_CMD = ")[1].split("\n\n")[0]
+        self.assertIn('"https://127.0.0.1:$(PORT)$(SMOKE_PATH)"', smoke)
+        self.assertIn("grep -qF '$(SMOKE_NEEDLE)'", smoke)
+        self.assertIn('"https://127.0.0.1:$(PORT)/"', smoke)
+        self.assertIn("grep -qF '$(SMOKE_PAGE_NEEDLE)'", smoke)
+        self.assertIn("[ -n '$(SMOKE_PAGE_NEEDLE)' ]", smoke)
+        self.assertLess(
+            smoke.index("SMOKE_PAGE_NEEDLE"), smoke.index('test "$$ok" = 1')
+        )
+        doc = (self.PIPELINE / "references" / "makefile.md").read_text(encoding="utf-8")
+        self.assertIn("`SMOKE_PAGE_NEEDLE`", doc)
+
+    def test_the_list_of_the_entry_file_row_is_the_one_list_of_the_skills(self):
+        """id: R-16 R-60"""
+        setup = (ROOT / "docs" / "requirements" / "project-setup.md").read_text(
+            encoding="utf-8"
+        )
+        row = [line for line in setup.splitlines() if '<a id="r-60">' in line][0]
+        sentence = row.split("The skills of the collection are ")[1].split(
+            ". This list is the one list"
+        )[0]
+        listed = re.findall(r"`(r-[a-z-]+)`", sentence)
+        self.assertEqual(len(listed), len(set(listed)))
+        folders = sorted(path.name for path in (ROOT / "skills").glob("r-*"))
+        self.assertEqual(sorted(listed), folders)
+        collection = (ROOT / "docs" / "requirements" / "collection.md").read_text(
+            encoding="utf-8"
+        )
+        row16 = [line for line in collection.splitlines() if '<a id="r-16">' in line][0]
+        self.assertIn("[R-60](project-setup.md#r-60)", row16)
+        self.assertEqual(re.findall(r"`(r-[a-z-]+)`", row16), [])
+
+    def test_a_publish_job_runs_on_a_push_only_with_the_flag_and_always_on_dispatch(
+        self,
+    ):
+        """id: R-121"""
+        flag = (
+            "(github.event_name == 'push' && github.ref =="
+            " format('refs/heads/{0}', github.event.repository.default_branch)"
+            " && vars.AUTO_PUBLISH == 'true') ||"
+        )
+        counts = {"ci.node.yml": 1, "ci.make.yml": 1, "ci.gradle.yml": 2}
+        for name, count in counts.items():
+            workflow = (self.PIPELINE / "templates" / name).read_text(encoding="utf-8")
+            jobs = re.findall(
+                r"(?ms)^  (publish-[a-z]+):\n(.*?)(?=^  [a-z-]+:\n)",
+                workflow + "  x:\n",
+            )
+            self.assertEqual(len(jobs), count, name)
+            for job, body in jobs:
+                condition = body.split("    if: >-\n")[1].split("    runs-on:")[0]
+                lines = [line.strip() for line in condition.splitlines()]
+                self.assertEqual(
+                    lines, [flag, f"inputs.job == '{job}'"], f"{name} {job}"
+                )
+                self.assertIn("needs: [build, test]", body)
+        client = (self.PIPELINE / "templates" / "publish-client.yml").read_text(
+            encoding="utf-8"
+        )
+        self.assertNotIn("branches:", client)
+        self.assertNotIn("AUTO_PUBLISH", client)
+        sdlc = PIPELINE_MK.read_text(encoding="utf-8")
+        container = (self.PIPELINE / "container.mk").read_text(encoding="utf-8")
+        self.assertNotIn("AUTO_PUBLISH", sdlc + container)
+        ci = re.search(r"(?m)^SDLC_CI \?= (.+)$", sdlc).group(1)
+        self.assertNotIn("publish", ci)
+        for name in ("Makefile.node", "Makefile.gradle", "Makefile.image"):
+            text = (self.PIPELINE / "templates" / name).read_text(encoding="utf-8")
+            for line in re.findall(r"(?m)^SDLC_CI \??= (.+)$", text):
+                self.assertNotIn("publish", line, name)
+        skill = (self.PIPELINE / "SKILL.md").read_text(encoding="utf-8")
+        self.assertIn(
+            "- By default only a human publishes a large artifact, such as a"
+            " container image, to a registry, with `workflow_dispatch`.",
+            skill,
+        )
+        self.assertIn("`AUTO_PUBLISH` set to `true`", skill)
+        for path in (
+            self.PIPELINE / "references" / "workflow.md",
+            self.PIPELINE / "references" / "contract.md",
+            self.PIPELINE / "templates" / "pipeline-rules.md",
+            ROOT / "skills" / "r-release" / "SKILL.md",
+        ):
+            self.assertIn("AUTO_PUBLISH", path.read_text(encoding="utf-8"), path.name)
+        setup = ROOT / "skills" / "r-project-setup" / "templates" / "CLAUDE.md"
+        self.assertNotIn(
+            "with the merge into the default branch", setup.read_text(encoding="utf-8")
+        )
+
     def test_jvm_tooling_counts_a_kotlin_build_file_as_present(self):
         """id: R-66"""
         gradle = (
@@ -1841,6 +2056,93 @@ def expand_make_recipe(target, variables):
         return variables[match.group(1)]
 
     return re.sub(r"\$\$|\$\((\w+)\)", replace, shell)
+
+
+FAKE_GIT = """\
+case "$*" in
+    "tag -l v[0-9]*") cat tags.txt ;;
+    "rev-parse --abbrev-ref HEAD") cat branch.txt ;;
+    "rev-parse HEAD") cat head.txt ;;
+    "rev-parse -q --verify origin/main") cat tip.txt 2>/dev/null || exit 1 ;;
+    *) exit 1 ;;
+esac
+"""
+
+
+class CheckTagRecipeTest(unittest.TestCase):
+    """Runs the real check-tag recipe of sdlc.mk in sh against a fake git."""
+
+    def check(self, tag, tags=("v0.3.0", "v0.4.0"), branch="main", head="a1", tip="a1"):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "bin").mkdir()
+            (root / "bin" / "git").write_text(FAKE_GIT, encoding="utf-8")
+            (root / "bin" / "git").chmod(0o755)
+            (root / "tags.txt").write_text("".join(f"{t}\n" for t in tags))
+            (root / "branch.txt").write_text(branch + "\n")
+            (root / "head.txt").write_text(head + "\n")
+            if tip:
+                (root / "tip.txt").write_text(tip + "\n")
+            shell = expand_make_recipe("check-tag", {"DEFAULT_BRANCH": "main"})
+            environment = {"PATH": f"{root / 'bin'}:{os.environ['PATH']}"}
+            if tag is not None:
+                environment["TAG"] = tag
+            return subprocess.run(
+                ["sh", "-c", shell],
+                cwd=tmp,
+                env=environment,
+                capture_output=True,
+                text=True,
+            )
+
+    def test_a_new_newer_tag_at_the_tip_of_the_default_branch_passes(self):
+        """id: R-120"""
+        for tag in ("v0.5.0", "v0.4.1", "v1.0.0", "v0.10.0"):
+            result = self.check(tag)
+            self.assertEqual(result.returncode, 0, f"{tag} {result.stderr}")
+        result = self.check("v0.1.0", tags=())
+        self.assertEqual(result.returncode, 0, result.stderr)
+
+    def test_a_bad_old_or_existing_tag_fails_and_names_the_reason(self):
+        """id: R-120"""
+        cases = (
+            (None, "set TAG"),
+            ("0.5.0", "is not vMAJOR.MINOR.PATCH"),
+            ("v0.5", "is not vMAJOR.MINOR.PATCH"),
+            ("v0.5.0-rc1", "is not vMAJOR.MINOR.PATCH"),
+            ("v0.4.0", "exists"),
+            ("v0.3.5", "is not newer than v0.4.0"),
+        )
+        for tag, reason in cases:
+            result = self.check(tag)
+            self.assertNotEqual(result.returncode, 0, f"{tag}")
+            self.assertIn(reason, result.stderr, f"{tag}")
+        # a pre-release tag does not count as the nearest tag
+        result = self.check("v0.3.5", tags=("v0.3.0", "v0.4.0-rc1"))
+        self.assertEqual(result.returncode, 0, result.stderr)
+
+    def test_a_tag_off_the_tip_of_the_default_branch_fails(self):
+        """id: R-120"""
+        for kwargs in (
+            {"branch": "feature"},
+            {"head": "b2"},
+            {"tip": ""},
+        ):
+            result = self.check("v0.5.0", **kwargs)
+            self.assertNotEqual(result.returncode, 0, str(kwargs))
+            self.assertIn("check out the tip of main", result.stderr)
+
+    def test_the_skill_and_the_reference_name_the_target(self):
+        """id: R-120"""
+        skill = (ROOT / "skills" / "r-github-pipeline" / "SKILL.md").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn(
+            "- Before a `v*` tag is pushed, `make check-tag TAG=vX.Y.Z` must pass:",
+            skill,
+        )
+        sdlc = PIPELINE_MK.read_text(encoding="utf-8")
+        self.assertIn(".PHONY: help version check-tag ci", sdlc)
 
 
 class CleanupRecipeTest(unittest.TestCase):

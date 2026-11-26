@@ -29,6 +29,16 @@ GRADLE_IMAGE ?= docker.io/library/gradle:$(GRADLE_VERSION)-jdk25
 GRADLE_RUN = mkdir -p "$$HOME/.gradle" && podman run --rm $(PODMAN_NET_ARGS) -e CI -e GRADLE_USER_HOME=/gradle \
 	-v "$$HOME/.gradle":/gradle:Z -v "$(CURDIR)":/work:Z -w /work
 GRADLE = $(GRADLE_RUN) $(JDK_IMAGE) ./gradlew --console=plain
+# A Gradle task that starts containers, such as a Testcontainers test, runs
+# through $(GRADLE_PODMAN). It is $(GRADLE) with the Podman socket of the
+# host and the host network, so the container that runs Gradle starts
+# other containers on the host, and the host needs no Java toolchain. The
+# image of that run holds a Podman client, as `CONTAINER_HOST` names the
+# socket. A target that uses it runs `make podman-socket` first.
+PODMAN_SOCKET = $$(podman info --format '{{.Host.RemoteSocket.Path}}')
+GRADLE_PODMAN = $(GRADLE_RUN) --network host --security-opt label=disable \
+	-e CONTAINER_HOST=unix:///run/podman/podman.sock -v "$(PODMAN_SOCKET)":/run/podman/podman.sock \
+	$(JDK_IMAGE) ./gradlew --console=plain
 
 SETUP_CMD = $(GRADLE) --version && $(GRADLE) -q dependencies --configuration testRuntimeClasspath > /dev/null
 BUILD_CMD = $(GRADLE) assemble
@@ -83,3 +93,17 @@ jvm-tooling: ## Set up the wrapper, Gradle files, Checkstyle, and EditorConfig, 
 	  if ! grep -qx "$$line" .gitignore; then printf '%s\n' "$$line" >> .gitignore; fi; \
 	done; \
 	$(MAKE) --no-print-directory format-fix
+
+.PHONY: podman-socket
+podman-socket: ## Start the Podman API socket of this user when it is off. $(GRADLE_PODMAN) needs it
+	@set -eu; \
+	if [ "$$(podman info --format '{{.Host.RemoteSocket.Exists}}')" = true ]; then exit 0; fi; \
+	sock=$(PODMAN_SOCKET); \
+	mkdir -p build "$$(dirname "$$sock")"; \
+	nohup podman system service --time=0 "unix://$$sock" > build/podman-service.log 2>&1 & \
+	for i in 1 2 3 4 5 6 7 8 9 10; do \
+		if [ -S "$$sock" ]; then exit 0; fi; \
+		sleep 1; \
+	done; \
+	echo "The Podman socket $$sock did not open. See build/podman-service.log." >&2; \
+	exit 1

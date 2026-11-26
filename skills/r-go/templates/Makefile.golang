@@ -41,7 +41,14 @@ SETUP_CMD = $(GO) mod download
 BIN ?=
 BIN_PKG ?= ./cmd/$(BIN)
 ARGS ?=
-BUILD_CMD = $(if $(BIN),mkdir -p build && $(GO_RUN) env $(if $(GOOS),GOOS=$(GOOS)) $(if $(GOARCH),GOARCH=$(GOARCH)) go build -o build/$(BIN) $(BIN_PKG),$(GO) build ./...)
+# The smoke check of a binary: `make build` runs build/$(BIN) with
+# BIN_SMOKE_ARGS in the Go image and fails when the exit code is not 0.
+# It does not run when GOOS or GOARCH names another machine, because that
+# binary does not start here. A program that needs no argument sets
+# BIN_SMOKE_ARGS to --version.
+BIN_SMOKE_ARGS ?= --help
+BIN_SMOKE = $(if $(or $(GOOS),$(GOARCH)),,&& $(GO_RUN) build/$(BIN) $(BIN_SMOKE_ARGS))
+BUILD_CMD = $(if $(BIN),mkdir -p build && $(GO_RUN) env $(if $(GOOS),GOOS=$(GOOS)) $(if $(GOARCH),GOARCH=$(GOARCH)) go build -o build/$(BIN) $(BIN_PKG) $(BIN_SMOKE),$(GO) build ./...)
 TEST_CMD = $(GO) test ./...
 INTEGRATION_CMD = true
 # gofmt reads the Go files of the packages of the project and no other

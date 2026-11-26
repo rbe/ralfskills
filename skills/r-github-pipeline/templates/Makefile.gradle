@@ -26,6 +26,16 @@ JRE_IMAGE ?= docker.io/library/eclipse-temurin:25-jre
 CI_IMAGE ?= localhost/$(NAME):ci
 JAR_GLOB ?= build/libs/$(NAME)-*.jar
 GRADLE ?= podman run --rm $(PODMAN_NET_ARGS) -e CI -e GRADLE_USER_HOME=/gradle -v "$$HOME/.gradle":/gradle:Z -v "$(CURDIR)":/work:Z -w /work $(JDK_IMAGE) ./gradlew --console=plain
+# A Gradle task that starts containers, such as a Testcontainers test, runs
+# through $(GRADLE_PODMAN). It is $(GRADLE) with the Podman socket of the
+# host and the host network, so the container that runs Gradle starts
+# other containers on the host, and the host needs no Java toolchain. The
+# image of that run holds a Podman client, as `CONTAINER_HOST` names the
+# socket. A target that uses it runs `make podman-socket` first.
+PODMAN_SOCKET = $$(podman info --format '{{.Host.RemoteSocket.Path}}')
+GRADLE_PODMAN = podman run --rm $(PODMAN_NET_ARGS) --network host --security-opt label=disable -e CI -e GRADLE_USER_HOME=/gradle \
+	-e CONTAINER_HOST=unix:///run/podman/podman.sock -v "$(PODMAN_SOCKET)":/run/podman/podman.sock \
+	-v "$$HOME/.gradle":/gradle:Z -v "$(CURDIR)":/work:Z -w /work $(JDK_IMAGE) ./gradlew --console=plain
 
 # The command variables of the contract. A # inside one is written \#.
 SETUP_CMD = set -eu; \
@@ -93,7 +103,7 @@ include .claude/skills/r-github-pipeline/sdlc.mk
 
 # Project targets.
 
-.PHONY: publish-github clean
+.PHONY: publish-github clean podman-socket
 
 publish-github: ## Match CI: release MAJOR.MINOR.PATCH-run with the tested JAR
 	@$(call SDLC_LOG,publish-github,_publish-github)
@@ -115,3 +125,16 @@ _publish-github:
 	    --notes "Build $$version." --target "$$(git rev-parse HEAD)"; \
 	fi; \
 	printf '# publish-github\n\nStatus: released\nRelease: %s\n' "$$version" > build/summaries/publish-github.md
+
+podman-socket: ## Start the Podman API socket of this user when it is off. $(GRADLE_PODMAN) needs it
+	@set -eu; \
+	if [ "$$(podman info --format '{{.Host.RemoteSocket.Exists}}')" = true ]; then exit 0; fi; \
+	sock=$(PODMAN_SOCKET); \
+	mkdir -p build "$$(dirname "$$sock")"; \
+	nohup podman system service --time=0 "unix://$$sock" > build/podman-service.log 2>&1 & \
+	for i in 1 2 3 4 5 6 7 8 9 10; do \
+		if [ -S "$$sock" ]; then exit 0; fi; \
+		sleep 1; \
+	done; \
+	echo "The Podman socket $$sock did not open. See build/podman-service.log." >&2; \
+	exit 1

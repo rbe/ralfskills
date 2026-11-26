@@ -20,6 +20,7 @@ This skill gives the Make targets and the code rules for Java, Groovy, Grails, a
 
 <rules>
 - In a recipe, `$(GRADLE)` runs the Gradle wrapper in Podman. `make build` runs Gradle.
+- Gradle runs in a container and reaches Podman through `$(GRADLE_PODMAN)`, so the host needs no Java toolchain. A Gradle task that starts containers runs through it, after `make podman-socket`.
 - `make wrapper` writes the Gradle wrapper alone.
 - The formatter of Java is google-java-format. The linter of Java is Checkstyle. The linter of Groovy is CodeNarc. `templates/Makefile.gradle` runs only Checkstyle, so a Groovy project sets `LINT_CMD` to add it.
 - Source is in `src/main/java`. Tests are in `src/test/java`.
