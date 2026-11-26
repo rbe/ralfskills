@@ -1017,7 +1017,7 @@ class ProjectReportTest(unittest.TestCase):
         contract = (ROOT / "skills" / "r-project-setup" / "contract.mk").read_text(
             encoding="utf-8"
         )
-        self.assertIn("r-project-report:", contract)
+        self.assertIn("\nproject-report:", contract)
 
     def test_this_repository_report_maps_the_requirements_list(self):
         """id: R-3"""
