@@ -1749,6 +1749,46 @@ class MakeAndPodmanInterfaceTest(unittest.TestCase):
             skill,
         )
 
+    def test_a_client_package_has_one_generic_publish_workflow(self):
+        """id: R-117"""
+        text = (self.PIPELINE / "templates" / "publish-client.yml").read_text(
+            encoding="utf-8"
+        )
+        for part in (
+            "name: Publish client\n",
+            "  workflow_dispatch:\n",
+            '      - "client-v*"\n',
+            "  contents: write\n  packages: write\n",
+            "registry-url: https://npm.pkg.github.com",
+            'scope: "@${{ github.repository_owner }}"',
+            "npm ci",
+            "npm test",
+            "npm pack",
+            "gh release create",
+            "npm publish",
+            "Refusing to invent a version.",
+            'client-v${version}"',
+        ):
+            self.assertIn(part, text)
+        self.assertNotIn("@rbe", text)
+        self.assertNotIn("branches:", text)
+        self.assertNotIn("make ", text.split("jobs:")[1])
+        skill = (self.PIPELINE / "SKILL.md").read_text(encoding="utf-8")
+        self.assertIn(
+            "If the project has `client/package.json` and no"
+            " `.github/workflows/publish-client.yml`, copy"
+            " `templates/publish-client.yml` to that path.",
+            skill,
+        )
+        files = (self.PIPELINE / "references" / "setup-files.md").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("`templates/publish-client.yml`", files)
+        contract = (self.PIPELINE / "references" / "contract.md").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("`.github/workflows/publish-client.yml`", contract)
+
     def test_jvm_tooling_counts_a_kotlin_build_file_as_present(self):
         """id: R-66"""
         gradle = (

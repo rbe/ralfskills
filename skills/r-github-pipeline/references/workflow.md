@@ -17,7 +17,7 @@ setup ──┬── build ──┬── publish-container ──┐
 
 ## Triggers and permissions
 
-- The triggers are `push` on every branch and `workflow_dispatch` with a `job` choice. There is no `pull_request` trigger and no tag trigger.
+- The triggers are `push` on every branch and `workflow_dispatch` with a `job` choice. There is no `pull_request` trigger and no tag trigger in `ci.yml`.
 - The default branch is `github.event.repository.default_branch`.
 - A manual publish also runs `build` and `test`, and it needs both to succeed.
 - The workflow cancels a run in progress only when the push is not on the default branch.

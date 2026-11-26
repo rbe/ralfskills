@@ -32,8 +32,8 @@ The include is `.claude/skills/r-github-pipeline/sdlc.mk`. A root `sdlc.mk` is o
 
 | Check | State | Evidence |
 | --- | --- | --- |
-| Exactly one workflow, `.github/workflows/ci.yml`, named `CI` | | |
-| Trigger is `push` on branches and `workflow_dispatch`. No `pull_request`. No tag trigger | | |
+| One workflow, `.github/workflows/ci.yml`, named `CI`, and `publish-client.yml` only when `client/package.json` exists | | |
+| Trigger is `push` on branches and `workflow_dispatch`. No `pull_request`. No tag trigger in `ci.yml` | | |
 | Job ids and `needs` match the graph. `publish-*` needs `build` and `test` | | |
 | Every `run:` step is `make <target>` | | |
 | `publish-*` runs on the default branch or the dispatch input | | |
