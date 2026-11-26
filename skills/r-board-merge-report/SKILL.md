@@ -6,7 +6,7 @@ description: Reports which board rows, ADRs, and closed history files can merge,
 The general rules in `CLAUDE.md` apply.
 
 <purpose>
-The report lists board text that says one fact twice, says opposite facts, or differs from the code. The owner reads it once and chooses by id what `r-board-merge` does. This skill writes no file, no row, and no id.
+The report lists board text that says one fact twice, says opposite facts, or differs from the code. The owner reads it once and chooses by id what `r-board-merge` does. This skill writes no file, no row, and no id. It covers the documents in `docs/`. `r-skills-review` covers skill files.
 </purpose>
 
 <inputs>

@@ -33,6 +33,7 @@ The diagram is `docs/diagrams/collection-map.svg`. A change that alters what it 
 | [r-system-state-report](skills/r-system-state-report/SKILL.md) | A plain-language report on what the system does now, the decisions that shaped it, and the decisions that wait for the owner. Say `state report` |
 | [r-board-merge-report](skills/r-board-merge-report/SKILL.md) | Reports which board rows, ADRs, and closed history files repeat text and can merge, shrink, or go. Writes nothing. Numbers come from `make board-numbers` |
 | [r-board-merge](skills/r-board-merge/SKILL.md) | Does what the owner chose by id from that report. One commit for each finding |
+| [r-skills-review](skills/r-skills-review/SKILL.md) | Reports where installed skills state one rule twice, do one action twice, or contradict. Skill files only. Writes nothing |
 | [r-component-upgrade](skills/r-component-upgrade/SKILL.md) | Updates one component to a newer version in one slice, with the gates before and after. Covers a library, a runtime, a base image, a tool pin, and this collection |
 | [r-upgrade-node-components](skills/r-upgrade-node-components/SKILL.md) | Gives the Node facts for `r-component-upgrade`: where each version is pinned and the known traps |
 | [r-upgrade-python-components](skills/r-upgrade-python-components/SKILL.md) | Gives the Python facts for `r-component-upgrade`: where each version is pinned and the known traps |
@@ -233,6 +234,7 @@ dependencies:
         - r-system-state-report   # the plain-language report for the owner
         - r-board-merge-report    # finds repeated board text
         - r-board-merge           # applies the findings the owner chose
+        - r-skills-review         # finds overlaps between skills
         - r-component-upgrade     # updates one component to a newer version
         - r-upgrade-node-components   # or r-upgrade-python-components, r-upgrade-java-components, r-upgrade-go-components: install the one of each language the project uses
         - r-github-pipeline   # when the project publishes through GitHub

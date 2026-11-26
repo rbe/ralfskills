@@ -605,7 +605,7 @@ def tag_problems(lines):
 class SkillShapeTest(unittest.TestCase):
     def test_each_skill_refers_to_the_general_rules_in_one_line(self):
         """id: R-76"""
-        self.assertEqual(len(skill_files()), 29)
+        self.assertEqual(len(skill_files()), 30)
         for path in skill_files():
             text = path.read_text(encoding="utf-8")
             self.assertEqual(text.count(ONE_LINE), 1, path)
@@ -1324,6 +1324,37 @@ class MakeAndPodmanInterfaceTest(unittest.TestCase):
         )
         self.assertNotIn("150 words", merge)
         self.assertNotIn("proposal gets the status", merge)
+
+    def test_skills_review_reports_three_kinds_and_names_the_owner_rule(self):
+        """id: R-107"""
+        text = self.skill_text("r-skills-review")
+        kinds = self.skill_text("r-skills-review").split("<references>")[0]
+        for sentence in (
+            "- A pointer is not an overlap.",
+            "- The owner rule: a rule that the general rules of `CLAUDE.md` state"
+            " stays only there.",
+            "Any other rule belongs to the skill whose purpose names the subject."
+            " The other places keep a pointer.",
+            "- Write each place as `path:line` and quote at most 20 words.",
+            "- Change no file.",
+            "This skill covers skill files only."
+            " `r-board-merge-report` covers the board documents in `docs/`.",
+        ):
+            self.assertIn(sentence, kinds)
+        for kind in (
+            "Same rule in two places",
+            "Same action in two skills",
+            "Contradiction",
+        ):
+            self.assertIn(kind, text)
+        self.assertIn(
+            "`r-skills-review` covers skill files.",
+            self.skill_text("r-board-merge-report"),
+        )
+        for name in ENTRY_FILES:
+            self.assertIn(
+                "`r-skills-review`", (ROOT / name).read_text(encoding="utf-8")
+            )
 
     def test_old_board_is_a_target_and_migrate_docs_types_no_host_command(self):
         """id: R-21"""
