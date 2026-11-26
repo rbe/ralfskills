@@ -1721,6 +1721,34 @@ class MakeAndPodmanInterfaceTest(unittest.TestCase):
             skill,
         )
 
+    def test_gradle_runs_in_podman_and_reaches_the_podman_socket(self):
+        """id: R-116"""
+        templates = {
+            "r-jvm": ROOT / "skills" / "r-jvm" / "templates" / "Makefile.gradle",
+            "r-github-pipeline": self.PIPELINE / "templates" / "Makefile.gradle",
+        }
+        for owner, path in templates.items():
+            text = path.read_text(encoding="utf-8")
+            self.assertRegex(text, r"(?m)^PODMAN_SOCKET = ", owner)
+            podman = re.search(r"(?m)^GRADLE_PODMAN = (?:.*\\\n)*.*$", text)
+            self.assertIsNotNone(podman, owner)
+            for part in (
+                "--network host",
+                "-e CONTAINER_HOST=unix:///run/podman/podman.sock",
+                '-v "$(PODMAN_SOCKET)":/run/podman/podman.sock',
+                "./gradlew",
+            ):
+                self.assertIn(part, podman.group(0), f"{owner} {part}")
+            self.assertRegex(text, r"(?m)^podman-socket: ", owner)
+            self.assertNotIn("docker.sock", text, owner)
+            self.assertNotRegex(text, r"(?m)^[^#\n]*\bdocker run\b", owner)
+        skill = (ROOT / "skills" / "r-jvm" / "SKILL.md").read_text(encoding="utf-8")
+        self.assertIn(
+            "- Gradle runs in a container and reaches Podman through"
+            " `$(GRADLE_PODMAN)`, so the host needs no Java toolchain.",
+            skill,
+        )
+
     def test_jvm_tooling_counts_a_kotlin_build_file_as_present(self):
         """id: R-66"""
         gradle = (
