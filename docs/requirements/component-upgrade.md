@@ -1,0 +1,7 @@
+# Requirements of r-component-upgrade
+
+The rows that the skills `r-component-upgrade`, `r-upgrade-node-components`, `r-upgrade-python-components`, `r-upgrade-java-components`, and `r-upgrade-go-components` own. `collection.md` says what the status means.
+
+| Id | Title | Status | Statement |
+| --- | --- | --- | --- |
+| <a id="r-104"></a>R-104 | Upgrade one component | in force | `r-component-upgrade` updates one component to a newer version in one slice. A component is a library, a language runtime, a base image, a tool pin of a makefile, or this skill collection. The steps name the component and both versions, point to the Update section of the README for this skill collection, read the skill `r-upgrade-<language>-components` that matches the component, list the breaking changes that the project uses, run the gates before and after the change of the one pin, and ask `r-record` for the history file. A major version step is a `r-plan` slice first. A pin names an exact version, never `latest`. If the new version makes a gate fail, the pin returns to the old version and `r-record` writes a roadmap row of the kind `defect`. This applies to a product repository that installs the skill. `r-component-upgrade` owns the procedure. `r-upgrade-node-components`, `r-upgrade-python-components`, `r-upgrade-java-components` (Java, Groovy, Grails, and Gradle), and `r-upgrade-go-components` state only where each version is pinned in that environment, which target changes the lock file, and the known traps. Each one names `r-component-upgrade`. |
