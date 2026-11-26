@@ -486,7 +486,7 @@ class GeneralRulesTest(unittest.TestCase):
 
     def test_the_entry_file_and_its_template_stay_within_their_word_limits(self):
         """id: R-76"""
-        limits = {"CLAUDE.md": 845, "skills/project-setup/templates/CLAUDE.md": 915}
+        limits = {"CLAUDE.md": 847, "skills/project-setup/templates/CLAUDE.md": 917}
         for name, limit in limits.items():
             text = (ROOT / name).read_text(encoding="utf-8")
             self.assertLessEqual(len(text.split()), limit, name)
@@ -599,7 +599,7 @@ def tag_problems(lines):
 class SkillShapeTest(unittest.TestCase):
     def test_each_skill_refers_to_the_general_rules_in_one_line(self):
         """id: R-76"""
-        self.assertEqual(len(skill_files()), 22)
+        self.assertEqual(len(skill_files()), 24)
         for path in skill_files():
             text = path.read_text(encoding="utf-8")
             self.assertEqual(text.count(ONE_LINE), 1, path)
@@ -1208,6 +1208,64 @@ class MakeAndPodmanInterfaceTest(unittest.TestCase):
             self.assertRegex(section, rf"!\[[^\]]+\]\(docs/diagrams/{name}\)")
             self.assertIn(f"The diagram is `docs/diagrams/{name}`.", section)
             self.assertIn("\n1. ", section)
+
+    def skill_text(self, name):
+        return (ROOT / "skills" / name / "SKILL.md").read_text(encoding="utf-8")
+
+    def test_ux_ui_design_asks_and_checks_accessibility(self):
+        """id: R-33"""
+        text = self.skill_text("ux-ui-design")
+        for sentence in (
+            "4. Which control returns focus to which control when a dialog closes?",
+            "5. Which state does the screen show, and what shows it besides colour?",
+            "2. Focus is visible. Text and controls meet contrast level AA of WCAG 2.2.",
+            "3. Each input has a programmatic label.",
+            "4. A validation error is text next to its field, not only a colour.",
+            "5. No state shows by colour alone.",
+            "6. A decorative icon is hidden from assistive technology."
+            " An icon-only control has an accessible name.",
+            "7. No content flashes more than three times in one second.",
+            "8. A dialog returns focus to the control that opened it.",
+        ):
+            self.assertIn(sentence, text)
+        self.assertEqual(text.count("contrast"), 1)
+
+    def test_observability_skill_asks_and_checks(self):
+        """id: R-102"""
+        text = self.skill_text("observability")
+        self.assertIn("kind: check\norder: 50", text)
+        self.assertIn(
+            "`privacy` owns personal data in logs. `api-design` owns the error body.",
+            text,
+        )
+        for sentence in (
+            "1. What does the program print on start?",
+            "2. Which failure can the user cause, and where does the user see it?",
+            "1. On start, the program prints one line with the address it listens on"
+            " and the data paths it uses.",
+            "3. A hot path writes no log line for each request.",
+            "4. A failure that the user can cause reaches the user as a visible error,"
+            " not as a silent empty view.",
+            "5. The program logs the cause of an unexpected failure once.",
+        ):
+            self.assertIn(sentence, text)
+        self.assertNotIn("personal data in logs.", text.split("<rules>")[0])
+
+    def test_performance_skill_owns_the_baseline_rule(self):
+        """id: R-103"""
+        text = self.skill_text("performance")
+        self.assertIn("kind: check\norder: 60", text)
+        rule = "A claim about speed, size, or model output quality needs a baseline from the same session."
+        self.assertIn(rule, text)
+        self.assertNotIn("baseline from the same session", self.skill_text("review"))
+        for sentence in (
+            "1. What is the largest input that the change must handle?",
+            "1. Each file or row is read once for each request, not once for each loop step.",
+            "2. An import or a parse runs in one pass.",
+            "3. Aggregation runs where the data is, not in a client that must first fetch all of it.",
+            "Both come from the same machine and the same session.",
+        ):
+            self.assertIn(sentence, text)
 
     def test_old_board_is_a_target_and_migrate_docs_types_no_host_command(self):
         """id: R-21"""

@@ -2,7 +2,7 @@
 
 This repository is the skill collection. `CLAUDE.md` is the only entry file.
 
-Stages, in order: `plan`, `develop`, `review`, `release`. Other skills: `record`, `project-report`, `project-setup`, `github-pipeline`, `onboard`, `system-state-report`, `board-merge-report`, `board-merge`. Language skills: `node`, `python`, `shell`, `jvm`, `go`. Subskills `plan` asks and `review` checks: `security`, `privacy`, `ux-ui-design`, `api-design`. A project skill is an extra name listed here.
+Stages, in order: `plan`, `develop`, `review`, `release`. Other skills: `record`, `project-report`, `project-setup`, `github-pipeline`, `onboard`, `system-state-report`, `board-merge-report`, `board-merge`. Language skills: `node`, `python`, `shell`, `jvm`, `go`. Subskills `plan` asks and `review` checks: `security`, `privacy`, `ux-ui-design`, `api-design`, `observability`, `performance`. A project skill is an extra name listed here.
 
 A row of `docs/requirements/*.md` is a requirement. Its status is `planned` (open work) or `in force` (a rule that holds).
 

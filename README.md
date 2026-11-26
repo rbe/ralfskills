@@ -41,6 +41,8 @@ The diagram is `docs/diagrams/collection-map.svg`. A change that alters what it 
 | [privacy](skills/privacy/SKILL.md) | Personal data, before and after |
 | [ux-ui-design](skills/ux-ui-design/SKILL.md) | Interaction. Product tokens stay in a project skill |
 | [api-design](skills/api-design/SKILL.md) | HTTP, and the public API of a module or a library. The route list stays in a project skill |
+| [observability](skills/observability/SKILL.md) | What the program prints on start, what the user sees on a failure, and what a log line holds |
+| [performance](skills/performance/SKILL.md) | The largest input, one read for each file or row, and a measured baseline for each claim |
 | [node](skills/node/SKILL.md) | JavaScript and TypeScript |
 | [python](skills/python/SKILL.md) | Python |
 | [shell](skills/shell/SKILL.md) | POSIX shell inside a recipe |
