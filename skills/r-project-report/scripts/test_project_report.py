@@ -475,6 +475,28 @@ class RequirementFilesTest(unittest.TestCase):
         self.assertNotIn("REQUIREMENTS.md", text)
 
 
+class AgentAgnosticTextTest(unittest.TestCase):
+    def test_no_skill_text_names_an_ai_coding_tool_a_tool_folder_or_a_model(self):
+        """id: R-17"""
+        names = (
+            "Cursor",
+            ".agents/",
+            ".cursor/",
+            "Fable",
+            "Opus",
+            "Sonnet",
+            "Haiku",
+        )
+        files = sorted((ROOT / "skills").glob("r-*/SKILL.md")) + sorted(
+            (ROOT / "skills").glob("r-*/references/**/*.md")
+        )
+        self.assertTrue(files)
+        for path in files:
+            text = path.read_text(encoding="utf-8")
+            for name in names:
+                self.assertNotIn(name, text, str(path))
+
+
 class GeneralRulesTest(unittest.TestCase):
     def test_the_entry_file_and_its_template_have_the_same_general_rules(self):
         """id: R-76"""
