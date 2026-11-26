@@ -249,3 +249,16 @@ A Make-only repository leaves `r-github-pipeline` out. A repository that still h
 `apm install` does not write `CLAUDE.md`. `apm compile` for the target `claude` keeps a `CLAUDE.md` that a person wrote and prints a warning. That was tested with APM 0.36.1. `r-project-setup` owns the entry file. APM adds `apm_modules/` to `.gitignore`. It also creates `.apm-local/`, which has its own `.gitignore`.
 
 `make skills-install` installs the skills that `apm.yml` names. `make apm ARGS='...'` is a one-off APM command in Podman. Install one skill with `make apm ARGS='install rbe/ralfskills --skill r-go'`. Repeat the flag to add another. `make apm ARGS="install rbe/ralfskills --skill '*'"` installs every skill again.
+
+## Guard hooks
+
+The collection ships two hooks. Claude Code runs them before each Bash command of the agent. [R-124](docs/requirements/collection.md#r-124) states them.
+
+- `block-bare-git-add.sh` refuses a command that stages the whole working copy: `git add -A`, `git add .`, `git add --all`, `git add -u`, or `git add :/` without a pathspec, and `git commit -a`. `git add -A src/` passes, because the pathspec bounds it. This is the rule of [R-114](docs/requirements/release.md#r-114).
+- `block-python-file-write.sh` refuses an inline Python command that writes a file of the project, such as `python3 - <<EOF` with `write_text` and `"src/app.py"`. A Python command that only reads passes, and so does a write under `build/` or to an absolute path such as `/tmp/x`.
+
+`hooks/r-guards.json` names the scripts in `hooks/scripts/`. `apm install` copies `hooks/` to `.claude/hooks/ralfskills/hooks/` and adds the two hooks to `.claude/settings.json`. It keeps the other settings of the file. It also writes `.claude/apm-hooks.json`, its record of the hooks it added. That was tested with APM 0.36.1 in a sample project that installed only `r-record` and `r-shell`: the hooks came with them. Commit `.claude/hooks/`, `.claude/settings.json`, and `.claude/apm-hooks.json` with `.claude/skills/`.
+
+The scripts need only POSIX `sh`, `awk`, `grep`, and `sed`. They need no `jq`. If the hook input has no command, a script exits 2. Claude Code then blocks the command and shows the message, so a changed input format does not switch the guard off without a sign.
+
+A project that has its own copy of these hooks removes the copy and its entries in `.claude/settings.json` when it takes this version. Otherwise each hook runs twice.
