@@ -544,7 +544,7 @@ class GeneralRulesTest(unittest.TestCase):
 
     def test_the_entry_file_and_its_template_stay_within_their_word_limits(self):
         """id: R-76"""
-        limits = {"CLAUDE.md": 941, "skills/r-project-setup/templates/CLAUDE.md": 1011}
+        limits = {"CLAUDE.md": 966, "skills/r-project-setup/templates/CLAUDE.md": 1036}
         for name, limit in limits.items():
             text = (ROOT / name).read_text(encoding="utf-8")
             self.assertLessEqual(len(text.split()), limit, name)
@@ -578,6 +578,19 @@ class GeneralRulesTest(unittest.TestCase):
             frontmatter = text[3 : text.index("\n---", 3)]
             for line in frontmatter.splitlines():
                 self.assertFalse(line.startswith("model:"), str(path))
+
+    def test_the_entry_file_and_its_template_state_the_stage_addendum_once(self):
+        """id: R-112"""
+        sentence = (
+            "If `CLAUDE.md` lists a project skill `<project>-<stage>`, the stage "
+            "reads it after its own steps. The addendum holds only what is true "
+            "for that project."
+        )
+        for name in ENTRY_FILES:
+            text = (ROOT / name).read_text(encoding="utf-8")
+            self.assertEqual(text.count(sentence), 1, name)
+        for path in (ROOT / "skills").glob("r-*/SKILL.md"):
+            self.assertNotIn("<stage>", path.read_text(encoding="utf-8"), str(path))
 
     def test_the_entry_file_and_its_template_hold_the_group_questions(self):
         """id: R-51"""
