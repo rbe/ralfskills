@@ -4,6 +4,22 @@ Skills for [Microsoft APM](https://github.com/microsoft/apm). This repository is
 
 Install so the files land in `.claude/skills/`. That is the APM target `claude`. Make includes `project.mk` from that path, or `sdlc.mk` when `github-pipeline` is installed. `CLAUDE.md` is the only entry file in a project that uses these skills.
 
+## How the parts work together
+
+![The agent reads CLAUDE.md and loads a skill. The skill tells the agent to type make targets and Git commands. Make runs every tool in a Podman image. record writes the board under docs. A Git push starts the GitHub workflow, and the workflow runs the same make targets.](docs/diagrams/collection-map.svg)
+
+An agent reads `CLAUDE.md`, loads the skill that the task needs, and types only `make` and Git. Make runs every tool in a Podman image. GitHub Actions runs the same Make targets. The orange box is the one point that every command passes. So a gate gives the same result on a laptop and on GitHub. The dashed arrow means that the makefiles come from the installed skills.
+
+1. You ask for a change. The agent reads `CLAUDE.md`, which holds the general rules and the names of the skills.
+2. The agent runs `make old-board`. If old documents such as `docs/DECISIONS.md` exist, the only skill is `migrate-docs`.
+3. `plan` asks you questions, one at a time, and names the boundary of the change. A request that names a file or a failing test starts at `develop`.
+4. `develop` changes the code and the tests with the language skill. It runs `make lint`, `make test`, and `make coverage`. Each target starts a Podman image.
+5. `review` runs the gates again and checks the change against the accepted rules of the board.
+6. `release` commits and pushes. The push starts the workflow, and the workflow runs the same targets. `make ci-status` reads the result.
+7. In each stage, `record` writes the ids and the board documents under `docs/`.
+
+The diagram is `docs/diagrams/collection-map.svg`. A change that alters what it shows updates it in the same commit.
+
 ## Skills
 
 | Skill | What it covers |
@@ -42,6 +58,19 @@ The rules that hold for every skill stand once, in the `<general_rules>` block o
 ## The cycle
 
 A request goes through `plan`, `develop`, `review`, and `release`. A new or vague request starts at `plan`. A fix that names a source file, a failing test, or a roadmap defect starts at `develop`. `release` commits the slice on one branch, pushes it, merges it into the default branch when CI passed, and asks `record` to close the task. With `github-pipeline` installed, that merge publishes.
+
+![You bring an idea to plan. The stages plan, develop, review, and release follow in order. Each stage asks record to write the board: the roadmap, the history file, and the rules. develop writes code and tests. A test names the rule that it proves.](docs/diagrams/board-map.svg)
+
+A product repository keeps three kinds of document beside the code. The roadmap lists the things to do. The rules say what must hold. The history reports what was done. The code and the tests are the current state. An arrow from a stage or from `record` is a write. Each stage box names what the stage reads. A stage never writes a board document itself. It asks `record`.
+
+1. Idea. You name a feature, a defect, or an open question. `plan` asks `record` for a row in `docs/ROADMAP.md`. A large item gets a detailed plan in `docs/proposals/`.
+2. Plan. `plan` reads the roadmap and the rules and asks you one question at a time. It names the slice: what changes, who owns the state, and which pattern applies. `record` starts the history file with the Plan section.
+3. Decide. If the plan makes a choice that must hold later, `record` writes it as a rule: a requirement row, a sentence in a fitting ADR, or a new ADR.
+4. Implement. `develop` reads the rules, writes the code, and writes the tests. Each test names the rule that it proves in a line `id:`. The history file gets the Develop section.
+5. Review. `review` runs the gates and the installed checks and compares the change with the rules. A finding goes to the history file. A defect that stays open becomes a new roadmap row.
+6. Release. `release` commits, pushes, and merges when CI passed. `record` closes the slice: the history file gets the status `closed`, the roadmap row is deleted, and the proposal gets the status `done`. Only `board-merge` deletes a closed history file, and only when the owner chooses it.
+
+The diagram is `docs/diagrams/board-map.svg`. A change that alters what it shows updates it in the same commit.
 
 `record` writes every board document. Each document has one job:
 

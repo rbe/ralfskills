@@ -11,6 +11,7 @@ import tempfile
 import unittest
 from contextlib import redirect_stderr, redirect_stdout
 from pathlib import Path
+from xml.etree import ElementTree
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[2]
@@ -1187,6 +1188,26 @@ class MakeAndPodmanInterfaceTest(unittest.TestCase):
         )
         sdlc = (self.PIPELINE / "sdlc.mk").read_text(encoding="utf-8")
         self.assertIn('-f base="$(DEFAULT_BRANCH)"', sdlc)
+
+    def test_the_readme_shows_the_two_diagrams_with_their_explanations(self):
+        """id: R-101"""
+        readme = (ROOT / "README.md").read_text(encoding="utf-8")
+        sections = {
+            "collection-map.svg": "## How the parts work together",
+            "board-map.svg": "## The cycle",
+        }
+        for name, heading in sections.items():
+            path = ROOT / "docs" / "diagrams" / name
+            svg = ElementTree.parse(path).getroot()
+            self.assertEqual(svg.tag, "{http://www.w3.org/2000/svg}svg")
+            self.assertIsNotNone(svg.find("{http://www.w3.org/2000/svg}title"))
+            self.assertIn(
+                "prefers-color-scheme: dark", path.read_text(encoding="utf-8")
+            )
+            section = readme.split(heading, 1)[1].split("\n## ", 1)[0]
+            self.assertRegex(section, rf"!\[[^\]]+\]\(docs/diagrams/{name}\)")
+            self.assertIn(f"The diagram is `docs/diagrams/{name}`.", section)
+            self.assertIn("\n1. ", section)
 
     def test_old_board_is_a_target_and_migrate_docs_types_no_host_command(self):
         """id: R-21"""
