@@ -20,7 +20,7 @@ The owner asked whether a glossary for the communication between the user and th
 
 ## Review
 
-The 269 unit tests of `UNIT_TESTS` passed. `ruff format --check` and `ruff check` passed with ruff 0.15.2. `ids.py`, `links.py check`, `project_report.py --check`, and `check_docs.py` passed as direct script runs. The rules file has 870 words, the limit of its test. Not run: `make gates` and `make coverage`, because this machine has no Podman.
+After the merge of main, the 271 unit tests of `UNIT_TESTS` passed. `ruff format --check` and `ruff check` passed with ruff 0.15.2. `ids.py`, `links.py check`, `project_report.py --check`, and `check_docs.py` passed as direct script runs. The rules file has 870 words, the limit of its test. Not run: `make gates` and `make coverage`, because this machine has no Podman.
 
 ## Release
 
