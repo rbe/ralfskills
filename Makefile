@@ -5,10 +5,12 @@
 # Ruff is the formatter and the linter. editorconfig-checker reads
 # .editorconfig. diff-cover writes the lines this change touched.
 
+# The full image has make and git, which tests/test_gates.py runs.
+PYTHON_IMAGE = docker.io/library/python:3.13
 # No install step. Ruff and editorconfig-checker are container images.
 SETUP_CMD = true
 BUILD_CMD = true
-UNIT_TESTS = skills/r-record/scripts/test_record.py skills/r-project-report/scripts/test_project_report.py skills/r-board-merge-report/scripts/test_board_numbers.py skills/r-project-setup/scripts/test_check_docs.py skills/r-project-setup/scripts/test_render_docs.py tests/test_hooks.py
+UNIT_TESTS = skills/r-record/scripts/test_record.py skills/r-project-report/scripts/test_project_report.py skills/r-board-merge-report/scripts/test_board_numbers.py skills/r-project-setup/scripts/test_check_docs.py skills/r-project-setup/scripts/test_render_docs.py tests/test_hooks.py tests/test_gates.py
 TEST_CMD = $(PYTHON) -m unittest $(UNIT_TESTS)
 TEST_CHANGED_CMD = $(PYTHON) skills/r-project-report/scripts/changed_tests.py
 PROJECT_REPORT_CMD = $(PYTHON) skills/r-project-report/scripts/project_report.py

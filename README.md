@@ -13,7 +13,7 @@ An agent reads `CLAUDE.md`, loads the skill that the task needs, and types only 
 1. You ask for a change. The agent reads `CLAUDE.md`, which holds the general rules and the names of the skills.
 2. The agent runs `make old-board`. If old documents such as `docs/DECISIONS.md` exist, the only skill is `r-migrate-docs`.
 3. `r-plan` asks you questions, one at a time, and names the boundary of the change. A request that names a file or a failing test starts at `r-develop`.
-4. `r-develop` changes the code and the tests with the language skill. It runs `make lint`, `make test`, and `make coverage`. Each target starts a Podman image.
+4. `r-develop` changes the code and the tests with the language skill. It runs `make coverage` and `make test-changed` for fast feedback. `r-review` runs `make gates` once: the six gates, then a stamp `build/gates.ok`. The pre-push hook that `make setup` installs refuses a push when the stamp is missing or stale. `git push --no-verify` skips it. Each target starts a Podman image.
 5. `r-review` runs the gates again and checks the change against the accepted rules of the board.
 6. `r-release` commits and pushes. The push starts the workflow, and the workflow runs the same targets. `make ci-status` reads the result.
 7. In each stage, `r-record` writes the ids and the board documents under `docs/`.
