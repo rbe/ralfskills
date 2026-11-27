@@ -12,15 +12,15 @@ proposals: []
 
 ## Plan
 
-The owner chose items 1, 2, 3 and the coverage defect of the simplification review of 2026-11-26. `r-plan` was not invoked.
+The owner chose items 1, 2, 3, and the coverage defect of the simplification review of 2026-11-26. `r-plan` was not invoked.
 
 ## Develop
 
-`skills/r-project-setup/rules.md` holds the general rules, the Agents section, and the communication contract. `CLAUDE.md` and its template import it with one `@` line. The pipeline-rules template keeps one paragraph, "This repository", and "Divergences". `CHANGE_DIFF` and `DIFF_BASE` in `tools.mk` write `build/coverage/change.diff`; no template runs `git add -N .`. The requirement rows went from 19,564 to 9,586 words. A Sonnet agent shortened the rows. The orchestrator re-read a sample and re-ran the gates.
+`skills/r-project-setup/rules.md` holds the general rules, the Agents section, and the communication contract. The entry files import it with one line. `CHANGE_DIFF` writes a change diff, and no template runs `git add -N .`. The requirement rows went from 19,564 to 9,586 words.
 
 ## Review
 
-`make editorconfig`, `format`, `lint`, `test` (201 tests), `integration`, and `coverage` (100% of the changed lines) passed. The new `@` import was checked: this session loaded `rules.md` through it.
+Gates passed: `make editorconfig`, `make format`, `make lint`, `make test` (201 tests), `make integration`, and `make coverage` at 100% of the changed lines. The new import was checked, because this session loaded `rules.md` through it.
 
 ## Release
 
