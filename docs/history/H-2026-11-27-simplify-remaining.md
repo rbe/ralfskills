@@ -16,11 +16,11 @@ The owner answered twelve questions on findings 6, 8, 9, 10, 11, 12, 13, 15, 16 
 
 ## Develop
 
-Not invoked yet.
+Five agents changed separate files. `sdlc.mk` includes `project.mk`, which owns `help`; `HELP_NOTES` adds the two lines of `sdlc.mk`. `container.mk` has `PLATFORMS` and `multiarch-host`. `templates/ci.yml` has marked blocks for Node, Image, JAR, and Release. `Makefile.image` has Node, JAR, and Release blocks. `scripts/render_docs.py` of `r-project-setup` is the default `DOCS_CMD`, with `DOCS_OPTIONS`. 42 closed history files were shortened, and `H-2026-11-22-one-list-for-rules` is closed.
 
 ## Review
 
-Not invoked yet.
+After the last edit, `make toon`, `links`, `ids`, `links-check`, `check-docs`, `editorconfig`, `format`, `lint`, `test` (246 tests), `integration`, and `coverage` (99% of 541 changed lines) passed. They ran in a cloud container with Docker behind a `podman` shim. Not run: a real two-platform build and push, because the container has no binfmt support.
 
 ## Release
 
