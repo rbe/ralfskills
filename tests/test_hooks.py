@@ -119,10 +119,45 @@ class PythonFileWriteTest(GuardTest):
         )
 
 
+class HookBypassTest(GuardTest):
+    script = "block-hook-bypass.sh"
+
+    def test_a_command_that_skips_the_git_hooks_is_refused(self):
+        """id: R-127"""
+        self.assert_denied(
+            "git push --no-verify",
+            "git push -u origin topic --no-verify",
+            "cd repo && git commit -m fix --no-verify",
+            "git -C repo push --no-verify origin main",
+            "git -c core.hooksPath=/dev/null push",
+            "sudo git push --no-verify",
+        )
+
+    def test_a_push_and_a_commit_with_the_hooks_pass(self):
+        """id: R-127"""
+        self.assert_allowed(
+            "git push -u origin topic",
+            "git push -n origin topic",
+            "git commit -m fix",
+            "git -c user.name=x commit -m fix",
+            "echo git push --no-verify",
+        )
+
+    def test_the_refusal_names_the_gate_rule(self):
+        """id: R-127"""
+        result = run_hook(self.script, bash_input("git push --no-verify"))
+        reason = json.loads(result.stdout)["hookSpecificOutput"]
+        self.assertIn("R-127", reason["permissionDecisionReason"])
+
+
 class HookInputTest(unittest.TestCase):
     def test_a_hook_input_without_a_command_blocks_with_a_message(self):
         """id: R-124"""
-        for script in ("block-bare-git-add.sh", "block-python-file-write.sh"):
+        for script in (
+            "block-bare-git-add.sh",
+            "block-python-file-write.sh",
+            "block-hook-bypass.sh",
+        ):
             with self.subTest(script=script):
                 result = run_hook(script, '{"tool_input": {"cmd": "ls"}}')
                 self.assertEqual(result.returncode, 2)
@@ -136,13 +171,17 @@ class HookInputTest(unittest.TestCase):
         result = run_hook("block-bare-git-add.sh", hook_input)
         self.assertEqual((result.returncode, result.stdout), (0, ""))
 
-    def test_the_hook_file_runs_both_scripts_before_each_bash_command(self):
+    def test_the_hook_file_runs_the_three_scripts_before_each_bash_command(self):
         """id: R-124"""
         hooks = json.loads((HOOKS / "r-guards.json").read_text(encoding="utf-8"))
         (group,) = hooks["hooks"]["PreToolUse"]
         self.assertEqual(group["matcher"], "Bash")
         commands = [hook["command"] for hook in group["hooks"]]
-        for script in ("block-bare-git-add.sh", "block-python-file-write.sh"):
+        for script in (
+            "block-bare-git-add.sh",
+            "block-python-file-write.sh",
+            "block-hook-bypass.sh",
+        ):
             self.assertIn(
                 f'sh "${{CLAUDE_PLUGIN_ROOT}}/hooks/scripts/{script}"', commands
             )
