@@ -12,27 +12,15 @@ proposals: []
 
 ## Plan
 
-The owner merged PR 30 and chose that the rule "Type only `make <target>` and Git commands" also allows a typed tool of POSIX `sh` that only reads. `plan` was not invoked.
+The owner merged PR 30 and chose to let a typed POSIX `sh` tool that only reads count under the rule "Type only `make <target>` and Git commands." `plan` was not invoked.
 
 ## Develop
 
-The first bullet of Interface in the `<general_rules>` block of `CLAUDE.md` and of `skills/project-setup/templates/CLAUDE.md` now has the sentence "A typed tool of POSIX `sh`, such as `tail` or `grep`, may only shorten or search output, and writes no file." The two blocks are identical.
-
-[R-75](../requirements/project-setup.md#r-75) owns the typed-command rule. It has one new sentence for the tools that only shorten or search output. No new id was issued. [R-76](../requirements/project-setup.md#r-76) states the word limits as 845 for `CLAUDE.md` and 915 for the template. Before, they were 824 and 894. The sentence has 21 words. `README.md` has the same sentence after "type only `make <target>` and Git commands".
-
-`test_the_general_rules_name_the_interface_and_the_start_of_a_task` in `skills/project-report/scripts/test_project_report.py` proves the new sentence for both files. The word-limit test has the new limits. No existing test asserted the old sentence in a way that the new sentence breaks. `CLAUDE.md` has 844 words and the template has 915 words, read with `wc -w`.
-
-Places that held text about the rule: `README.md` line 82 was changed. `skills/project-setup/references/fail-list.md`, `skills/project-setup/templates/contract-report.md`, and [R-89](../requirements/project-setup.md#r-89) speak of a recipe on the host, not of a typed command, so they stay.
+The Interface rule now names tools such as `tail` or `grep` that only shorten or search output and write no file. [R-75](../requirements/project-setup.md#r-75) owns the rule, and no id was issued. [R-76](../requirements/project-setup.md#r-76) raised the word limits to 845 and 915. [R-89](../requirements/project-setup.md#r-89) stays, because it speaks of a host recipe.
 
 ## Review
 
-`make toon`, `make links`, `make ids`, `make links-check`, `make editorconfig`, `make format`, `make lint`, and `make test` passed after the last edit. `make test` ran 136 tests.
-
-security: the sentence allows only a tool that writes no file. No listener, no secret.
-
-privacy, ux-ui-design, api-design: not touched.
-
-Not run: `make integration` and `make coverage`.
+Gates passed in Podman after the last edit, including `make test` with 136 tests, `make toon`, and `make links-check`. Security: the sentence allows only a tool that writes no file. Not run: `make integration` and `make coverage`.
 
 ## Release
 

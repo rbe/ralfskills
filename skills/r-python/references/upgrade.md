@@ -1,12 +1,5 @@
----
-name: r-upgrade-python-components
-description: "Gives the Python facts for r-component-upgrade: where each version is pinned, which target changes the lock file, and the known traps. Use with r-component-upgrade when the component is the Python runtime, a Python package, a Python base image, or the Ruff or coverage pin."
----
-
-The general rules in `CLAUDE.md` apply.
-
 <purpose>
-This skill gives the Python facts that `r-component-upgrade` needs. It adds no step.
+This file gives the Python facts that `r-component-upgrade` needs. It adds no step.
 </purpose>
 
 <rules>

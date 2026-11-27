@@ -13,31 +13,15 @@ issues: []
 
 ## Plan
 
-`plan` was not invoked. The owner named the four rows and the removal.
-
-Boundary: `docs/REQUIREMENTS.md` owns the statements. The skills say [R-53](../requirements/record.md#r-53) to [R-56](../requirements/record.md#r-56). `plan` owns the request for an ADR. `develop` and `review` own the read. `record` owns the status and the divergence rule.
-
-Pattern: one row per rule. `plan` asks for the ADR. `develop` and `review` read it. `record` owns the status.
+`plan` was not invoked. The owner named four rows and the removal. [R-53](../requirements/record.md#r-53) to [R-56](../requirements/record.md#r-56) state the ADR rules. `record` owns the status rule.
 
 ## Develop
 
-[R-53](../requirements/record.md#r-53) to [R-56](../requirements/record.md#r-56) are rows in `docs/REQUIREMENTS.md`. `tests/test_skills.py` and `tests/test_integration.py` are deleted. `UNIT_TESTS` names the two script test files. `INTEGRATION_CMD` is `true`, because there is no integration entry. `.coveragerc` no longer names `tests`. One script test asserted a deleted test name and an empty list of ids with no test. Those two assertions are removed. The script test that required a test for every requirement is removed. The project report now lists [R-4](../requirements/record.md#r-4), [R-5](../requirements/migrate-docs.md#r-5), [R-7](../requirements/plan.md#r-7) to [R-12](../requirements/project-setup.md#r-12), [R-14](../requirements/plan.md#r-14), R-15, and [R-53](../requirements/record.md#r-53) to [R-56](../requirements/record.md#r-56) as ids with no test. Python is the language skill.
-
-[R-53](../requirements/record.md#r-53) is step 6 in `skills/plan/SKILL.md`, after the step that waits. [R-54](../requirements/develop.md#r-54) is step 3 in `skills/develop/SKILL.md` and step 2 in `skills/review/SKILL.md`. [R-55](../requirements/record.md#r-55) is in that `review` step and in the ADRs section of `skills/record/SKILL.md`. [R-56](../requirements/record.md#r-56) is in that section, and `supersedes` is a link key. The project report does not list a superseded ADR as an id with no test. One script test names [R-56](../requirements/record.md#r-56). The open row D-4 is deleted and the id is retired.
+[R-53](../requirements/record.md#r-53) to [R-56](../requirements/record.md#r-56) are rows of `docs/REQUIREMENTS.md`. [R-54](../requirements/develop.md#r-54) and [R-55](../requirements/record.md#r-55) sit in the steps that read them. Two wording test files were deleted. The project report lists [R-4](../requirements/record.md#r-4), [R-5](../requirements/migrate-docs.md#r-5), [R-7](../requirements/plan.md#r-7), [R-12](../requirements/project-setup.md#r-12), [R-14](../requirements/plan.md#r-14), and [R-16](../requirements/collection.md#r-16) to [R-52](../requirements/collection.md#r-52) as ids with no test.
 
 ## Review
 
-`make lint`, `make test`, and `make ids` were not run. This machine has no Podman. The two script test files and the id check were run with the host `python3`, and they passed. The pinned Ruff image was not run. A host Ruff 0.16.9 reports the format check as clean. It reports 15 lint errors that the pinned 0.15.2 rules may not have. Thirteen are a shebang on a file that is not executable. None is on a line this change wrote.
-
-security: no listener, no secret, no personal data in a fixture.
-
-privacy: no personal data.
-
-ux-ui-design: no screen.
-
-api-design: not HTTP. Not a module export.
-
-No finding. Left alone: the columns of `docs/adr/index.toon`, which do not list `supersedes`. The rows [R-16](../requirements/collection.md#r-16) to [R-52](../requirements/collection.md#r-52) of the owner's list. The open rows D-1 and D-2.
+`make lint` and `make test` did not run, because this machine has no Podman. The script tests and the id check passed under host `python3`. Security, privacy, interaction, and API checks found nothing.
 
 ## Release
 

@@ -12,15 +12,15 @@ proposals: []
 
 ## Plan
 
-The owner asked that the close of a task, which is its own merge, runs no pipeline, because the branch of the task already ran it. `r-plan` was not invoked. The owner keeps the separate close.
+The owner asked that the close of a task runs no pipeline, because the task's branch already ran it. `r-plan` was not invoked. The owner keeps the separate close.
 
 ## Develop
 
-[R-123](../requirements/github-pipeline.md#r-123) is the rule. `make ci-scope` in `sdlc.mk` compares `HEAD` with `github.event.before`, or with the merge base of the default branch. If every changed file is in `CI_BOARD_FILES` and `make ci-status` passes for that base, it writes `board-only=true`. The three workflow templates skip `make setup`, `build`, and `test` on that output. `report` still runs. Tests run the real recipe in `sh` against a fake `git` and a fake `ci-status`.
+[R-123](../requirements/github-pipeline.md#r-123) is the rule. `make ci-scope` compares `HEAD` with the previous push. If every changed file is a board file and `make ci-status` passes, it writes `board-only=true`. The three workflow templates skip `setup`, `build`, and `test` on that output.
 
 ## Review
 
-`make editorconfig`, `format`, `lint`, `test` (200 tests), and `coverage` passed. `make integration` is `true`. The workflow did not run on GitHub.
+Gates passed after the last edit: `make editorconfig`, `make format`, `make lint`, `make test` (200 tests), and `make coverage`. `make integration` is `true`. The workflow did not run on GitHub.
 
 ## Release
 

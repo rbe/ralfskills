@@ -12,23 +12,15 @@ proposals: []
 
 ## Plan
 
-The owner asked to add the two diagrams "ralfskills Map" and "ralfskills Board Map" to the repository and to show them in the README with their explanations. Before, the two diagrams were web pages outside the repository. `plan` was not invoked.
+The owner asked to add the diagrams "ralfskills Map" and "ralfskills Board Map" to the repository and show them in the README. Before, they were web pages outside the repository. `plan` was not invoked.
 
 ## Develop
 
-`docs/diagrams/collection-map.svg` and `docs/diagrams/board-map.svg` hold the SVG of the two pages. Each file has its own styles, a `<title>`, and colours for a light and a dark page, because GitHub shows an SVG in the README as an image without the styles of the page. The label `ci-status, pull-request, publish-container` now has three lines, because one line crossed the frame of the GitHub box.
-
-The README has a new section "How the parts work together" with the first diagram, its explanation, and seven steps. The section "The cycle" shows the second diagram, its explanation, and six steps. Step 6 says what close mode does with the history file, the roadmap row, and the proposal, as `skills/record/references/close.md` says.
-
-[R-101](../requirements/collection.md#r-101) is the new rule. One new test in `skills/project-report/scripts/test_project_report.py` names `id: R-101`.
+`docs/diagrams/collection-map.svg` and `docs/diagrams/board-map.svg` hold the two diagrams, each with its own styles for light and dark pages. The README has the sections "How the parts work together" and "The cycle", with seven and six steps. [R-101](../requirements/collection.md#r-101) is the new rule, and one test names it.
 
 ## Review
 
-After the last edit, `make toon`, `make links`, `make ids`, `make links-check`, `make editorconfig`, `make format`, `make lint`, `make test`, `make integration`, and `make coverage` passed. `make test` ran 138 tests. `make coverage` reports 14 changed lines, all covered. The gates ran in a cloud container with Docker behind a `podman` shim and local stand-ins for the Ruff and editorconfig-checker images.
-
-Both SVG files were rendered as images in Chromium, in light and in dark mode, and checked by eye.
-
-security, privacy, ux-ui-design, api-design: not touched.
+Gates passed after the last edit, including `make test` with 138 tests and `make coverage`, which reported 14 changed lines, all covered. Both SVG files were checked in Chromium, in light and dark mode. Security, privacy, interaction, and API checks were not touched.
 
 ## Release
 
