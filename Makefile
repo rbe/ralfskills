@@ -13,16 +13,18 @@ BUILD_CMD = true
 UNIT_TESTS = skills/r-record/scripts/test_record.py skills/r-project-report/scripts/test_project_report.py skills/r-board-merge-report/scripts/test_board_numbers.py skills/r-project-setup/scripts/test_check_docs.py skills/r-project-setup/scripts/test_render_docs.py tests/test_hooks.py tests/test_gates.py
 TEST_CMD = $(PYTHON) -m unittest $(UNIT_TESTS)
 TEST_CHANGED_CMD = $(PYTHON) skills/r-project-report/scripts/changed_tests.py
-PROJECT_REPORT_CMD = $(PYTHON) skills/r-project-report/scripts/project_report.py
-FORMAT_CMD = podman run --rm -v "$(CURDIR)":/io:Z -w /io $(RUFF_IMAGE) format --check
-FORMAT_FIX_CMD = podman run --rm -v "$(CURDIR)":/io:Z -w /io $(RUFF_IMAGE) format
-LINT_CMD = podman run --rm -v "$(CURDIR)":/io:Z -w /io $(RUFF_IMAGE) check
+FORMAT_CMD = $(RUFF) format --check
+FORMAT_FIX_CMD = $(RUFF) format
+LINT_CMD = $(RUFF) check
 # No integration entry. The unit tests cover the scripts.
 INTEGRATION_CMD = true
 COVERAGE_CMD = set -eu; \
-	podman run --rm -e HOME=/tmp -e PYTHONDONTWRITEBYTECODE=1 $(PODMAN_NET_ARGS) -v "$(CURDIR)":/work:Z -w /work $(PYTHON_IMAGE) sh -c 'set -eu; pip install --disable-pip-version-check --root-user-action=ignore -q --target /tmp/py "coverage==$(COVERAGE_VERSION)"; PYTHONPATH=/tmp/py python3 skills/r-project-report/scripts/cover_tests.py $(UNIT_TESTS)'; \
+	$(COVERAGE_PYTHON) skills/r-project-report/scripts/cover_tests.py $(UNIT_TESTS); \
 	REPORT=build/coverage/coverage.xml $(DIFF_COVER)
 
+# report.mk comes before project.mk, so it owns project-report, as in a
+# product, and adds test-ids to board-check.
+include skills/r-project-report/report.mk
 include skills/r-project-setup/project.mk
 # This collection is not installed under .claude/skills, so the index
 # target is included from the skill source. A product Makefile includes

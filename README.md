@@ -13,7 +13,7 @@ An agent reads `CLAUDE.md`, loads the skill that the task needs, and types only 
 1. You ask for a change. The agent reads `CLAUDE.md`, which holds the general rules and the names of the skills.
 2. The agent runs `make old-board`. If old documents such as `docs/DECISIONS.md` exist, the only skill is `r-migrate-docs`.
 3. `r-plan` asks you questions, one at a time, and names the boundary of the change. A request that names a file or a failing test starts at `r-develop`.
-4. `r-develop` changes the code and the tests with the language skill. It runs `make coverage` and `make test-changed` for fast feedback. `r-review` runs `make gates` once: the six gates, then a stamp `build/gates.ok`. The pre-push hook that `make setup` installs refuses a push when the stamp is missing or stale. `git push --no-verify` skips it. Each target starts a Podman image.
+4. `r-develop` changes the code and the tests with the language skill. It runs `make coverage` and `make test-changed` for fast feedback. `r-review` runs `make gates` once: the six gates, then a stamp `build/gates.ok`. `make setup`, `make gates`, and `make test-changed` install a git pre-push hook. The hook refuses a push when the stamp is missing, or when the pushed commit differs from the stamped content outside the board files. Each target starts a Podman image. On a machine without Podman, such as a cloud session, `TOOLS=host make setup` installs the pinned tools, and `TOOLS=host` runs them from `PATH`.
 5. `r-review` runs the gates again and checks the change against the accepted rules of the board.
 6. `r-release` commits and pushes. The push starts the workflow, and the workflow runs the same targets. `make ci-status` reads the result.
 7. In each stage, `r-record` writes the ids and the board documents under `docs/`.
@@ -220,12 +220,13 @@ A Make-only repository leaves `r-github-pipeline` out. A repository that still h
 
 ## Guard hooks
 
-The collection ships two hooks. Claude Code runs them before each Bash command of the agent. [R-124](docs/requirements/collection.md#r-124) states them.
+The collection ships three hooks. Claude Code runs them before each Bash command of the agent. [R-124](docs/requirements/collection.md#r-124) states them.
 
 - `block-bare-git-add.sh` refuses a command that stages the whole working copy: `git add -A`, `git add .`, `git add --all`, `git add -u`, or `git add :/` without a pathspec, and `git commit -a`. `git add -A src/` passes, because the pathspec bounds it. This is the rule of [R-114](docs/requirements/release.md#r-114).
 - `block-python-file-write.sh` refuses an inline Python command that writes a file of the project, such as `python3 - <<EOF` with `write_text` and `"src/app.py"`. A Python command that only reads passes, and so does a write under `build/` or to an absolute path such as `/tmp/x`.
+- `block-hook-bypass.sh` refuses `git push --no-verify`, `git commit --no-verify`, and `git -c core.hooksPath=...`. These skip the pre-push hook of [R-127](docs/requirements/project-setup.md#r-127). The owner can still use them in a terminal.
 
-`hooks/r-guards.json` names the scripts in `hooks/scripts/`. `apm install` copies `hooks/` to `.claude/hooks/ralfskills/hooks/` and adds the two hooks to `.claude/settings.json`. It keeps the other settings of the file. It also writes `.claude/apm-hooks.json`, its record of the hooks it added. That was tested with APM 0.36.1 in a sample project that installed only `r-record` and `r-shell`: the hooks came with them. Commit `.claude/hooks/`, `.claude/settings.json`, and `.claude/apm-hooks.json` with `.claude/skills/`.
+`hooks/r-guards.json` names the scripts in `hooks/scripts/`. `apm install` copies `hooks/` to `.claude/hooks/ralfskills/hooks/` and adds the hooks to `.claude/settings.json`. It keeps the other settings of the file. It also writes `.claude/apm-hooks.json`, its record of the hooks it added. That was tested with APM 0.36.1 in a sample project that installed only `r-record` and `r-shell`: the hooks came with them. Commit `.claude/hooks/`, `.claude/settings.json`, and `.claude/apm-hooks.json` with `.claude/skills/`.
 
 The scripts need only POSIX `sh`, `awk`, `grep`, and `sed`. They need no `jq`. If the hook input has no command, a script exits 2. Claude Code then blocks the command and shows the message, so a changed input format does not switch the guard off without a sign.
 

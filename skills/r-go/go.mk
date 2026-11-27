@@ -32,6 +32,12 @@ GO_OPTS ?= -e HOME=/tmp -e CI -e GOFLAGS=-buildvcs=false \
 	-v "$(CURDIR)":/work:Z -w /work
 GO_RUN ?= podman run --rm $(GO_OPTS) $(GO_IMAGE)
 GO ?= $(GO_RUN) go
+# Host mode (TOOLS=host of podman-python.mk): go runs from PATH. It
+# replaces the GO_RUN and GO that the project set before the include.
+ifeq ($(TOOLS),host)
+GO_RUN = env GOFLAGS=-buildvcs=false
+GO = $(GO_RUN) go
+endif
 
 .PHONY: go
 .PHONY: go-tooling

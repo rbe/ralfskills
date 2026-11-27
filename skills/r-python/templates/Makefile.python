@@ -20,12 +20,12 @@ SETUP_CMD = true
 BUILD_CMD = true
 TEST_CMD = $(PYTHON) -m unittest $(UNIT_TESTS)
 INTEGRATION_CMD = true
-FORMAT_CMD = podman run --rm -v "$(CURDIR)":/io:Z -w /io $(RUFF_IMAGE) format --check --exclude .claude --exclude apm_modules --exclude build --exclude docs --exclude .git --exclude .venv
-FORMAT_FIX_CMD = podman run --rm -v "$(CURDIR)":/io:Z -w /io $(RUFF_IMAGE) format --exclude .claude --exclude apm_modules --exclude build --exclude docs --exclude .git --exclude .venv
-LINT_CMD = podman run --rm -v "$(CURDIR)":/io:Z -w /io $(RUFF_IMAGE) check --exclude .claude --exclude apm_modules --exclude build --exclude docs --exclude .git --exclude .venv
+FORMAT_CMD = $(RUFF) format --check --exclude .claude --exclude apm_modules --exclude build --exclude docs --exclude .git --exclude .venv
+FORMAT_FIX_CMD = $(RUFF) format --exclude .claude --exclude apm_modules --exclude build --exclude docs --exclude .git --exclude .venv
+LINT_CMD = $(RUFF) check --exclude .claude --exclude apm_modules --exclude build --exclude docs --exclude .git --exclude .venv
 TEST_CHANGED_CMD = $(PYTHON) .claude/skills/r-project-report/scripts/changed_tests.py
 COVERAGE_CMD = set -eu; \
-	podman run --rm -e HOME=/tmp -e PYTHONDONTWRITEBYTECODE=1 $(PODMAN_NET_ARGS) -v "$(CURDIR)":/work:Z -w /work $(PYTHON_IMAGE) sh -c 'set -eu; pip install --disable-pip-version-check --root-user-action=ignore -q --target /tmp/py "coverage==$(COVERAGE_VERSION)"; PYTHONPATH=/tmp/py python3 .claude/skills/r-project-report/scripts/cover_tests.py $(UNIT_TESTS)'; \
+	$(COVERAGE_PYTHON) .claude/skills/r-project-report/scripts/cover_tests.py $(UNIT_TESTS); \
 	REPORT=build/coverage/coverage.xml $(DIFF_COVER)
 
 include .claude/skills/r-project-setup/project.mk
