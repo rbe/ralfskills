@@ -37,4 +37,5 @@ This skill gives the Make targets and the code rules for Go files.
 - `references/tooling.md`: read it before `make go-tooling` runs, when you change `go.mk`, or when a Go cache volume is the question.
 - `references/coverage.md`: read it when `make coverage`, `make test-changed`, `make format`, or `make run` fails.
 - `references/build.md`: read it when the change touches `BIN`, `BIN_PKG`, `make build`, or a binary for another machine.
+- `references/upgrade.md`: read it when `r-component-upgrade` updates a component of this language.
 </references>

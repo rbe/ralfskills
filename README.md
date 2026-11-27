@@ -22,38 +22,7 @@ The diagram is `docs/diagrams/collection-map.svg`. A change that alters what it 
 
 ## Skills
 
-| Skill | What it covers |
-| --- | --- |
-| [r-plan](skills/r-plan/SKILL.md) | Grill. Ask one question at a time. Write a history file to start now, or a roadmap row with a proposal to implement later |
-| [r-develop](skills/r-develop/SKILL.md) | Implement the slice with the installed language skill |
-| [r-review](skills/r-review/SKILL.md) | Gates and the installed subskills, after the change |
-| [r-release](skills/r-release/SKILL.md) | Commit, push, merge when CI passed, and close the task. Invokes `r-github-pipeline` when delivery changes |
-| [r-record](skills/r-record/SKILL.md) | Ids, the board, the history file, the ADRs and their status, the ADR index, and this collection's requirements index |
-| [r-onboard](skills/r-onboard/SKILL.md) | The order of the other skills for a project that adopts this collection. Say `report and integrate` |
-| [r-system-state-report](skills/r-system-state-report/SKILL.md) | A plain-language report on what the system does now, the decisions that shaped it, and the decisions that wait for the owner. Say `state report` |
-| [r-board-merge-report](skills/r-board-merge-report/SKILL.md) | Reports which board rows, ADRs, and closed history files repeat text and can merge, shrink, or go. Writes nothing. Numbers come from `make board-numbers` |
-| [r-board-merge](skills/r-board-merge/SKILL.md) | Does what the owner chose by id from that report. One commit for each finding |
-| [r-skills-review](skills/r-skills-review/SKILL.md) | Reports where installed skills state one rule twice, do one action twice, or contradict. Skill files only. Writes nothing |
-| [r-component-upgrade](skills/r-component-upgrade/SKILL.md) | Updates one component to a newer version in one slice, with the gates before and after. Covers a library, a runtime, a base image, a tool pin, and this collection |
-| [r-upgrade-node-components](skills/r-upgrade-node-components/SKILL.md) | Gives the Node facts for `r-component-upgrade`: where each version is pinned and the known traps |
-| [r-upgrade-python-components](skills/r-upgrade-python-components/SKILL.md) | Gives the Python facts for `r-component-upgrade`: where each version is pinned and the known traps |
-| [r-upgrade-java-components](skills/r-upgrade-java-components/SKILL.md) | Gives the Java, Groovy, Grails, and Gradle facts for `r-component-upgrade`: where each version is pinned and the known traps |
-| [r-upgrade-go-components](skills/r-upgrade-go-components/SKILL.md) | Gives the Go facts for `r-component-upgrade`: where each version is pinned and the known traps |
-| [r-project-report](skills/r-project-report/SKILL.md) | Generated requirements map, architecture review, and development review |
-| [r-migrate-docs](skills/r-migrate-docs/SKILL.md) | The only skill that reads an old board. Other skills stop until it has deleted those files |
-| [r-project-setup](skills/r-project-setup/SKILL.md) | Writes `CLAUDE.md` from its template when the file is missing. Make is the only interface. `help` is the default goal. EditorConfig, one formatter, one linter, unit tests, one integration entry, and a diff-cover report are targets |
-| [r-github-pipeline](skills/r-github-pipeline/SKILL.md) | One GitHub workflow. Versions from a `vMAJOR.MINOR.PATCH` tag plus the run number |
-| [r-security](skills/r-security/SKILL.md) | Questions before a slice, checks after |
-| [r-privacy](skills/r-privacy/SKILL.md) | Personal data, before and after |
-| [r-ux-ui-design](skills/r-ux-ui-design/SKILL.md) | Interaction. Product tokens stay in a project skill |
-| [r-api-design](skills/r-api-design/SKILL.md) | HTTP, and the public API of a module or a library. The route list stays in a project skill |
-| [r-observability](skills/r-observability/SKILL.md) | What the program prints on start, what the user sees on a failure, and what a log line holds |
-| [r-performance](skills/r-performance/SKILL.md) | The largest input, one read for each file or row, and a measured baseline for each claim |
-| [r-node](skills/r-node/SKILL.md) | JavaScript and TypeScript |
-| [r-python](skills/r-python/SKILL.md) | Python |
-| [r-shell](skills/r-shell/SKILL.md) | POSIX shell inside a recipe |
-| [r-jvm](skills/r-jvm/SKILL.md) | Java, Groovy, Grails, and Gradle |
-| [r-go](skills/r-go/SKILL.md) | Go |
+The skills are the folders under [`skills/`](skills/). Each folder has a `SKILL.md` whose `description` says what the skill covers and when to use it. `CLAUDE.md` names the stages, the other skills, the language skills, and the subskills.
 
 The `name` in each skill's frontmatter matches its directory. A project installs the stages, `r-record`, `r-project-setup`, `r-project-report`, the language skills it uses, and the subskills it wants. It installs `r-github-pipeline` when it publishes through GitHub. It installs `r-migrate-docs` when the old board is still present, and it runs that skill before the others.
 
@@ -236,7 +205,6 @@ dependencies:
         - r-board-merge           # applies the findings the owner chose
         - r-skills-review         # finds overlaps between skills
         - r-component-upgrade     # updates one component to a newer version
-        - r-upgrade-node-components   # or r-upgrade-python-components, r-upgrade-java-components, r-upgrade-go-components: install the one of each language the project uses
         - r-github-pipeline   # when the project publishes through GitHub
         - r-migrate-docs      # when the old board is still present
         - r-node              # or r-python, r-jvm, r-go: the language skills the project uses
