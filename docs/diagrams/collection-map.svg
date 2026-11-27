@@ -72,9 +72,10 @@
   <text class="h" x="36" y="204">Board</text>
   <text class="c" x="84" y="204">docs/</text>
   <text class="t" x="36" y="228">ROADMAP · proposals/ · adr/</text>
-  <text class="t" x="36" y="248">requirements/ · history/</text>
-  <text class="m" x="36" y="272">Each test names the id</text>
-  <text class="m" x="36" y="288">of the rule that it proves.</text>
+  <text class="t" x="36" y="246">requirements/ · history/</text>
+  <text class="t" x="36" y="264">glossary.md</text>
+  <text class="m" x="36" y="282">Each test names the id</text>
+  <text class="m" x="36" y="296">of the rule that it proves.</text>
 
   <line class="arr" x1="340" y1="232" x2="232" y2="232" marker-end="url(#ah)"/>
   <text class="l" x="286" y="224" text-anchor="middle">r-record writes</text>

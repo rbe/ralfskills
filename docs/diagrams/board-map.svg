@@ -71,6 +71,8 @@
   <text class="c" x="680.0" y="356" text-anchor="middle">docs/adr/ or docs/requirements/</text>
   <text class="m" x="680.0" y="376" text-anchor="middle">the rules in force,</text>
   <text class="m" x="680.0" y="393" text-anchor="middle">each with its reason</text>
+  <rect class="pill" x="576" y="408" width="208" height="30" rx="15"/>
+  <text class="m" x="680" y="427" text-anchor="middle">docs/glossary.md: one row per term</text>
   <rect class="box" x="840" y="190" width="240" height="260" rx="4"/>
   <text class="h" x="960.0" y="216" text-anchor="middle">Code and tests</text>
   <text class="m" x="960.0" y="236" text-anchor="middle">the current state</text>
