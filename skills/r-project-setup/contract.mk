@@ -131,6 +131,7 @@ endif
 # build/summaries/docs.md. A project that sets DOCS_CMD keeps its own renderer.
 # Marker `# help-docs`: help lists this target only when RENDER_DOCS is 1.
 ifeq ($(RENDER_DOCS),1)
+DOCS_CMD ?=
 ifeq ($(strip $(DOCS_CMD)),)
 DOCS_CMD = set -eu; \
 	mkdir -p build/summaries; \
