@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="500" viewBox="0 0 1120 500" role="img" aria-label="You bring an idea to plan. The stages plan, develop, review and release follow in order. Each stage asks record to write the board: the roadmap, the history file and the rules. develop writes code and tests. A test names the rule that it proves.">
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="500" viewBox="0 0 1120 500" role="img" aria-label="You bring an idea to plan. The stages r-plan, r-develop, r-review and r-release follow in order. Each stage asks r-record to write the board: the roadmap, the history file, the rules and the glossary. r-develop writes code and tests. A test names the rule that it proves, and make test checks that line.">
   <title>From an idea to a release: the documents and the skills</title>
 <style>
   svg { --bg: #f5f6f8; --surface: #ffffff; --fg: #1b2230; --muted: #586377; --line: #c3cad6; --accent: #a8500a; --accent-bg: #fbeedd; }
@@ -19,76 +19,6 @@
   .acc { fill: var(--accent); }
 </style>
   <rect class="backdrop" x="0" y="0" width="1120" height="500"/>
-  <defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
-  <path class="head" d="M0 0 L10 5 L0 10 z"/></marker></defs>
-  <rect class="box" x="20" y="40" width="180" height="90" rx="4"/>
-  <text class="h" x="110.0" y="66" text-anchor="middle">You</text>
-  <text class="m" x="110.0" y="86" text-anchor="middle">idea, defect, question</text>
-  <rect class="box" x="240" y="40" width="180" height="90" rx="4"/>
-  <text class="h" x="330.0" y="66" text-anchor="middle">r-plan</text>
-  <text class="m" x="330.0" y="86" text-anchor="middle">asks, names the slice</text>
-  <text class="m" x="330.0" y="103" text-anchor="middle">reads roadmap and rules</text>
-  <rect class="box" x="460" y="40" width="180" height="90" rx="4"/>
-  <text class="h" x="550.0" y="66" text-anchor="middle">r-develop</text>
-  <text class="m" x="550.0" y="86" text-anchor="middle">writes code and tests</text>
-  <text class="m" x="550.0" y="103" text-anchor="middle">reads the rules</text>
-  <rect class="box" x="680" y="40" width="180" height="90" rx="4"/>
-  <text class="h" x="770.0" y="66" text-anchor="middle">r-review</text>
-  <text class="m" x="770.0" y="86" text-anchor="middle">runs gates and checks</text>
-  <text class="m" x="770.0" y="103" text-anchor="middle">reads rules and report</text>
-  <rect class="box" x="900" y="40" width="180" height="90" rx="4"/>
-  <text class="h" x="990.0" y="66" text-anchor="middle">r-release</text>
-  <text class="m" x="990.0" y="86" text-anchor="middle">commit, push, merge</text>
-  <text class="m" x="990.0" y="103" text-anchor="middle">asks r-record to close</text>
-  <line class="arr" x1="202" y1="85" x2="238" y2="85" marker-end="url(#ah)" marker-start="url(#ah)"/>
-  <line class="arr" x1="420" y1="85" x2="458" y2="85" marker-end="url(#ah)"/>
-  <line class="arr" x1="640" y1="85" x2="678" y2="85" marker-end="url(#ah)"/>
-  <line class="arr" x1="860" y1="85" x2="898" y2="85" marker-end="url(#ah)"/>
-  <rect class="hinge" x="20" y="190" width="780" height="46" rx="4"/>
-  <text class="h" x="410" y="218" text-anchor="middle">r-record <tspan class="t" font-weight="400">writes every id and every board document</tspan></text>
-  <line class="arr" x1="330" y1="130" x2="330" y2="188" marker-end="url(#ah)"/>
-  <text class="l" x="338" y="164">item, rule, slice</text>
-  <line class="arr" x1="550" y1="130" x2="550" y2="188" marker-end="url(#ah)"/>
-  <text class="l" x="558" y="164">ids, notes</text>
-  <line class="arr" x1="740" y1="130" x2="740" y2="188" marker-end="url(#ah)"/>
-  <text class="l" x="732" y="164" text-anchor="end">findings</text>
-  <path class="arr" d="M990 130 V160 H785 V188" marker-end="url(#ah)"/>
-  <text class="l" x="888" y="153" text-anchor="middle">close the slice</text>
-  <path class="arr" d="M550 40 V18 H1102 V320 H1082" marker-end="url(#ah)"/>
-  <text class="l" x="826" y="12" text-anchor="middle">r-develop writes code and tests</text>
-  <rect class="box" x="20" y="330" width="240" height="120" rx="4"/>
-  <text class="c" x="140.0" y="356" text-anchor="middle">docs/ROADMAP.md</text>
-  <text class="m" x="140.0" y="376" text-anchor="middle">things to do:</text>
-  <text class="m" x="140.0" y="393" text-anchor="middle">feature, defect, question</text>
-  <rect class="pill" x="36" y="408" width="208" height="30" rx="15"/>
-  <text class="m" x="140" y="427" text-anchor="middle">docs/proposals/: plan of one row</text>
-  <rect class="box" x="290" y="330" width="240" height="120" rx="4"/>
-  <text class="c" x="410.0" y="356" text-anchor="middle">docs/history/</text>
-  <text class="m" x="410.0" y="376" text-anchor="middle">one file per slice:</text>
-  <text class="m" x="410.0" y="393" text-anchor="middle">Plan, Develop, Review, Release</text>
-  <text class="m" x="410.0" y="410" text-anchor="middle">the report of finished work</text>
-  <rect class="box" x="560" y="330" width="240" height="120" rx="4"/>
-  <text class="c" x="680.0" y="356" text-anchor="middle">docs/adr/ or docs/requirements/</text>
-  <text class="m" x="680.0" y="376" text-anchor="middle">the rules in force,</text>
-  <text class="m" x="680.0" y="393" text-anchor="middle">each with its reason</text>
-  <rect class="pill" x="576" y="408" width="208" height="30" rx="15"/>
-  <text class="m" x="680" y="427" text-anchor="middle">docs/glossary.md: one row per term</text>
-  <rect class="box" x="840" y="190" width="240" height="260" rx="4"/>
-  <text class="h" x="960.0" y="216" text-anchor="middle">Code and tests</text>
-  <text class="m" x="960.0" y="236" text-anchor="middle">the current state</text>
-  <text class="m" x="960" y="270" text-anchor="middle">Make runs the gates:</text>
-  <text class="m" x="960" y="287" text-anchor="middle">format, lint, test, coverage</text>
-  <line class="arr" x1="140" y1="236" x2="140" y2="328" marker-end="url(#ah)"/>
-  <line class="arr" x1="410" y1="236" x2="410" y2="328" marker-end="url(#ah)"/>
-  <line class="arr" x1="680" y1="236" x2="680" y2="328" marker-end="url(#ah)"/>
-  <text class="l" x="148" y="278">add a row;</text>
-  <text class="l" x="148" y="294">delete it at close</text>
-  <text class="l" x="418" y="278">start, add sections,</text>
-  <text class="l" x="418" y="294">close</text>
-  <text class="l" x="688" y="278">add or change</text>
-  <text class="l" x="688" y="294">a rule</text>
-  <line class="arr" x1="838" y1="400" x2="802" y2="400" marker-end="url(#ah)"/>
-  <text class="l" x="960" y="396" text-anchor="middle">a test names the rule</text>
-  <text class="l" x="960" y="413" text-anchor="middle">that it proves: <tspan class="c">id:</tspan></text>
-  <text class="m" x="410" y="480" text-anchor="middle">The board: three kinds of document, all written by r-record</text>
-  </svg>
+  <defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path class="head" d="M0 0 L10 5 L0 10 z"/></marker></defs>
+  <rect class="box" x="20" y="40" width="180" height="90" rx="4"/><text class="h" x="110.0" y="66" text-anchor="middle">You</text><text class="m" x="110.0" y="86" text-anchor="middle">idea, defect, question</text><rect class="box" x="240" y="40" width="180" height="90" rx="4"/><text class="h" x="330.0" y="66" text-anchor="middle">r-plan</text><text class="m" x="330.0" y="86" text-anchor="middle">asks, names the slice</text><text class="m" x="330.0" y="103" text-anchor="middle">reads roadmap and rules</text><rect class="box" x="460" y="40" width="180" height="90" rx="4"/><text class="h" x="550.0" y="66" text-anchor="middle">r-develop</text><text class="m" x="550.0" y="86" text-anchor="middle">writes code and tests</text><text class="m" x="550.0" y="103" text-anchor="middle">runs make test-changed</text><rect class="box" x="680" y="40" width="180" height="90" rx="4"/><text class="h" x="770.0" y="66" text-anchor="middle">r-review</text><text class="m" x="770.0" y="86" text-anchor="middle">runs make gates once</text><text class="m" x="770.0" y="103" text-anchor="middle">reads rules and report</text><rect class="box" x="900" y="40" width="180" height="90" rx="4"/><text class="h" x="990.0" y="66" text-anchor="middle">r-release</text><text class="m" x="990.0" y="86" text-anchor="middle">commit, push, merge</text><text class="m" x="990.0" y="103" text-anchor="middle">asks r-record to close</text><line class="arr" x1="202" y1="85" x2="238" y2="85" marker-end="url(#ah)" marker-start="url(#ah)"/><line class="arr" x1="420" y1="85" x2="458" y2="85" marker-end="url(#ah)"/><line class="arr" x1="640" y1="85" x2="678" y2="85" marker-end="url(#ah)"/><line class="arr" x1="860" y1="85" x2="898" y2="85" marker-end="url(#ah)"/><rect class="hinge" x="20" y="190" width="780" height="46" rx="4"/><text class="h" x="410" y="218" text-anchor="middle">r-record <tspan class="t" font-weight="400">writes every id and every board document</tspan></text><line class="arr" x1="330" y1="130" x2="330" y2="188" marker-end="url(#ah)"/><text class="l" x="338" y="164">item, rule, slice</text><line class="arr" x1="550" y1="130" x2="550" y2="188" marker-end="url(#ah)"/><text class="l" x="558" y="164">ids, notes</text><line class="arr" x1="740" y1="130" x2="740" y2="188" marker-end="url(#ah)"/><text class="l" x="732" y="164" text-anchor="end">findings</text><path class="arr" d="M990 130 V160 H785 V188" marker-end="url(#ah)"/><text class="l" x="888" y="153" text-anchor="middle">close the slice</text><path class="arr" d="M550 40 V18 H1102 V320 H1082" marker-end="url(#ah)"/><text class="l" x="826" y="12" text-anchor="middle">r-develop writes code and tests</text><rect class="box" x="20" y="330" width="240" height="120" rx="4"/><text class="c" x="140.0" y="356" text-anchor="middle">docs/ROADMAP.md</text><text class="m" x="140.0" y="376" text-anchor="middle">things to do:</text><text class="m" x="140.0" y="393" text-anchor="middle">feature, defect, question</text><rect class="pill" x="36" y="408" width="208" height="30" rx="15"/><text class="m" x="140" y="427" text-anchor="middle">docs/proposals/: plan of one row</text><rect class="box" x="290" y="330" width="240" height="120" rx="4"/><text class="c" x="410.0" y="356" text-anchor="middle">docs/history/</text><text class="m" x="410.0" y="376" text-anchor="middle">one file per slice:</text><text class="m" x="410.0" y="393" text-anchor="middle">Plan, Develop, Review, Release</text><text class="m" x="410.0" y="410" text-anchor="middle">the report of finished work</text><rect class="box" x="560" y="330" width="240" height="120" rx="4"/><text class="c" x="680.0" y="356" text-anchor="middle">docs/adr/ or docs/requirements/</text><text class="m" x="680.0" y="376" text-anchor="middle">the rules in force,</text><text class="m" x="680.0" y="393" text-anchor="middle">each with its reason</text><rect class="pill" x="576" y="408" width="208" height="30" rx="15"/><text class="m" x="680" y="427" text-anchor="middle">docs/glossary.md: one row per term</text><rect class="box" x="840" y="190" width="240" height="260" rx="4"/><text class="h" x="960.0" y="216" text-anchor="middle">Code and tests</text><text class="m" x="960.0" y="236" text-anchor="middle">the current state</text><text class="m" x="960" y="270" text-anchor="middle">make gates runs the six gates</text><text class="m" x="960" y="287" text-anchor="middle">and writes build/gates.ok</text><text class="m" x="960" y="304" text-anchor="middle">make test runs make board-check</text><line class="arr" x1="140" y1="236" x2="140" y2="328" marker-end="url(#ah)"/><line class="arr" x1="410" y1="236" x2="410" y2="328" marker-end="url(#ah)"/><line class="arr" x1="680" y1="236" x2="680" y2="328" marker-end="url(#ah)"/><text class="l" x="148" y="278">add a row;</text><text class="l" x="148" y="294">delete it at close</text><text class="l" x="418" y="278">start, add sections,</text><text class="l" x="418" y="294">close</text><text class="l" x="688" y="278">add or change</text><text class="l" x="688" y="294">a rule</text><line class="arr" x1="838" y1="400" x2="802" y2="400" marker-end="url(#ah)"/><text class="l" x="960" y="396" text-anchor="middle">a test names the rule</text><text class="l" x="960" y="413" text-anchor="middle">that it proves: <tspan class="c">id:</tspan></text><text class="m" x="410" y="480" text-anchor="middle">The board: three kinds of document, all written by r-record</text>
+</svg>

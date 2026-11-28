@@ -6,7 +6,7 @@ Install so the files land in `.claude/skills/`. That is the APM target `claude`.
 
 ## How the parts work together
 
-![The agent reads CLAUDE.md and loads a skill. The skill tells the agent to type make targets and Git commands. Make runs every tool in a Podman image. r-record writes the board under docs. A Git push starts the GitHub workflow, and the workflow runs the same make targets.](docs/diagrams/collection-map.svg)
+![The agent reads CLAUDE.md and loads a skill. The skill tells the agent to type make targets and Git commands. Make runs every tool in a Podman image, or from PATH in host mode. r-record writes the board and the glossary under docs. A Git push passes the pre-push hook and starts the GitHub workflow, and the workflow runs the same make targets.](docs/diagrams/collection-map.svg)
 
 An agent reads `CLAUDE.md`, loads the skill that the task needs, and types only `make` and Git. Make runs every tool in a Podman image. GitHub Actions runs the same Make targets. The orange box is the one point that every command passes. So a gate gives the same result on a laptop and on GitHub. The dashed arrow means that the makefiles come from the installed skills.
 
@@ -36,7 +36,7 @@ The rules that hold for every skill stand once, in the `<general_rules>` block o
 
 A request goes through `r-plan`, `r-develop`, `r-review`, and `r-release`. A new or vague request starts at `r-plan`. A fix that names a source file, a failing test, or a roadmap defect starts at `r-develop`. `r-release` commits the slice on one branch, pushes it, merges it into the default branch when CI passed, and asks `r-record` to close the task. With `r-github-pipeline` installed, that merge publishes.
 
-![You bring an idea to plan. The stages r-plan, r-develop, r-review, and r-release follow in order. Each stage asks r-record to write the board: the roadmap, the history file, and the rules. r-develop writes code and tests. A test names the rule that it proves.](docs/diagrams/board-map.svg)
+![You bring an idea to plan. The stages r-plan, r-develop, r-review, and r-release follow in order. Each stage asks r-record to write the board: the roadmap, the history file, the rules, and the glossary. r-develop writes code and tests. A test names the rule that it proves, and make test checks that line.](docs/diagrams/board-map.svg)
 
 A product repository keeps three kinds of document beside the code. The roadmap lists the things to do. The rules say what must hold. The history reports what was done. The code and the tests are the current state. An arrow from a stage or from `r-record` is a write. Each stage box names what the stage reads. A stage never writes a board document itself. It asks `r-record`.
 
